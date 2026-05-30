@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+        USB device filter pro CurieFinder — FNIRSI GC-01 s RadPro firmware
+        VID 0x0483 = STMicroelectronics (STM32 CDC bootloader)
+        VID 0x4348 = WCH (CH32 CDC)
+        VID 0x1A86 = QinHeng Electronics (CH340/CH341 — alternativní USB-serial čip)
+
+        Android si zapamatuje souhlas "vždy otevřít CurieFinder" pro tato VID.
+        Cizí appky (např. Serial USB Terminal) se přestanou hlásit jako první volba.
+    -->
+
+    <!-- STMicroelectronics CDC (RadPro na STM32) -->
+    <usb-device vendor-id="1155" />
+
+    <!-- WCH CH32 CDC -->
+    <usb-device vendor-id="17224" />
+
+    <!-- QinHeng CH340/CH341 -->
+    <usb-device vendor-id="6790" />
+</resources>
