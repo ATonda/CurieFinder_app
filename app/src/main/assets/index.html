@@ -275,18 +275,6 @@
         #map { position:absolute; top:0; left:0; right:0; bottom:0; background:#111a11; }
         .map-overlay { position:absolute; bottom:0; left:0; right:0; z-index:1000; }
         .map-toolbar { display:flex; gap:4px; padding:6px 8px; background:rgba(10,14,10,0.92); border-top:1px solid #1a2e1a; }
-        #heat-panel { display:none; position:absolute; bottom:52px; left:0; right:0; z-index:1100;
-          background:rgba(10,14,10,0.97); border-top:1px solid #1a2e1a; padding:10px 12px; flex-direction:column; gap:8px; }
-        #heat-panel.open { display:flex; }
-        .heat-row { display:flex; align-items:center; gap:8px; font-size:0.65rem; color:#b0c8b0; }
-        .heat-row label { flex:0 0 80px; }
-        .heat-row input[type=number] { width:60px; background:#0a1a0a; border:1px solid #2a5a2a; color:#00ff41;
-          font-family:'Share Tech Mono',monospace,Arial,sans-serif; font-size:0.65rem; padding:2px 4px; border-radius:3px; }
-        .heat-btn { font-family:'Share Tech Mono',monospace; font-size:0.6rem; padding:4px 10px;
-          background:#003d0f; border:1px solid #00ff41; color:#00ff41; border-radius:3px; cursor:pointer; }
-        .heat-btn:active { background:#00ff41; color:#000; }
-        .heat-btn.danger { border-color:#ff4444; color:#ff4444; background:#1a0000; }
-        #heat-status { font-size:0.6rem; color:#88ff88; min-height:1em; }
         .map-btn { font-family:'Share Tech Mono',monospace; font-size:0.7rem; padding:0 4px; cursor:pointer; text-transform:uppercase; border-radius:4px; border:1px solid #1a3a1a; background:#0a0e0a; color:#00cc33; white-space:nowrap; height:38px; flex:1; text-align:center; transition:none; }
         .map-btn.active { background:#003d0f; border-color:#00ff41; color:#00ff41; }
         .map-btn.danger { border-color:#1a3a1a; background:#0a0e0a; color:#00cc33; }
@@ -338,6 +326,47 @@
         .trasa-btn.ram { border-color:#aa00ff; color:#aa00ff; background:rgba(170,0,255,0.08); }
         .trasa-empty { font-size:0.65rem; color:#4a6a4a; text-align:center; padding:15px 10px; }
 
+        /* ── ROI ZÁLOŽKA HEATMAP ──────────────────────────── */
+        .roi-map-hint { position:absolute; top:10px; left:50%; transform:translateX(-50%); z-index:1200;
+          background:rgba(10,14,10,0.92); border:1px solid #ffb300; color:#ffb300;
+          font-family:'Share Tech Mono',monospace; font-size:0.65rem; padding:6px 14px;
+          border-radius:4px; pointer-events:none; display:none; text-align:center; white-space:nowrap; }
+        .roi-map-hint.visible { display:block; }
+        .roi-section { display:flex; flex-direction:column; flex:1; min-height:0; }
+        .roi-tab-panel { display:flex; flex-direction:column; flex:1; min-height:0; overflow:hidden; }
+        .roi-toolbar { display:flex; gap:4px; padding:6px 8px; border-bottom:1px solid #1a2e1a; flex-shrink:0; flex-wrap:wrap; }
+        .roi-btn { font-family:'Share Tech Mono',monospace; font-size:0.6rem; padding:5px 8px; cursor:pointer; border-radius:4px; border:1px solid #2a5a2a; background:#0a0e0a; color:#4a6a4a; text-align:center; white-space:nowrap; }
+        .roi-btn.green  { border-color:#00ff41; color:#00ff41; background:#003d0f; }
+        .roi-btn.red    { border-color:#ff3333; color:#ff3333; background:#1a0000; }
+        .roi-btn.blue   { border-color:#00aaff; color:#00aaff; background:rgba(0,170,255,0.08); }
+        .roi-btn.orange { border-color:#ffb300; color:#ffb300; background:rgba(255,179,0,0.08); }
+        .roi-btn:active { opacity:0.7; }
+        .roi-list { flex:1; overflow-y:auto; padding:4px 8px; }
+        .roi-item { background:#111a11; border:1px solid #1a2e1a; border-radius:4px; margin-bottom:6px; overflow:hidden; }
+        .roi-item.active { border-color:#00ff41; }
+        .roi-item-header { display:flex; align-items:center; gap:6px; padding:8px 10px; cursor:pointer; }
+        .roi-item-name { font-size:0.75rem; color:#00ff41; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .roi-item-meta { font-size:0.55rem; color:#4a6a4a; flex-shrink:0; }
+        .roi-item-btns { display:flex; gap:4px; padding:0 8px 8px 8px; }
+        .roi-item-body { border-top:1px solid #0a1a0a; padding:8px 10px; display:none; flex-direction:column; gap:6px; }
+        .roi-item-body.open { display:flex; }
+        .roi-field-row { display:flex; align-items:center; gap:6px; font-size:0.6rem; color:#b0c8b0; }
+        .roi-field-row label { flex:0 0 90px; color:#4a6a4a; }
+        .roi-field-row input[type=number], .roi-field-row input[type=text] {
+            flex:1; background:#0a1a0a; border:1px solid #2a5a2a; color:#00ff41;
+            font-family:'Share Tech Mono',monospace; font-size:0.6rem; padding:3px 6px; border-radius:3px;
+        }
+        .roi-coords-row { display:flex; gap:4px; font-size:0.55rem; color:#4a6a4a; flex-wrap:wrap; }
+        .roi-coord-val { background:#0a1a0a; border:1px solid #1a2e1a; border-radius:3px; padding:2px 6px; color:#88aa88; font-size:0.55rem; }
+        .roi-blocks-header { font-size:0.55rem; color:#00ff41; letter-spacing:1px; text-transform:uppercase; margin-top:4px; border-top:1px solid #1a2e1a; padding-top:6px; }
+        .roi-block-item { display:flex; align-items:center; gap:6px; padding:5px 0; border-bottom:1px solid #0a140a; }
+        .roi-block-cb { accent-color:#00ff41; width:16px; height:16px; flex-shrink:0; cursor:pointer; }
+        .roi-block-name { font-size:0.7rem; color:#b0c8b0; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .roi-block-pts { font-size:0.55rem; color:#4a6a4a; flex-shrink:0; }
+        .roi-block-del { font-size:0.65rem; color:#ff3333; background:none; border:none; cursor:pointer; padding:0 4px; }
+        .roi-empty { font-size:0.65rem; color:#4a6a4a; text-align:center; padding:20px 10px; }
+        .roi-status { font-size:0.6rem; color:#88ff88; padding:4px 8px; min-height:1.4em; flex-shrink:0; border-top:1px solid #1a2e1a; }
+
         .bt-device-item { padding:10px 12px; border-bottom:1px solid #1a2e1a; cursor:pointer; font-size:0.75rem; color:#b0c8b0; }
         .bt-device-item:hover, .bt-device-item:active { background:#003d0f; color:#00ff41; }
         .bt-device-list { max-height:200px; overflow-y:auto; margin-bottom:8px; }
@@ -352,8 +381,9 @@
         .poi-tab-panel { display:flex; flex-direction:column; height:100%; overflow:hidden; }
         .poi-tab-header { flex-shrink:0; isolation:isolate; z-index:200; display:flex; justify-content:space-between; align-items:center; padding:6px 12px; border-bottom:1px solid #1a2e1a; font-size:0.6rem; color:#00ff41; }
         .poi-section { display:flex; flex-direction:column; overflow:hidden; }
-        .poi-section-heat { flex:1; border-bottom:2px solid #1a3a1a; min-height:0; }
         .poi-section-poi  { flex-shrink:0; height:220px; }
+        .poi-section-trasy { flex:1; min-height:0; display:flex; flex-direction:column; }
+        .trasa-panel-poi { flex:1; min-height:0; overflow-y:auto; }
         .poi-section-header { flex-shrink:0; display:flex; justify-content:space-between; align-items:center; padding:5px 10px; background:#060e06; font-size:0.65rem; color:#00ff41; border-bottom:1px solid #1a2e1a; font-weight:bold; letter-spacing:1px; }
         .sec-actions { display:flex; gap:3px; align-items:center; padding:4px 8px; border-top:1px solid #1a2e1a; flex-shrink:0; background:#060e06; }
         .sec-btn { font-family:'Share Tech Mono',monospace; font-size:0.6rem; padding:5px 8px; cursor:pointer; border-radius:4px; border:1px solid #2a5a2a; background:#0a0e0a; color:#4a6a4a; white-space:nowrap; }
@@ -361,12 +391,6 @@
         .sec-btn.red    { border-color:#ff3333; color:#ff3333; }
         .sec-btn.blue   { border-color:#00aaff; color:#00aaff; }
         .sec-btn.sort   { border-color:#2a5a2a; color:#4a6a4a; padding:5px 6px; }
-        .heat-list { flex:1; overflow-y:auto; padding:4px 8px; }
-        .heat-list-item { display:flex; align-items:center; gap:6px; padding:5px 0; border-bottom:1px solid #0a140a; font-size:0.75rem; }
-        .heat-list-item .heat-name { flex:1; color:#00ff41; cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-        .heat-list-item .heat-note { font-size:0.65rem; color:#88aa88; }
-        .heat-list-item .heat-status { font-size:0.6rem; color:#2a6a2a; flex-shrink:0; }
-        .heat-action-btn { background:none; border:1px solid #2a5a2a; color:#00ff41; font-size:0.55rem; padding:2px 5px; border-radius:3px; cursor:pointer; }
         .poi-tab-list { flex:1; overflow-y:auto; padding:4px 8px; }
         .poi-tab-item { display:flex; align-items:center; gap:8px; padding:8px 0; border-bottom:1px solid #0a140a; }
         .poi-tab-item .poi-cb { accent-color:#00ff41; width:16px; height:16px; flex-shrink:0; cursor:pointer; }
@@ -524,6 +548,7 @@
         <button class="tab-btn active" onclick="switchTab('cps')">📊 CPS</button>
         <button class="tab-btn" onclick="switchTab('map')">🗺️ MAPA</button>
         <button class="tab-btn" onclick="switchTab('poi')">📍 BODY</button>
+        <button class="tab-btn" onclick="switchTab('roi')">🌡️ HEAT</button>
     </div>
 
     <div class="tab-content active" id="tab-cps">
@@ -584,21 +609,6 @@
 
     <div class="tab-content" id="tab-poi">
         <div class="poi-tab-panel">
-            <!-- Sekce heatmap -->
-            <div class="poi-section poi-section-heat">
-                <div class="poi-section-header">
-                    <span>HEATMAPY</span>
-                    <span style="display:flex;gap:3px;align-items:center;">
-                        <button id="heat-btn-cycle" class="sec-btn green" onclick="heatCycleShowMode()">VŠE</button>
-                        <button id="heat-sort-date" class="sec-btn sort" onclick="setHeatSort('date')">DAT</button>
-                        <button id="heat-sort-name" class="sec-btn sort" onclick="setHeatSort('name')">AZ</button>
-                        <button class="sec-btn red"   onclick="heatDeleteSelected()">SMAZAT</button>
-                        <button class="sec-btn blue"  onclick="heatExportSelected()">SDÍLET</button>
-                        <button class="sec-btn green" onclick="heatImport()">IMPORT</button>
-                    </span>
-                </div>
-                <div class="heat-list" id="heat-list"></div>
-            </div>
             <!-- Sekce BODY + VRSTVY sloučené -->
             <div class="poi-section poi-section-poi">
                 <div class="poi-section-header">
@@ -613,11 +623,38 @@
                 <div class="poi-tab-list" id="poi-tab-list" style="flex:1;overflow-y:auto;"></div>
                 <div id="cf-layers-container"></div>
             </div>
+            <!-- Sekce TRASY -->
+            <div class="poi-section poi-section-trasy">
+                <div class="poi-section-header">
+                    <span id="poi-trasy-count">TRASY (0)</span>
+                    <span style="display:flex;gap:3px;align-items:center;">
+                        <button class="sec-btn" id="poi-trasa-sort-date" onclick="setTrasaSort('date')" style="font-size:0.5rem;padding:1px 4px;cursor:pointer;">📅</button>
+                        <button class="sec-btn" id="poi-trasa-sort-name" onclick="setTrasaSort('name')" style="font-size:0.5rem;padding:1px 4px;cursor:pointer;">AZ</button>
+                        <button class="sec-btn green" id="poi-trasa-btn-all"    onclick="toggleAllShow()">👁 VŠE</button>
+                        <button class="sec-btn red"   id="poi-trasa-btn-del"    onclick="smazatTrasy()">SMAZAT</button>
+                        <button class="sec-btn blue"  id="poi-trasa-btn-share"  onclick="sdiletTrasy()">SDÍLET</button>
+                        <button class="sec-btn green" onclick="importCSV()">📥</button>
+                    </span>
+                </div>
+                <div class="trasa-panel-poi" id="trasa-panel-poi"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-content" id="tab-roi">
+        <div class="roi-tab-panel">
+            <div class="roi-toolbar" id="roi-toolbar">
+                <button class="roi-btn green" id="roi-btn-new"    onclick="roiNew()">➕ NOVÁ OBLAST</button>
+                <button class="roi-btn blue"  id="roi-btn-import" onclick="roiImport()">📥 IMPORT</button>
+            </div>
+            <div class="roi-list" id="roi-list"></div>
+            <div class="roi-status" id="roi-status"></div>
         </div>
     </div>
 
     <div class="tab-content" id="tab-map">
         <div id="map"></div>
+        <div class="roi-map-hint" id="roi-map-hint"></div>
         <div class="spec-legend" id="spec-legend">
             <canvas id="spec-legend-canvas" width="10" height="130"></canvas>
             <div class="spec-legend-labels">
@@ -691,7 +728,6 @@
                     </div>
                 </div>
             </div>
-            <div class="trasa-panel" id="trasa-panel"></div>
             <div class="debug-panel" id="debug-panel">
                 <div class="debug-gps">
                     <div class="gps-dot" id="gps-dot"></div>
@@ -701,34 +737,13 @@
                     <span id="log-status">📝 LOG: OFF</span>
                 </div>
             </div>
-            <div id="heat-panel">
-                <div class="heat-row">
-                    <label>Radius oblasti (m)</label>
-                    <input type="number" id="heat-radius" value="100" min="10" max="500" onchange="heatSaveSettings()">
-                    <label style="margin-left:8px">Max vzdál. bodů (m)</label>
-                    <input type="number" id="heat-maxdist" value="3" min="2" max="50" onchange="heatSaveSettings()">
-                </div>
-                <div class="heat-row">
-                    <label>Rozlišení gridu (m)</label>
-                    <input type="number" id="heat-grid" value="1" min="0.5" max="5" step="0.5" onchange="heatSaveSettings()">
-                    <label style="margin-left:8px">Průhlednost (%)</label>
-                    <input type="number" id="heat-opacity" value="100" min="10" max="100" onchange="heatSaveSettings()">
-                </div>
-                <div class="heat-row" style="gap:6px;flex-wrap:wrap">
-                    <button class="heat-btn" onclick="heatGenerate()">⚡ GENEROVAT</button>
-                    <button class="heat-btn" onclick="heatMerge()">➕ PŘIDAT K EXISTUJÍCÍ</button>
-                    <button class="heat-btn" onclick="heatToggleVisible()">👁️ ZOBRAZIT/SKRÝT</button>
-                    <button class="heat-btn danger" style="flex:1" onclick="heatClear()">🗑️ SMAZAT</button>
-                    <button class="heat-btn" style="flex:1" onclick="heatExportPNG()">🖼️ EXPORT PNG</button>
-                </div>
-                <div id="heat-status"></div>
-            </div>
+
             <div class="map-toolbar">
                 <button class="map-btn danger" id="btn-log" onclick="toggleLog()">LOG</button>
                 <button class="map-btn" id="btn-graph" onclick="toggleMapGraph()">📊 GRAF</button>
                 <button class="map-btn" id="btn-zobrazeni" onclick="toggleInfoPanel()">🎨 VZHLED</button>
-                <button class="map-btn" id="btn-trasa" onclick="toggleSavedTracks()">📂 TRASA</button>
-                <button class="map-btn" id="btn-heat" onclick="toggleHeatPanel()">🌡️ HEAT</button>
+                <button class="map-btn" id="btn-track-hide" onclick="toggleCurrentTrackVisible()" title="Skrýt/zobrazit aktuální trasu">👁 TRASA</button>
+                <button class="map-btn" id="btn-roi-map" onclick="roiMapToggle()" style="display:none">🗺️ ROI</button>
 
             </div>
         </div>
@@ -802,7 +817,7 @@
             background:'POZADÍ', cps_unit:'IMPULZŮ ZA SEKUNDU', samples:'vzorků',
             close_hint:'2× TAP PRO ZAVŘENÍ', avg_short:'PRŮMĚR', waiting_title:'ODPOJENO',
             waiting_hint:'Zapni zařízení CurieFinder',
-            no_tracks:'Žádné uložené trasy',
+            no_tracks:'Žádné uložené trasy', tracks_section:'TRASY',
             note_start:'Poznámka k logu (volitelné):',
             note_edit:'Upravit poznámku k logu:',
             log_stop_confirm:'Zastavit nahrávání logu?',
@@ -850,7 +865,25 @@
             poi_add_confirm:'📍 Přidat bod na aktuální pozici?',
             poi_move_where:'📌 Přesunout bod kam?', poi_move_gps:'📍 GPS pozice', poi_move_map:'🎯 Střed mapy',
             heat_no_grid:'Žádná heatmapa', heat_not_enough:'Nedostatek bodů (min 2)',
-            heat_collecting:'Sbírám body...', heat_done:'✓ Hotovo' },
+            heat_collecting:'Sbírám body...', heat_done:'✓ Hotovo', roi_select_new:'🗺️ VYBRAT OBLAST', roi_select_edit:'✏️ ZMĚNIT OBLAST', roi_show:'ZOBRAZIT',
+            roi_new_area:'Název nové oblasti', roi_new_btn:'➕ NOVÁ OBLAST', roi_import_btn:'📥 IMPORT', roi_no_areas:'Žádné oblasti. Klepni ➕ NOVÁ OBLAST.',
+            roi_blocks:'BLOKY TRAS', roi_no_blocks:'Žádné bloky tras',
+            roi_name_lbl:'Název oblasti', roi_grid_lbl:'Grid rozl. (m)', roi_radius_lbl:'IDW radius (m)', roi_maxdist_lbl:'Max. vzd. (m)',
+            roi_bounds_lbl:'Bounds oblasti:', roi_bounds_none:'Bounds nejsou nastaveny',
+            roi_select_map:'🗺️ VYBRAT V MAPĚ', roi_add_tracks:'📂 PŘIDAT TRASY', roi_generate:'⚡ GENEROVAT',
+            roi_import:'📥 IMPORT', roi_share:'📤 SDÍLET', roi_delete:'🗑 SMAZAT',
+            roi_delete_confirm:(n) => `Smazat oblast "${n}"?`,
+            roi_delete_block:(n) => `Smazat blok "${n}"?`,
+            roi_saved:'Bounds uloženy', roi_saved_hint:'Bounds uloženy — vrať se do záložky HEAT',
+            roi_no_open:'Nejprve otevři oblast', roi_no_points:'Nedostatek bodů pro heatmapu (min. 2)',
+            roi_no_bounds:'Nejprve nastav bounds oblasti v mapě',
+            roi_generating:'⏳ Generuji heatmapu...',
+            roi_done:(c,r,p,v) => `✓ ${c}×${r} grid, ${p} bodů, ${v} buněk`,
+            roi_added:(n,t) => `Přidáno ${n} blok(ů), celkem ${t} bodů`,
+            roi_no_new:'Žádné nové trasy k přidání (duplicity nebo prázdné)',
+            roi_imported:'Importováno: ', roi_hint_move:'Pohybuj mapou — oblast zůstane uprostřed',
+            roi_hint_edit:'✏ Editační mód — tah rohovými body, protější zůstane na místě',
+            roi_edit:'✏ EDITOVAT', roi_save_bounds:'✓ ULOŽIT', roi_cancel:'ZRUŠIT' },
       sk: { searching:'HĽADÁM...',
             disconnected_msg:'Zapni zariadenie CurieFinder',
             connected:'Pripojené', conn_cancel:'Pripojenie zrušené', conn_err:'Chyba: ',
@@ -860,7 +893,7 @@
             background:'POZADIE', cps_unit:'IMPULZOV ZA SEKUNDU', samples:'vzoriek',
             close_hint:'2× TAP PRE ZATVORENIE', avg_short:'PRIEMER', waiting_title:'ODPOJENÉ',
             waiting_hint:'Zapni zariadenie CurieFinder',
-            no_tracks:'Žiadne uložené trasy',
+            no_tracks:'Žiadne uložené trasy', tracks_section:'TRASY',
             note_start:'Poznámka k logu (voliteľné):',
             note_edit:'Upraviť poznámku k logu:',
             log_stop_confirm:'Zastaviť nahrávanie logu?',
@@ -905,7 +938,25 @@
             poi_add_confirm:'📍 Pridať bod na aktuálnu polohu?',
             poi_move_where:'📌 Presunúť bod kam?', poi_move_gps:'📍 GPS poloha', poi_move_map:'🎯 Stred mapy',
             heat_no_grid:'Žiadna heatmapa', heat_not_enough:'Nedostatok bodov (min 2)',
-            heat_collecting:'Zbierám body...', heat_done:'✓ Hotovo' },
+            heat_collecting:'Zbierám body...', heat_done:'✓ Hotovo', roi_select_new:'🗺️ VYBRAŤ OBLASŤ', roi_select_edit:'✏️ ZMENIŤ OBLASŤ', roi_show:'ZOBRAZIŤ',
+            roi_new_area:'Názov novej oblasti', roi_new_btn:'➕ NOVÁ OBLASŤ', roi_import_btn:'📥 IMPORT', roi_no_areas:'Žiadne oblasti. Klepni ➕ NOVÁ OBLASŤ.',
+            roi_blocks:'BLOKY TRÁS', roi_no_blocks:'Žiadne bloky trás',
+            roi_name_lbl:'Názov oblasti', roi_grid_lbl:'Grid rozl. (m)', roi_radius_lbl:'IDW polomer (m)', roi_maxdist_lbl:'Max. vzd. (m)',
+            roi_bounds_lbl:'Bounds oblasti:', roi_bounds_none:'Bounds nie sú nastavené',
+            roi_select_map:'🗺️ VYBRAŤ V MAPE', roi_add_tracks:'📂 PRIDAŤ TRASY', roi_generate:'⚡ GENEROVAŤ',
+            roi_import:'📥 IMPORT', roi_share:'📤 ZDIEĽAŤ', roi_delete:'🗑 ZMAZAŤ',
+            roi_delete_confirm:(n) => `Zmazať oblasť "${n}"?`,
+            roi_delete_block:(n) => `Zmazať blok "${n}"?`,
+            roi_saved:'Bounds uložené', roi_saved_hint:'Bounds uložené — vráť sa do záložky HEAT',
+            roi_no_open:'Najprv otvor oblasť', roi_no_points:'Nedostatok bodov (min. 2)',
+            roi_no_bounds:'Najprv nastav bounds oblasti v mape',
+            roi_generating:'⏳ Generujem heatmapu...',
+            roi_done:(c,r,p,v) => `✓ ${c}×${r} grid, ${p} bodov, ${v} buniek`,
+            roi_added:(n,t) => `Pridané ${n} blok(ov), celkom ${t} bodov`,
+            roi_no_new:'Žiadne nové trasy na pridanie (duplicity alebo prázdne)',
+            roi_imported:'Importované: ', roi_hint_move:'Pohybuj mapou — oblasť zostane uprostred',
+            roi_hint_edit:'✏ Editačný mód — ťahaj rohovými bodmi, protľahlý zostane na mieste',
+            roi_edit:'✏ EDITOVAŤ', roi_save_bounds:'✓ ULOŽIŤ', roi_cancel:'ZRUŠIŤ' },
       it: { searching:'RICERCA...',
             disconnected_msg:'Accendi il dispositivo CurieFinder',
             connected:'Connesso', conn_cancel:'Connessione annullata', conn_err:'Errore: ',
@@ -915,7 +966,7 @@
             background:'FONDO', cps_unit:'IMPULSI AL SECONDO', samples:'campioni',
             close_hint:'2× TAP PER CHIUDERE', avg_short:'MEDIA', waiting_title:'DISCONNESSO',
             waiting_hint:'Accendi il dispositivo CurieFinder',
-            no_tracks:'Nessun percorso salvato',
+            no_tracks:'Nessun percorso salvato', tracks_section:'PERCORSI',
             note_start:'Nota per il log (opzionale):',
             note_edit:'Modifica nota del log:',
             log_stop_confirm:'Fermare la registrazione?',
@@ -973,7 +1024,25 @@
             poi_add_confirm:'📍 Aggiungere punto alla posizione attuale?',
             poi_move_where:'📌 Spostare il punto dove?', poi_move_gps:'📍 Posizione GPS', poi_move_map:'🎯 Centro mappa',
             heat_no_grid:'Nessuna heatmap', heat_not_enough:'Punti insufficienti (min 2)',
-            heat_collecting:'Raccolta punti...', heat_done:'✓ Fatto' },
+            heat_collecting:'Raccolta punti...', heat_done:'✓ Fatto', roi_select_new:'🗺️ SELEZIONA AREA', roi_select_edit:"✏️ MODIFICA AREA", roi_show:'MOSTRA',
+            roi_new_area:'Nome nuova area', roi_new_btn:'➕ NUOVA AREA', roi_import_btn:'📥 IMPORTA', roi_no_areas:'Nessuna area. Tocca ➕ NUOVA AREA.',
+            roi_blocks:'BLOCCHI TRACCE', roi_no_blocks:'Nessun blocco traccia',
+            roi_name_lbl:'Nome area', roi_grid_lbl:'Risoluzione griglia (m)', roi_radius_lbl:'Raggio IDW (m)', roi_maxdist_lbl:'Dist. max (m)',
+            roi_bounds_lbl:'Limiti area:', roi_bounds_none:'Limiti non impostati',
+            roi_select_map:'🗺️ SELEZIONA SU MAPPA', roi_add_tracks:'📂 AGGIUNGI TRACCE', roi_generate:'⚡ GENERA',
+            roi_import:'📥 IMPORTA', roi_share:'📤 CONDIVIDI', roi_delete:'🗑 ELIMINA',
+            roi_delete_confirm:(n) => `Eliminare area "${n}"?`,
+            roi_delete_block:(n) => `Eliminare blocco "${n}"?`,
+            roi_saved:'Limiti salvati', roi_saved_hint:'Limiti salvati — torna alla scheda HEAT',
+            roi_no_open:"Prima apri un'area", roi_no_points:'Punti insufficienti (min. 2)',
+            roi_no_bounds:'Prima imposta i limiti area sulla mappa',
+            roi_generating:'⏳ Generazione heatmap...',
+            roi_done:(c,r,p,v) => `✓ Griglia ${c}×${r}, ${p} punti, ${v} celle`,
+            roi_added:(n,t) => `Aggiunti ${n} blocchi, totale ${t} punti`,
+            roi_no_new:'Nessuna traccia nuova da aggiungere (duplicati o vuote)',
+            roi_imported:'Importato: ', roi_hint_move:"Sposta la mappa — l'area rimane al centro",
+            roi_hint_edit:"✏ Modalità modifica — trascina angoli, l'opposto rimane fermo",
+            roi_edit:'✏ MODIFICA', roi_save_bounds:'✓ SALVA', roi_cancel:'ANNULLA' },
       en: { searching:'SEARCHING...',
             disconnected_msg:'Turn on CurieFinder device',
             connected:'Connected', conn_cancel:'Connection cancelled', conn_err:'Error: ',
@@ -983,7 +1052,7 @@
             background:'BACKGROUND', cps_unit:'COUNTS PER SECOND', samples:'samples',
             close_hint:'2× TAP TO CLOSE', avg_short:'AVERAGE', waiting_title:'DISCONNECTED',
             waiting_hint:'Turn on CurieFinder device',
-            no_tracks:'No saved tracks',
+            no_tracks:'No saved tracks', tracks_section:'TRACKS',
             note_start:'Log note (optional):',
             note_edit:'Edit log note:',
             log_stop_confirm:'Stop recording?',
@@ -1031,7 +1100,25 @@
             poi_add_confirm:'📍 Add point at current position?',
             poi_move_where:'📌 Move point where?', poi_move_gps:'📍 GPS position', poi_move_map:'🎯 Map center',
             heat_no_grid:'No heatmap', heat_not_enough:'Not enough points (min 2)',
-            heat_collecting:'Collecting points...', heat_done:'✓ Done' },
+            heat_collecting:'Collecting points...', heat_done:'✓ Done', roi_select_new:'🗺️ SELECT AREA', roi_select_edit:'✏️ EDIT AREA', roi_show:'SHOW',
+            roi_new_area:'New area name', roi_new_btn:'➕ NEW AREA', roi_import_btn:'📥 IMPORT', roi_no_areas:'No areas. Tap ➕ NEW AREA.',
+            roi_blocks:'TRACK BLOCKS', roi_no_blocks:'No track blocks',
+            roi_name_lbl:'Area name', roi_grid_lbl:'Grid res. (m)', roi_radius_lbl:'IDW radius (m)', roi_maxdist_lbl:'Max dist (m)',
+            roi_bounds_lbl:'Area bounds:', roi_bounds_none:'Bounds not set',
+            roi_select_map:'🗺️ SELECT ON MAP', roi_add_tracks:'📂 ADD TRACKS', roi_generate:'⚡ GENERATE',
+            roi_import:'📥 IMPORT', roi_share:'📤 SHARE', roi_delete:'🗑 DELETE',
+            roi_delete_confirm:(n) => `Delete area "${n}"?`,
+            roi_delete_block:(n) => `Delete block "${n}"?`,
+            roi_saved:'Bounds saved', roi_saved_hint:'Bounds saved — return to HEAT tab',
+            roi_no_open:'Open an area first', roi_no_points:'Not enough points (min. 2)',
+            roi_no_bounds:'Set area bounds on map first',
+            roi_generating:'⏳ Generating heatmap...',
+            roi_done:(c,r,p,v) => `✓ ${c}×${r} grid, ${p} points, ${v} cells`,
+            roi_added:(n,t) => `Added ${n} block(s), total ${t} points`,
+            roi_no_new:'No new tracks to add (duplicates or empty)',
+            roi_imported:'Imported: ', roi_hint_move:'Move map — area stays centered',
+            roi_hint_edit:'✏ Edit mode — drag corners, opposite stays fixed',
+            roi_edit:'✏ EDIT', roi_save_bounds:'✓ SAVE', roi_cancel:'CANCEL' },
       pl: { searching:'SZUKAM...', disconnected_msg:'Włącz urządzenie CurieFinder', conn_lost:'Połączenie przerwane',
             connected:'POŁĄCZONO', disconnected:'ROZŁĄCZONO', conn_err:'BŁĄD POŁĄCZENIA: ',
             conn_cancel:'Anulowano', searching_ble:'Szukam BLE...',
@@ -1040,7 +1127,7 @@
             background:'TŁO', cps_unit:'ZLICZEŃ NA SEKUNDĘ', samples:'próbek',
             close_hint:'2× DOTKNIJ ABY ZAMKNĄĆ', avg_short:'ŚREDNIA', waiting_title:'ROZŁĄCZONO',
             waiting_hint:'Włącz urządzenie CurieFinder',
-            no_tracks:'Brak zapisanych tras',
+            no_tracks:'Brak zapisanych tras', tracks_section:'TRASY',
             note_start:'Notatka do logu (opcjonalnie):',
             note_edit:'Edytuj notatkę logu:',
             log_stop_confirm:'Zatrzymać nagrywanie?',
@@ -1088,7 +1175,25 @@
             poi_add_confirm:'📍 Dodać punkt w bieżącej pozycji?',
             poi_move_where:'📌 Przenieść punkt gdzie?', poi_move_gps:'📍 Pozycja GPS', poi_move_map:'🎯 Środek mapy',
             heat_no_grid:'Brak mapy cieplnej', heat_not_enough:'Za mało punktów (min 2)',
-            heat_collecting:'Zbieranie punktów...', heat_done:'✓ Gotowe' },
+            heat_collecting:'Zbieranie punktów...', heat_done:'✓ Gotowe', roi_select_new:'🗺️ WYBIERZ OBSZAR', roi_select_edit:'✏️ EDYTUJ OBSZAR', roi_show:'POKAŻ',
+            roi_new_area:'Nazwa nowego obszaru', roi_new_btn:'➕ NOWY OBSZAR', roi_import_btn:'📥 IMPORT', roi_no_areas:'Brak obszarów. Dotknij ➕ NOWY OBSZAR.',
+            roi_blocks:'BLOKI TRAS', roi_no_blocks:'Brak bloków tras',
+            roi_name_lbl:'Nazwa obszaru', roi_grid_lbl:'Rozdzielczość siatki (m)', roi_radius_lbl:'Promień IDW (m)', roi_maxdist_lbl:'Maks. odl. (m)',
+            roi_bounds_lbl:'Granice obszaru:', roi_bounds_none:'Granice nie zostały ustawione',
+            roi_select_map:'🗺️ WYBIERZ NA MAPIE', roi_add_tracks:'📂 DODAJ TRASY', roi_generate:'⚡ GENERUJ',
+            roi_import:'📥 IMPORT', roi_share:'📤 UDOSTĘPNIJ', roi_delete:'🗑 USUŃ',
+            roi_delete_confirm:(n) => `Usunąć obszar "${n}"?`,
+            roi_delete_block:(n) => `Usunąć blok "${n}"?`,
+            roi_saved:'Granice zapisane', roi_saved_hint:'Granice zapisane — wróć do karty HEAT',
+            roi_no_open:'Najpierw otwórz obszar', roi_no_points:'Za mało punktów (min. 2)',
+            roi_no_bounds:'Najpierw ustaw granice obszaru na mapie',
+            roi_generating:'⏳ Generowanie mapy cieplnej...',
+            roi_done:(c,r,p,v) => `✓ Siatka ${c}×${r}, ${p} punktów, ${v} komórek`,
+            roi_added:(n,t) => `Dodano ${n} blok(ów), łącznie ${t} punktów`,
+            roi_no_new:'Brak nowych tras do dodania (duplikaty lub puste)',
+            roi_imported:'Zaimportowano: ', roi_hint_move:'Przesuń mapę — obszar pozostaje w centrum',
+            roi_hint_edit:'✏ Tryb edycji — przeciągnij rogi, przeciwległy zostaje na miejscu',
+            roi_edit:'✏ EDYTUJ', roi_save_bounds:'✓ ZAPISZ', roi_cancel:'ANULUJ' },
       hu: { searching:'KERESÉS...', disconnected_msg:'Kapcsolja be a CurieFinder eszközt', conn_lost:'Kapcsolat megszakadt',
             connected:'CSATLAKOZVA', disconnected:'LEVÁLASZTVA', conn_err:'CSATLAKOZÁSI HIBA: ',
             conn_cancel:'Megszakítva', searching_ble:'BLE keresése...',
@@ -1097,7 +1202,7 @@
             background:'HÁTTÉR', cps_unit:'IMPULZUS MÁSODPERCENKÉNT', samples:'minta',
             close_hint:'2× ÉRINTÉS A BEZÁRÁSHOZ', avg_short:'ÁTLAG', waiting_title:'LEVÁLASZTVA',
             waiting_hint:'Kapcsolja be a CurieFinder eszközt',
-            no_tracks:'Nincsenek mentett nyomvonalak',
+            no_tracks:'Nincsenek mentett nyomvonalak', tracks_section:'ÚTVONALAK',
             note_start:'Napló megjegyzése (opcionális):',
             note_edit:'Naplómegjegyzés szerkesztése:',
             log_stop_confirm:'Leállítja a rögzítést?',
@@ -1145,7 +1250,25 @@
             poi_add_confirm:'📍 Pont hozzáadása az aktuális pozícióhoz?',
             poi_move_where:'📌 Hova helyezi a pontot?', poi_move_gps:'📍 GPS pozíció', poi_move_map:'🎯 Térkép közepe',
             heat_no_grid:'Nincs hőtérkép', heat_not_enough:'Nincs elég pont (min 2)',
-            heat_collecting:'Pontok gyűjtése...', heat_done:'✓ Kész' }
+            heat_collecting:'Pontok gyűjtése...', heat_done:'✓ Kész', roi_select_new:'🗺️ TERÜLET KIJELÖLÉS', roi_select_edit:'✏️ TERÜLET SZERKESZTÉS', roi_show:'MEGJELENÍTÉS',
+            roi_new_area:'Új terület neve', roi_new_btn:'➕ ÚJ TERÜLET', roi_import_btn:'📥 IMPORT', roi_no_areas:'Nincs terület. Érintse meg ➕ ÚJ TERÜLET.',
+            roi_blocks:'ÚTVONAL BLOKKOK', roi_no_blocks:'Nincsenek útvonal blokkok',
+            roi_name_lbl:'Terület neve', roi_grid_lbl:'Rács felbontás (m)', roi_radius_lbl:'IDW sugár (m)', roi_maxdist_lbl:'Max táv. (m)',
+            roi_bounds_lbl:'Terület határok:', roi_bounds_none:'Határok nincsenek beállítva',
+            roi_select_map:'🗺️ KIJELÖLÉS TÉRKÉPEN', roi_add_tracks:'📂 ÚTVONALAK HOZZÁADÁSA', roi_generate:'⚡ GENERÁLÁS',
+            roi_import:'📥 IMPORT', roi_share:'📤 MEGOSZTÁS', roi_delete:'🗑 TÖRLÉS',
+            roi_delete_confirm:(n) => `Törli a(z) "${n}" területet?`,
+            roi_delete_block:(n) => `Törli a(z) "${n}" blokkot?`,
+            roi_saved:'Határok mentve', roi_saved_hint:'Határok mentve — térjen vissza a HEAT lapra',
+            roi_no_open:'Először nyisson meg egy területet', roi_no_points:'Nincs elég pont (min. 2)',
+            roi_no_bounds:'Először állítsa be a terület határait a térképen',
+            roi_generating:'⏳ Hőtérkép generálása...',
+            roi_done:(c,r,p,v) => `✓ ${c}×${r} rács, ${p} pont, ${v} cella`,
+            roi_added:(n,t) => `${n} blokk hozzáadva, összesen ${t} pont`,
+            roi_no_new:'Nincs hozzáadható új útvonal (duplikátum vagy üres)',
+            roi_imported:'Importálva: ', roi_hint_move:'Mozgassa a térképet — a terület középen marad',
+            roi_hint_edit:'✏ Szerkesztési mód — húzza a sarkokat, az átellenes sarkok helyben maradnak',
+            roi_edit:'✏ SZERKESZTÉS', roi_save_bounds:'✓ MENTÉS', roi_cancel:'MÉGSE' }
     };
 
     // ── Import jazyka z JSON souboru ─────────────────────────────────────────
@@ -1317,7 +1440,11 @@
     const DEVICE_EXPIRE_MS   = 30 * 24 * 60 * 60 * 1000; // 30 dní
 
     function recentDevicesLoad() {
-      try { return JSON.parse(lsGet('recent_devices', '[]')); } catch(e) { return []; }
+      try {
+        const arr = JSON.parse(lsGet('recent_devices', '[]'));
+        // Odfiltrovat stare zaznamy s "Hledat" jmenem (legacy bug)
+        return arr.filter(d => d.name && !d.name.startsWith('⚡ Hledat'));
+      } catch(e) { return []; }
     }
 
     function recentDevicesSave(arr) {
@@ -1468,7 +1595,10 @@
     let trasaPanelOpen   = false;
     let infoPanelOpen    = false;
     let savedSelection   = [];
-    try { savedSelection = JSON.parse(lsGet('saved_selection', '[]')); } catch(e) { savedSelection = []; }
+    // Pri startu VZDY prazdny vyber — trasy se nezobrazuji dokud uzivatel neklkne VŠE
+    // Predchozi rucni vyber je zachovan v saved_selection_manual pro tlacitko VYBER
+    savedSelection = [];
+    lsSet('saved_selection', '[]');
     let currentFiles     = [];
     let _trasaSort = lsGet('trasa_sort', 'date'); // date | name | note
     let _poiSort   = lsGet('poi_sort',   'date'); // date | name
@@ -1479,13 +1609,9 @@
     let _applyDebounce   = null;
 
     // HEATMAP stav — inicializovat zde aby byly dostupné od startu
-    let _heatLayers   = {};      // filename -> { grid, canvas, clickRect, visible }
     let _heatShowMode = lsGet('heat_show_mode', 'selection'); // all | selection | hidden
-    let _heatVisibleManual = []; // pamatuje si které heatmapy byly viditelné při posledním VÝBĚR módu
-    try { _heatVisibleManual = JSON.parse(lsGet('heat_visible_manual', '[]')); } catch(e) { _heatVisibleManual = []; }
     let _heatDebounce = null; // debounce pro načítání heatmap dat
     let _heatPanelOpen = false;
-    let _heatSelection = [];     // výběr pro mazání/sdílení — vždy prázdný po restartu
 
     // GRAF NAD MAPOU
     let mapGraphVisible   = lsGet('map_graph_visible', 'false') === 'true';
@@ -2232,9 +2358,14 @@
 
     let _connType = '';   // 'NUS' | 'USB' | 'BT' | 'BLE' — typ aktuálního spojení
 
-    window.onCurieConnected = function(typ) {
+    window.onCurieConnected = function(typ, dname) {
       isConnected = true;
       _connType = (typ || 'BT');
+      // Pokud byl pouzit povel "Hledat...", nahradit skutecnym jmenem zarizeni
+      if (dname && _savedBtDevice && _savedBtDevice.startsWith('⚡ Hledat')) {
+        _savedBtDevice = dname;
+        lsSet('bt_device_name', dname);
+      }
       // Uložit zařízení do dynamického seznamu
       if (_savedBtDevice && !_savedBtDevice.startsWith('BLE:')) {
         recentDevicesAdd(_savedBtDevice, '');
@@ -2309,7 +2440,19 @@
       wizOnError(msg || '');
     };
 
-    window.onCurieSaved = function(filename) { /* placeholder */ };
+    window.onCurieSaved = function(filename) {
+      // ROI pending share — po uložení souboru ho sdílet
+      if (window._roiPendingShare && window._roiPendingShare === filename) {
+        window._roiPendingShare = null;
+        setTimeout(() => {
+          try {
+            if (IS_ANDROID && typeof AndroidSerial !== 'undefined') {
+              AndroidSerial.shareCSV(JSON.stringify([filename]));
+            }
+          } catch(e) { roiStatus('Chyba sdílení: ' + e.message); }
+        }, 300);
+        return;
+      } /* placeholder */ };
 
     // ============================================================
     // PRŮMĚR
@@ -2865,12 +3008,17 @@
     let cfLayers = [];  // [{file, name, icon, color, points, layer, visible, loaded, isGeo}]
 
     function switchTab(name) {
+      // Pokud odcházíme z mapy a je aktivní ROI výběr → uložit bounds
+      const prevTab = document.getElementById('tab-map')?.classList.contains('active');
+      if (prevTab && name !== 'map') roiOnLeaveMap();
+
       document.querySelectorAll('.tab-btn').forEach((b, i) => {
-        b.classList.toggle('active', (i===0&&name==='cps')||(i===1&&name==='map')||(i===2&&name==='poi'));
+        b.classList.toggle('active', (i===0&&name==='cps')||(i===1&&name==='map')||(i===2&&name==='poi')||(i===3&&name==='roi'));
       });
       document.getElementById('tab-cps').classList.toggle('active', name === 'cps');
       document.getElementById('tab-map').classList.toggle('active', name === 'map');
       document.getElementById('tab-poi').classList.toggle('active', name === 'poi');
+      document.getElementById('tab-roi').classList.toggle('active', name === 'roi');
       if (name === 'map') {
         if (!leafletMap) initMap();
         setTimeout(() => {
@@ -2880,12 +3028,26 @@
         }, 150);
       }
       if (name === 'poi') {
-        // Načíst body pokud mapa ještě nebyla inicializována
         if (!leafletMap && poiPoints.length === 0) poiLoadFromFile();
         poiRenderTab();
-        // cfLayersDiscover načte heatmap soubory a zavolá heatRenderList
         if (cfLayers.length === 0) cfLayersDiscover();
-        else { cfLayersRenderTab(); heatRenderList(_heatFiles); }
+        else { cfLayersRenderTab(); }
+        renderTrasaPanelPoi();
+        // Lokalizace tlacítek sekce TRASY
+        const _btnAll   = document.getElementById('poi-trasa-btn-all');
+        const _btnDel   = document.getElementById('poi-trasa-btn-del');
+        const _btnShare = document.getElementById('poi-trasa-btn-share');
+        if (_btnAll)   _btnAll.textContent   = T[LANG].show_all   || '👁 VŠE';
+        if (_btnDel)   _btnDel.textContent   = T[LANG].roi_delete  || 'SMAZAT';
+        if (_btnShare) _btnShare.textContent = T[LANG].roi_share   || 'SDÍLET';
+      }
+      if (name === 'roi') {
+        roiLoadList();
+        // Lokalizace toolbar tlacítek
+        const btnNew = document.getElementById('roi-btn-new');
+        const btnImp = document.getElementById('roi-btn-import');
+        if (btnNew) btnNew.textContent = T[LANG].roi_new_btn || '➕ NOVÁ OBLAST';
+        if (btnImp) btnImp.textContent = T[LANG].roi_import_btn || '📥 IMPORT';
       }
       // Zavřít BT dialog při přepnutí záložky
       const overlay = document.getElementById('cf-dialog-overlay');
@@ -3264,8 +3426,7 @@
       // Zavřít heat panel při kliknutí mimo něj
       document.addEventListener('touchstart', (e) => {
         if (!_heatPanelOpen) return;
-        if (e.target.closest('#heat-panel') || e.target.closest('#btn-heat')) return;
-        toggleHeatPanel();
+
       }, { passive: true });
 
       document.getElementById('tab-map').addEventListener('touchstart', (e) => {
@@ -4089,7 +4250,6 @@
         const all = JSON.parse(raw);
         // Heatmap soubory — zobrazit v heat listu, ne v cfLayers
         const heatFiles = all.filter(f => f.startsWith('CF_heat_')).sort().reverse();
-        heatRenderList(heatFiles);
         const layerFiles = all.filter(f =>
           (f.startsWith('CF_LAYER_') && !f.startsWith('CF_heat_') &&
            (f.endsWith('.csv') || f.endsWith('.geojson'))) ||
@@ -4887,10 +5047,10 @@
     // Callback z Androidu po úspěšném importu
     window.onCurieImported = function(filename) {
       setTimeout(() => {
-        if (filename && filename.startsWith('CF_heat_')) {
-          // Heatmapa — přidat do seznamu
-          if (!_heatFiles.includes(filename)) _heatFiles.unshift(filename);
-          heatRenderList(_heatFiles);
+        if (filename && filename.startsWith('CF_ROI_') && filename.endsWith('.roi')) {
+          // ROI oblast - aktualizovat seznam v zalozce HEAT
+          roiLoadList();
+          roiStatus(T[LANG].roi_imported + filename);
         } else {
           renderTrasaPanel();
           applyZobrazit();
@@ -5081,1125 +5241,1294 @@
     // ============================================================
     // HEATMAP LIST v záložce BODY
     // ============================================================
-    let _heatFiles       = [];   // seznam heatmap souborů
-    let _heatSort        = lsGet('heat_sort', 'date'); // date | name
-    let _heatActiveFile  = null; // aktuálně načtená heatmapa
-    let _heatNames       = {};   // vlastní jména: filename -> name
-    let _heatNotes       = {};   // poznámky: filename -> note
-    try { _heatNames = JSON.parse(lsGet('heat_names', '{}')); } catch(e) { _heatNames = {}; }
-    try { _heatNotes = JSON.parse(lsGet('heat_notes', '{}')); } catch(e) { _heatNotes = {}; }
 
-    function setHeatSort(by) {
-      _heatSort = by;
-      lsSet('heat_sort', by);
-      const btnDate = document.getElementById('heat-sort-date');
-      const btnName = document.getElementById('heat-sort-name');
-      if (btnDate) { btnDate.style.borderColor = by==='date'?'#00ff41':'#2a5a2a'; btnDate.style.color = by==='date'?'#00ff41':'#4a6a4a'; }
-      if (btnName) { btnName.style.borderColor = by==='name'?'#00ff41':'#2a5a2a'; btnName.style.color = by==='name'?'#00ff41':'#4a6a4a'; }
-      heatRenderList(_heatFiles);
-    }
+    // ============================================================
+    // ROI - MAPA: vyber bounds obdelniku + zobrazeni heatmapy
+    // CSS overlay pristup - zadne kolize s Leaflet touch eventy
+    // ============================================================
+    let _roiHeatCanvas    = null;   // L.imageOverlay aktivni ROI heatmapa
+    let _roiHeatVisible   = false;
+    let _roiHeatFile      = null;   // filename oblasti jejiz heatmapa je zobrazena
+    let _roiBoundsRect    = null;   // L.rectangle zluta hranice oblasti
+    let _roiSelectFile    = null;   // filename oblasti pro vyber bounds
+    let _roiMapEditMode   = false;  // true = editacni mod (mapa zmrazena)
+    let _roiOverlayW      = 200;    // sirka overlay obdelniku v px
+    let _roiOverlayH      = 150;    // vyska overlay obdelniku v px
 
-    function heatRenderList(files) {
-      _heatFiles = files || [];
-      // Seřadit
-      const sorted = [..._heatFiles];
-      if (_heatSort === 'name') {
-        sorted.sort((a, b) => (_heatNames[a]||a).localeCompare(_heatNames[b]||b, 'cs'));
+    // ---- Zobrazit/skryt ROI heatmapu (tlacitko v mape) ----
+    function roiMapToggle() {
+      if (_roiHeatVisible) {
+        // Skryt
+        if (_roiHeatCanvas) { leafletMap.removeLayer(_roiHeatCanvas); _roiHeatCanvas = null; }
+        if (_roiBoundsRect) { leafletMap.removeLayer(_roiBoundsRect); _roiBoundsRect = null; }
+        _roiHeatVisible = false;
+        const btn = document.getElementById('btn-roi-map');
+        if (btn) btn.classList.remove('active');
       } else {
-        sorted.sort((a, b) => b.localeCompare(a)); // nejnovější nahoře
-      }
-      const list = document.getElementById('heat-list');
-      if (!list) return;
-      if (!_heatFiles.length) {
-        list.innerHTML = '<div style="padding:12px;text-align:center;color:#2a5a2a;font-size:0.6rem;">Žádné heatmapy</div>';
-        return;
-      }
-      // Aktualizovat cyklující tlačítko
-      const _btnCycle = document.getElementById('heat-btn-cycle');
-      const _heatModeLabels = { all: 'VŠE', selection: 'VÝBĚR', hidden: 'SKRÝT' };
-      if (_btnCycle) _btnCycle.textContent = _heatModeLabels[_heatShowMode] || 'VÝBĚR';
-
-      list.innerHTML = sorted.map((f, i) => {
-        const rawName = f.replace(/^CF_heat_/,'').replace(/\.csv$/,'');
-        const name  = _heatNames[f] || rawName;
-        const note  = _heatNotes[f] || '';
-        const active = _heatShowMode === 'all' ? true : _heatShowMode === 'hidden' ? false : (_heatLayers[f]?.visible === true);
-        const sel = _heatSelection.includes(f);
-        return `<div class='trasa-item' id='hli_${i}'>
-          <input type='checkbox' class='cb-show' data-file='${f}' ${active?'checked':''}>
-          <label id='hln_${i}' data-file='${f}'>${name}</label>
-          <span class='trasa-note'>${note}</span>
-          <input type='checkbox' class='cb-sel' data-file='${f}' ${sel?'checked':''}>
-        </div>`;
-      }).join('');
-
-      // Event delegation — inicializovat jen jednou přes data atribut
-      if (!list._heatDelegated) {
-        list._heatDelegated = true;
-        list.addEventListener('change', function(e) {
-          const cb = e.target;
-          const f = cb.dataset.file;
-          if (!f) return;
-          if (cb.classList.contains('cb-show')) heatListToggle(f, cb.checked);
-          if (cb.classList.contains('cb-sel'))  heatSelToggle(f, cb.checked);
-        });
-      }
-
-      // Long press na řádek = editace, krátký klik na řádek = skok na mapu, checkboxy nezávislé
-      sorted.forEach((f, i) => {
-        const item = document.getElementById('hli_' + i);
-        const lbl  = document.getElementById('hln_' + i);
-        if (!item) return;
-        let _lpTimer = null, _lpMoved = false, _lpFired = false;
-        let _lpStartX = 0, _lpStartY = 0;
-        item.addEventListener('contextmenu', (e) => { e.preventDefault(); return false; });
-        const lpStart = (e) => {
-          if (e.target && e.target.type === 'checkbox') return;
-          _lpMoved = false; _lpFired = false;
-          _lpStartX = e.touches ? e.touches[0].clientX : e.clientX;
-          _lpStartY = e.touches ? e.touches[0].clientY : e.clientY;
-          _lpTimer = setTimeout(() => {
-            _lpTimer = null; _lpFired = true;
-            if (!_lpMoved) { try { if (navigator.vibrate) navigator.vibrate(30); } catch(e) {} heatListEdit(f); }
-          }, 700);
-        };
-        const lpMove = (e) => {
-          const cx = e.touches ? e.touches[0].clientX : e.clientX;
-          const cy = e.touches ? e.touches[0].clientY : e.clientY;
-          if (Math.abs(cx - _lpStartX) > 8 || Math.abs(cy - _lpStartY) > 8) {
-            _lpMoved = true; if (_lpTimer) { clearTimeout(_lpTimer); _lpTimer = null; }
-          }
-        };
-        const lpEnd = (e) => {
-          if (e.target && e.target.type === 'checkbox') return;
-          if (_lpTimer) { clearTimeout(_lpTimer); _lpTimer = null; }
-        };
-        item.addEventListener('touchstart', lpStart, { passive: true });
-        item.addEventListener('touchmove',  lpMove,  { passive: true });
-        item.addEventListener('touchend',   (e) => {
-          if (e.target && e.target.type === 'checkbox') return;
-          lpEnd(e);
-          if (!_lpMoved && !_lpFired) heatListLoad(f);
-        });
-        item.addEventListener('mousedown',  lpStart);
-        item.addEventListener('mousemove',  lpMove);
-        item.addEventListener('mouseup',    (e) => {
-          if (e.target && e.target.type === 'checkbox') return;
-          lpEnd(e);
-          if (!_lpMoved && !_lpFired) heatListLoad(f);
-        });
-      });
-    }
-
-    function heatListLoadNoNav(filename) {
-      if (!IS_ANDROID || typeof AndroidSerial === 'undefined') return;
-      try {
-        heatStatus('Načítám...');
-        const csv = AndroidSerial.readCSV(filename);
-        if (!csv) return;
-        if (!_heatLayers[filename]) _heatLayers[filename] = { grid: null, canvas: null, visible: false };
-        const g = heatLoadToGrid(csv, filename);
-        if (!g) return;
-        _heatLayers[filename].grid = g;
-        _heatLayers[filename].visible = true;
-        heatDrawLayer(filename);
-        heatRenderList(_heatFiles);
-      } catch(e) { console.warn('heatListLoadNoNav:', e); }
-    }
-
-    function heatListLoad(filename) {
-      if (!IS_ANDROID || typeof AndroidSerial === 'undefined') return;
-      try {
-        heatStatus('Načítám...');
-        const csv = AndroidSerial.readCSV(filename);
-        if (!csv) { heatStatus('Nelze načíst: ' + filename); return; }
-        // Načíst do _heatLayers
-        if (!_heatLayers[filename]) _heatLayers[filename] = { grid: null, canvas: null, visible: false };
-        const g = heatLoadToGrid(csv, filename);
-        if (!g) return;
-        _heatLayers[filename].grid = g;
-        _heatLayers[filename].visible = true;
-        _heatActiveFile = filename; // zapamatovat aktivní heatmapu
-        heatRenderList(_heatFiles);
-        _followPaused = true;
-        switchTab('map');
-        setTimeout(() => {
-          if (leafletMap) leafletMap.invalidateSize();
-          heatDrawLayer(filename);
-          setTimeout(() => {
-            if (leafletMap && g) {
-              const bounds = L.latLngBounds([[g.lat0, g.lon0],[g.lat1, g.lon1]]);
-              leafletMap.fitBounds(bounds, { padding:[30,30], maxZoom:18 });
-            }
-            setTimeout(() => { _followPaused = false; }, 4000);
-          }, 200);
-        }, 400);
-      } catch(e) { console.warn('heatListLoad:', e); }
-    }
-
-    function heatListToggle(filename, checked) {
-      // Individuální změna → selection mód + zapamatovat
-      if (checked) {
-        if (!_heatVisibleManual.includes(filename)) _heatVisibleManual.push(filename);
-        if (!_heatLayers[filename]) _heatLayers[filename] = { grid: null, canvas: null, visible: false };
-        _heatLayers[filename].visible = true;
-        if (_heatLayers[filename].grid) { if (leafletMap) heatDrawLayer(filename); }
-        else { heatListLoadNoNav(filename); }
-      } else {
-        _heatVisibleManual = _heatVisibleManual.filter(f => f !== filename);
-        if (leafletMap) {
-          if (_heatLayers[filename]?.canvas) { leafletMap.removeLayer(_heatLayers[filename].canvas); _heatLayers[filename].canvas = null; }
-          if (_heatLayers[filename]?.clickRect) { leafletMap.removeLayer(_heatLayers[filename].clickRect); _heatLayers[filename].clickRect = null; }
+        // Zobrazit — pouzit _roiOpenFile nebo _roiHeatFile
+        const targetFile = _roiOpenFile || _roiHeatFile;
+        if (!targetFile) {
+          roiStatus(T[LANG].roi_no_open);
+          switchTab('roi');
+          return;
         }
-        if (_heatLayers[filename]) _heatLayers[filename].visible = false;
-      }
-      lsSet('heat_visible_manual', JSON.stringify(_heatVisibleManual));
-      _heatShowMode = 'selection';
-      lsSet('heat_show_mode', 'selection');
-      const btn = document.getElementById('heat-btn-cycle');
-      if (btn) btn.textContent = 'VÝBĚR';
-      heatRenderList(_heatFiles);
-    }
-
-    function heatCycleShowMode() {
-      const modes = ['all', 'selection', 'hidden'];
-      const labels = ['VŠE', 'VÝBĚR', 'SKRÝT'];
-      const idx = modes.indexOf(_heatShowMode);
-      const next = modes[(idx + 1) % 3];
-      _heatShowMode = next;
-      lsSet('heat_show_mode', next);
-      const btn = document.getElementById('heat-btn-cycle');
-      if (btn) btn.textContent = labels[(idx + 1) % 3];
-      // Vizuálně překreslit seznam okamžitě (jen checkboxy), data načíst s debouncem
-      heatRenderList(_heatFiles);
-      if (_heatDebounce) clearTimeout(_heatDebounce);
-      _heatDebounce = setTimeout(() => { _heatDebounce = null; heatSetShowMode(next); }, 1500);
-    }
-
-    function heatSetShowMode(mode) {
-      _heatShowMode = mode;
-      lsSet('heat_show_mode', mode);
-      if (mode === 'all') {
-        // Načíst a zobrazit všechny
-        let pending = _heatFiles.length;
-        if (pending === 0) { heatRenderList(_heatFiles); return; }
-        _heatFiles.forEach(f => {
-          if (_heatLayers[f]?.visible && _heatLayers[f]?.canvas) { pending--; if (pending===0) heatRenderList(_heatFiles); return; }
+        if (_roiOpenFile !== targetFile || !_roiOpenData) {
           try {
-            if (!IS_ANDROID || typeof AndroidSerial === 'undefined') { pending--; if (pending===0) heatRenderList(_heatFiles); return; }
-            const csv = AndroidSerial.readCSV(f);
-            if (!csv) { pending--; if (pending===0) heatRenderList(_heatFiles); return; }
-            if (!_heatLayers[f]) _heatLayers[f] = { grid: null, canvas: null, visible: false };
-            const g = heatLoadToGrid(csv, f);
-            if (g) { _heatLayers[f].grid = g; _heatLayers[f].visible = true; if (leafletMap) heatDrawLayer(f); }
-          } catch(e) { console.warn('heatSetShowMode all:', e); }
-          pending--;
-          if (pending === 0) heatRenderList(_heatFiles);
-        });
-      } else if (mode === 'hidden') {
-        // Skrýt vše
-        _heatFiles.forEach(f => {
-          if (leafletMap) {
-            if (_heatLayers[f]?.canvas) { leafletMap.removeLayer(_heatLayers[f].canvas); _heatLayers[f].canvas = null; }
-            if (_heatLayers[f]?.clickRect) { leafletMap.removeLayer(_heatLayers[f].clickRect); _heatLayers[f].clickRect = null; }
+            const raw = IS_ANDROID && typeof AndroidSerial !== 'undefined' ? AndroidSerial.readROI(targetFile) : '';
+            _roiOpenFile = targetFile;
+            _roiOpenData = roiParseHeader(raw);
+          } catch(e) { roiStatus('Chyba: ' + e.message); return; }
+        }
+        _roiHeatFile = targetFile;
+
+        // Pokud je aktualni trasa v pameti a jeste neni v oblasti, nabidnout ulozeni
+        if (typeof trackPoints !== 'undefined' && trackPoints.length > 0) {
+          const firstTs = trackPoints[0]?.ts || trackPoints[0]?.timestamp || '';
+          const existingStarts = new Set((_roiOpenData.blocks || []).map(b => b.sourceStart).filter(Boolean));
+          const existingFiles  = new Set((_roiOpenData.blocks || []).map(b => b.sourceFile).filter(Boolean));
+          const alreadyIn = (firstTs && existingStarts.has(firstTs));
+          if (!alreadyIn) {
+            // Dialog — pridat a ulozit aktualni trasu?
+            // Mini dialog ANO/NE pres cfConfirm — NE = generate bez ulozeni
+            const _tgt = targetFile;
+            // Pouzit nativni cfConfirm pro ANO, pro NE zachytit tlacitko
+            const _dlgOverlay = document.getElementById('cf-dialog-overlay');
+            const _dlgMsg     = document.getElementById('cf-dialog-msg');
+            const _dlgYes     = document.getElementById('cf-dialog-yes');
+            const _dlgNo      = document.getElementById('cf-dialog-no');
+            if (_dlgOverlay && _dlgMsg && _dlgYes && _dlgNo) {
+              _dlgMsg.innerHTML = 'Přidat aktuální trasu do oblasti a uložit?';
+              const inputEl = document.getElementById('cf-dialog-input');
+              if (inputEl) inputEl.style.display = 'none';
+              _dlgYes.textContent = T[LANG].btn_yes || 'ANO';
+              _dlgNo.textContent  = T[LANG].btn_no  || 'NE';
+              const _origYes = _dlgYes.onclick, _origNo = _dlgNo.onclick;
+              _dlgYes.onclick = () => {
+                _dlgOverlay.classList.remove('visible');
+                _dlgYes.onclick = _origYes; _dlgNo.onclick = _origNo;
+                roiAddCurrentTrackToFile(_tgt);
+                roiGenerateAndShow(true);
+              };
+              _dlgNo.onclick = () => {
+                _dlgOverlay.classList.remove('visible');
+                _dlgYes.onclick = _origYes; _dlgNo.onclick = _origNo;
+                roiGenerateAndShow(true);
+              };
+              _dlgOverlay.classList.add('visible');
+            } else {
+              roiGenerateAndShow(true);
+            }
+            return;
           }
-          if (_heatLayers[f]) _heatLayers[f].visible = false;
-        });
-        heatRenderList(_heatFiles);
-      } else {
-        // VÝBĚR — obnovit z _heatVisibleManual (stejně jako trasy z saved_selection_manual)
-        try { _heatVisibleManual = JSON.parse(lsGet('heat_visible_manual', '[]')); } catch(e) { _heatVisibleManual = []; }
-        _heatFiles.forEach(f => {
-          const shouldShow = _heatVisibleManual.includes(f);
-          // Synchronizovat visible stav
-          if (_heatLayers[f]) _heatLayers[f].visible = shouldShow;
-          if (!shouldShow && _heatLayers[f]?.canvas) {
-            if (leafletMap) { leafletMap.removeLayer(_heatLayers[f].canvas); _heatLayers[f].canvas = null; }
-            if (_heatLayers[f]?.clickRect && leafletMap) { leafletMap.removeLayer(_heatLayers[f].clickRect); _heatLayers[f].clickRect = null; }
-          } else if (shouldShow) {
-            if (_heatLayers[f]?.grid && !_heatLayers[f]?.canvas) {
-              if (leafletMap) heatDrawLayer(f);
-            } else if (!_heatLayers[f]?.grid) {
-              heatListLoadNoNav(f);
+        }
+        roiGenerateAndShow(true);
+      }
+    }
+
+    // ---- Přidat aktuální trasu z paměti do ROI souboru ----
+    function roiAddCurrentTrackToFile(filename) {
+      if (!_roiOpenData || !trackPoints || trackPoints.length === 0) return;
+      const b = _roiOpenData.bounds;
+      const firstTs = trackPoints[0]?.ts || trackPoints[0]?.timestamp || '';
+      const pts = [];
+      for (const p of trackPoints) {
+        if (!p.lat || !p.lon || p.cps <= 0) continue;
+        if (b) {
+          const latMin = Math.min(b.lat0, b.lat1), latMax = Math.max(b.lat0, b.lat1);
+          const lonMin = Math.min(b.lon0, b.lon1), lonMax = Math.max(b.lon0, b.lon1);
+          if (p.lat < latMin || p.lat > latMax || p.lon < lonMin || p.lon > lonMax) continue;
+        }
+        pts.push({ lat: p.lat, lon: p.lon, cps: p.cps, ts: p.ts || p.timestamp || '' });
+      }
+      if (!pts.length) { roiStatus('Aktuální trasa nemá body v oblasti'); return; }
+      const blk = {
+        name: 'Aktuální trasa ' + localTimestamp().substring(0, 16),
+        visible: true,
+        sourceStart: firstTs,
+        sourceFile: '',
+        points: pts.length,
+        data: pts
+      };
+      if (!_roiOpenData.blocks) _roiOpenData.blocks = [];
+      _roiOpenData.blocks.push(blk);
+      roiSave(filename, _roiOpenData, _roiOpenData.blocks);
+      const item = _roiList.find(r => r.filename === filename);
+      if (item) item.blockCount = _roiOpenData.blocks.length;
+      roiStatus('Trasa uložena do oblasti (' + pts.length + ' bodů)');
+    }
+
+    // ---- Generovat IDW heatmapu z ROI dat a zobrazit na mape ----
+    function roiGenerateAndShow(fromMapBtn) {
+      if (!_roiOpenData) return;
+      if (!leafletMap) initMap();
+
+      const pts = [];
+      const b   = _roiOpenData.bounds;
+
+      for (const blk of (_roiOpenData.blocks || [])) {
+        if (!blk.visible) continue;
+        for (const p of blk.data) pts.push(p);
+      }
+
+      for (const p of trackPoints) {
+        if (!p.lat || !p.lon || p.cps <= 0) continue;
+        if (b) {
+          const latMin = Math.min(b.lat0, b.lat1), latMax = Math.max(b.lat0, b.lat1);
+          const lonMin = Math.min(b.lon0, b.lon1), lonMax = Math.max(b.lon0, b.lon1);
+          if (p.lat < latMin || p.lat > latMax || p.lon < lonMin || p.lon > lonMax) continue;
+        }
+        pts.push(p);
+      }
+
+      if (pts.length < 2) { roiStatus(T[LANG].roi_no_points); return; }
+      if (!b) { roiStatus(T[LANG].roi_no_bounds); return; }
+
+      const progressTimer = setTimeout(() => roiStatus(T[LANG].roi_generating), 1000);
+
+      setTimeout(() => {
+        try {
+          const gridRes = (_roiOpenData.gridRes !== undefined && _roiOpenData.gridRes !== null) ? _roiOpenData.gridRes : 1;
+          const radius  = (_roiOpenData.radius  !== undefined && _roiOpenData.radius  !== null) ? _roiOpenData.radius  : 3;
+          const latM = 1 / 111320;
+          const lonM = 1 / (111320 * Math.cos(b.lat0 * Math.PI / 180));
+          const lat0 = Math.min(b.lat0, b.lat1), lat1 = Math.max(b.lat0, b.lat1);
+          const lon0 = Math.min(b.lon0, b.lon1), lon1 = Math.max(b.lon0, b.lon1);
+          const rows = Math.max(1, Math.round((lat1 - lat0) / (gridRes * latM)));
+          const cols = Math.max(1, Math.round((lon1 - lon0) / (gridRes * lonM)));
+
+          const data  = new Float32Array(rows * cols).fill(-1);
+          const wSum  = new Float32Array(rows * cols).fill(0);
+          const cpsSm = new Float32Array(rows * cols).fill(0);
+
+          for (const p of pts) {
+            const pr = (p.lat - lat0) / (gridRes * latM);
+            const pc = (p.lon - lon0) / (gridRes * lonM);
+            const r0 = Math.max(0, Math.floor(pr - radius / gridRes));
+            const r1 = Math.min(rows - 1, Math.ceil(pr + radius / gridRes));
+            const c0 = Math.max(0, Math.floor(pc - radius / gridRes));
+            const c1 = Math.min(cols - 1, Math.ceil(pc + radius / gridRes));
+            for (let r = r0; r <= r1; r++) {
+              for (let c = c0; c <= c1; c++) {
+                const dr = (r - pr) * gridRes, dc = (c - pc) * gridRes;
+                const d  = Math.sqrt(dr*dr + dc*dc);
+                if (d > radius) continue;
+                const w = d < 1e-6 ? 1e6 : 1 / (d * d);
+                wSum[r * cols + c]  += w;
+                cpsSm[r * cols + c] += w * p.cps;
+              }
             }
           }
-        });
-        heatRenderList(_heatFiles);
-      }
+
+          for (let i = 0; i < data.length; i++) {
+            if (wSum[i] > 0) data[i] = cpsSm[i] / wSum[i];
+          }
+
+          const scale = 2;
+          const offCanvas = document.createElement('canvas');
+          offCanvas.width  = cols * scale;
+          offCanvas.height = rows * scale;
+          const ctx = offCanvas.getContext('2d');
+          ctx.globalAlpha = parseFloat(document.getElementById('heat-opacity')?.value || 100) / 100;
+
+          const specMin = (_roiOpenData.specMin !== null && _roiOpenData.specMin !== undefined) ? _roiOpenData.specMin : _specMin;
+          const specMax = (_roiOpenData.specMax !== null && _roiOpenData.specMax !== undefined) ? _roiOpenData.specMax : _specMax;
+
+          for (let r = 0; r < rows; r++) {
+            for (let c = 0; c < cols; c++) {
+              const cps = data[r * cols + c];
+              if (cps < 0) continue;
+              ctx.fillStyle = getTrackColorRange(cps, specMin, specMax);
+              ctx.fillRect(c * scale, (rows - 1 - r) * scale, scale, scale);
+            }
+          }
+
+          const dataUrl = offCanvas.toDataURL();
+          const lbounds = L.latLngBounds([[lat0, lon0], [lat1, lon1]]);
+          if (_roiHeatCanvas) { leafletMap.removeLayer(_roiHeatCanvas); _roiHeatCanvas = null; }
+          if (_roiBoundsRect) { leafletMap.removeLayer(_roiBoundsRect); _roiBoundsRect = null; }
+          _roiHeatCanvas  = L.imageOverlay(dataUrl, lbounds, { opacity: 1, interactive: false, zIndex: 200 }).addTo(leafletMap);
+          _roiHeatCanvas.bringToBack();
+          _roiBoundsRect  = L.rectangle(lbounds, {
+            color: '#ffb300', weight: 1.5, fill: false, interactive: false, zIndex: 201
+          }).addTo(leafletMap);
+          _roiHeatVisible = true;
+          _roiHeatFile    = _roiOpenFile;
+          // Prekreslit trasy nad heatmapu
+          if (typeof redrawSavedTracks === 'function' && savedSelection.length > 0) redrawSavedTracks();
+          if (typeof redrawTrack === 'function' && trackPoints.length > 0) redrawTrack();
+
+          const btn = document.getElementById('btn-roi-map');
+          if (btn) { btn.style.display = ''; btn.classList.add('active'); }
+
+          clearTimeout(progressTimer);
+          const validCells = data.filter(v => v >= 0).length;
+          roiStatus(T[LANG].roi_done(cols, rows, pts.length, validCells));
+
+          if (!fromMapBtn) {
+            switchTab('map');
+            setTimeout(() => {
+              leafletMap.invalidateSize();
+              // Přesunout pohled na střed oblasti (bez změny zoomu)
+              const cLat = (lat0 + lat1) / 2, cLon = (lon0 + lon1) / 2;
+              leafletMap.panTo([cLat, cLon]);
+            }, 300);
+          }
+        } catch(e) {
+          clearTimeout(progressTimer);
+          roiStatus('Chyba: ' + e.message);
+        }
+      }, 50);
     }
 
-    function heatSelToggle(filename, checked) {
-      if (checked) { if (!_heatSelection.includes(filename)) _heatSelection.push(filename); }
-      else { _heatSelection = _heatSelection.filter(f => f !== filename); }
-      lsSet('heat_selection', JSON.stringify(_heatSelection));
-    }
+    // ---- Spustit vyber bounds v mape ----
+    // Obdelnik je CSS overlay - pevne uprostred obrazovky
+    // Mapa se pohybuje pod nim, stred mapy = stred oblasti
+    // ============================================================
+    // ROI - VYBER OBLASTI V MAPE
+    // Cely pristup zalozeny na lat/lon — zadne px offsety, funguje na vsech displejich
+    // Overlay je child #map divu => top:50%,left:50% = presny stred mapy
+    // _roiCornerLL: 4 rohy jako {lat,lon} — TL,TR,BR,BL
+    // ============================================================
 
-    function heatExportSelected() {
-      const selected = _heatFiles.filter(f => _heatSelection.includes(f));
-      if (!selected.length) { cfInfo(T[LANG].heat_select_first); return; }
-      if (IS_ANDROID && typeof AndroidSerial !== 'undefined' && AndroidSerial.shareCSV) {
-        AndroidSerial.shareCSV(JSON.stringify(selected));
-        // Odškrtnout po odeslání
-        _heatSelection = [];
-        heatRenderList(_heatFiles);
-      }
-    }
+    let _roiCssHandles = [];
+    let _roiCornerLL   = [];  // [{lat,lon},...] 4 rohy v GPS souradnicich
 
-    function heatImport() {
-      if (IS_ANDROID && typeof AndroidSerial !== 'undefined' && AndroidSerial.importCSV) {
-        AndroidSerial.importCSV();
+    // Vychozi rozmer nove oblasti v metrech
+    const ROI_DEFAULT_W_M = 200;
+    const ROI_DEFAULT_H_M = 150;
+
+    // ---- Inicializace oblasti: existujici bounds nebo vychozi ze stredu mapy ----
+    function roiInitCornerLL() {
+      const b = _roiOpenData && _roiOpenData.bounds ? _roiOpenData.bounds : null;
+      if (b) {
+        // Z ulozenych bounds
+        const lat0 = Math.min(b.lat0, b.lat1), lat1 = Math.max(b.lat0, b.lat1);
+        const lon0 = Math.min(b.lon0, b.lon1), lon1 = Math.max(b.lon0, b.lon1);
+        _roiCornerLL = [
+          { lat: lat1, lon: lon0 }, // TL
+          { lat: lat1, lon: lon1 }, // TR
+          { lat: lat0, lon: lon1 }, // BR
+          { lat: lat0, lon: lon0 }  // BL
+        ];
       } else {
-        document.getElementById('import-file-input').click();
+        // Vychozi: stred mapy + vychozi rozmer v metrech
+        const c = leafletMap.getCenter();
+        const latM = 1 / 111320;
+        const lonM = 1 / (111320 * Math.cos(c.lat * Math.PI / 180));
+        const dLat = ROI_DEFAULT_H_M / 2 * latM;
+        const dLon = ROI_DEFAULT_W_M / 2 * lonM;
+        _roiCornerLL = [
+          { lat: c.lat + dLat, lon: c.lng - dLon }, // TL
+          { lat: c.lat + dLat, lon: c.lng + dLon }, // TR
+          { lat: c.lat - dLat, lon: c.lng + dLon }, // BR
+          { lat: c.lat - dLat, lon: c.lng - dLon }  // BL
+        ];
       }
     }
 
-    function heatDeleteSelected() {
-      const selected = _heatFiles.filter(f => _heatSelection.includes(f));
-      if (!selected.length) return;
-      cfConfirm(T[LANG].heat_delete_sel(selected.length), () => {
-        selected.forEach(f => {
-          if (IS_ANDROID && typeof AndroidSerial !== 'undefined') AndroidSerial.deleteCSV(JSON.stringify([f]));
-          if (_heatLayers[f]?.canvas) leafletMap.removeLayer(_heatLayers[f].canvas);
-          if (_heatLayers[f]?.clickRect) leafletMap.removeLayer(_heatLayers[f].clickRect);
-          delete _heatLayers[f];
-        });
-        _heatFiles = _heatFiles.filter(f => !selected.includes(f));
-        _heatSelection = _heatSelection.filter(f => !selected.includes(f));
-        lsSet('heat_selection', JSON.stringify(_heatSelection));
-        heatRenderList(_heatFiles);
+    // ---- Prevezt _roiCornerLL na px souradnice v #map divu ----
+    function roiCornerLLtoPx() {
+      if (!leafletMap || !_roiCornerLL.length) return [];
+      return _roiCornerLL.map(ll => {
+        const pt = leafletMap.latLngToContainerPoint([ll.lat, ll.lon]);
+        return { x: pt.x, y: pt.y };
       });
     }
 
-    function heatListEdit(filename) {
-      const rawName = filename.replace(/^CF_heat_/,'').replace(/\.csv$/,'');
-      const current = _heatNames[filename] || rawName;
-      const currentNote = _heatNotes[filename] || '';
-      // Načíst současné min/max ze souboru
-      let currentMin = _specMin, currentMax = _specMax;
-      const layer = _heatLayers[filename];
-      if (layer && layer.grid) {
-        if (layer.grid.specMin !== null && layer.grid.specMin !== undefined) currentMin = layer.grid.specMin;
-        if (layer.grid.specMax !== null && layer.grid.specMax !== undefined) currentMax = layer.grid.specMax;
-      }
-      // Jeden dialog se všemi poli
-      const overlay = document.getElementById('cf-dialog-overlay');
-      const msgEl   = document.getElementById('cf-dialog-msg');
-      const btnOk   = document.getElementById('cf-dialog-yes');
-      const btnCnl  = document.getElementById('cf-dialog-no');
-      if (!overlay) return;
-      const iStyle = 'width:100%;background:#0a1a0a;border:1px solid #2a5a2a;color:#00ff41;font-size:0.65rem;padding:4px;border-radius:3px;box-sizing:border-box;margin-bottom:6px;';
-      const lStyle = 'font-size:0.6rem;color:#4a8a4a;margin-bottom:2px;display:block;';
-      msgEl.innerHTML =
-        '<div style="font-size:0.65rem;color:#00ff41;margin-bottom:10px;letter-spacing:1px;">' + T[LANG].heat_rename + '</div>' +
-        '<label style="' + lStyle + '">' + T[LANG].heat_name_prompt + '</label>' +
-        '<input id="he-name" type="text" value="' + current.replace(/"/g,'&quot;') + '" style="' + iStyle + '">' +
-        '<label style="' + lStyle + '">' + T[LANG].heat_note_prompt + '</label>' +
-        '<input id="he-note" type="text" value="' + currentNote.replace(/"/g,'&quot;') + '" style="' + iStyle + '">' +
-        '<label style="' + lStyle + '">Min CPS/µSv/h</label>' +
-        '<input id="he-min" type="number" value="' + currentMin + '" style="' + iStyle + '">' +
-        '<label style="' + lStyle + '">Max CPS/µSv/h</label>' +
-        '<input id="he-max" type="number" value="' + currentMax + '" style="' + iStyle + '">';
-      const prevOk  = btnOk.textContent;
-      const prevCnl = btnCnl.textContent;
-      btnOk.textContent  = 'OK';
-      btnCnl.textContent = T[LANG].btn_cancel || 'Zrušit';
-      const cleanup = () => {
-        overlay.classList.remove('visible');
-        btnOk.textContent  = prevOk;
-        btnCnl.textContent = prevCnl;
-        btnOk.onclick = null; btnCnl.onclick = null;
-      };
-      btnOk.onclick = () => {
-        const newName = document.getElementById('he-name')?.value.trim() || rawName;
-        const newNote = document.getElementById('he-note')?.value.trim() || '';
-        const newMin  = parseFloat(document.getElementById('he-min')?.value) || currentMin;
-        const newMax  = parseFloat(document.getElementById('he-max')?.value) || currentMax;
-        cleanup();
-        // Uložit jméno a poznámku
-        _heatNames[filename] = newName;
-        _heatNotes[filename] = newNote;
-        lsSet('heat_names', JSON.stringify(_heatNames));
-        lsSet('heat_notes', JSON.stringify(_heatNotes));
-        // Aktualizovat min/max v CSV souboru
-        if (IS_ANDROID && typeof AndroidSerial !== 'undefined') {
-          const csv = AndroidSerial.readCSV(filename);
-          if (csv) {
-            let lines = csv.split('\n');
-            // Nahradit nebo přidat spec_min/max v hlavičce
-            let foundMin = false, foundMax = false;
-            lines = lines.map(l => {
-              if (l.startsWith('# spec_min=')) { foundMin = true; return '# spec_min=' + newMin; }
-              if (l.startsWith('# spec_max=')) { foundMax = true; return '# spec_max=' + newMax; }
-              return l;
-            });
-            // Pokud nebyly nalezeny, přidat za první řádek
-            if (!foundMin || !foundMax) {
-              const insertAt = lines.findIndex(l => l.startsWith('#')) + 1 || 1;
-              if (!foundMin) lines.splice(insertAt, 0, '# spec_min=' + newMin);
-              if (!foundMax) lines.splice(insertAt + (foundMin ? 0 : 1), 0, '# spec_max=' + newMax);
-            }
-            AndroidSerial.saveCSV(lines.join('\n'), filename);
-          }
-        }
-        // Aktualizovat layer a překreslit
-        if (_heatLayers[filename] && _heatLayers[filename].grid) {
-          _heatLayers[filename].grid.specMin = newMin;
-          _heatLayers[filename].grid.specMax = newMax;
-          heatDrawLayer(filename);
-        }
-        heatRenderList(_heatFiles);
-      };
-      btnCnl.onclick = () => { cleanup(); };
-      overlay.classList.add('visible');
-      setTimeout(() => document.getElementById('he-name')?.focus(), 100);
+    // ---- Aktualizovat overlay a handlery z _roiCornerLL ----
+    function roiApplyCornerLLToOverlay() {
+      const ov = document.getElementById('roi-select-overlay');
+      if (!ov || !leafletMap || !_roiCornerLL.length) return;
+      const pxPts = roiCornerLLtoPx();
+      const xs = pxPts.map(p => p.x), ys = pxPts.map(p => p.y);
+      const left = Math.min(...xs), top  = Math.min(...ys);
+      const w    = Math.max(...xs) - left;
+      const h    = Math.max(...ys) - top;
+      ov.style.transform = 'none';
+      ov.style.left   = left + 'px';
+      ov.style.top    = top  + 'px';
+      ov.style.width  = w    + 'px';
+      ov.style.height = h    + 'px';
     }
 
-    function heatListDelete(filename) {
-      cfConfirm(T[LANG].heat_delete_one((_heatNames[filename]) || filename), () => {
-        if (IS_ANDROID && typeof AndroidSerial !== 'undefined') {
-          AndroidSerial.deleteCSV(JSON.stringify([filename]));
-        }
-        // Odstranit vrstvu z mapy
-        if (_heatLayers[filename]?.canvas) leafletMap.removeLayer(_heatLayers[filename].canvas);
-        if (_heatLayers[filename]?.clickRect) leafletMap.removeLayer(_heatLayers[filename].clickRect);
-        delete _heatLayers[filename];
-        _heatFiles = _heatFiles.filter(f => f !== filename);
-        heatRenderList(_heatFiles);
-      });
+    // ---- Spocitat a zobrazit rozmery oblasti v metrech ----
+    function roiUpdateSizeInfo(el) {
+      if (!el) el = document.getElementById('roi-size-info');
+      if (!el || !_roiCornerLL.length) return;
+      // Sirka: TL -> TR, Vyska: TL -> BL
+      const widthM  = Math.round(_gpsDist(_roiCornerLL[0].lat, _roiCornerLL[0].lon, _roiCornerLL[1].lat, _roiCornerLL[1].lon));
+      const heightM = Math.round(_gpsDist(_roiCornerLL[0].lat, _roiCornerLL[0].lon, _roiCornerLL[3].lat, _roiCornerLL[3].lon));
+      el.textContent = widthM + ' x ' + heightM + ' m';
     }
 
-    function heatPanelFromBody() {
+    // ---- Zahajit vyber oblasti v mape ----
+    function roiStartMapSelect(filename) {
+      _roiSelectFile = filename;
+      if (_roiBoundsRect) { leafletMap && leafletMap.removeLayer(_roiBoundsRect); _roiBoundsRect = null; }
       switchTab('map');
-      setTimeout(() => toggleHeatPanel(), 300);
+      if (!leafletMap) initMap();
+      setTimeout(() => {
+        leafletMap.invalidateSize();
+        // Vycentrovat na existujici oblast bez animace
+        const b = _roiOpenData && _roiOpenData.bounds ? _roiOpenData.bounds : null;
+        if (b) {
+          leafletMap.setView(
+            [(b.lat0 + b.lat1) / 2, (b.lon0 + b.lon1) / 2],
+            leafletMap.getZoom(), { animate: false }
+          );
+        }
+        roiShowOverlay();
+      }, 350);
     }
 
-    // Při ukládání heatmapy přidat do seznamu
-    function heatSaveAndRegister(fname) {
-      if (!_heatFiles.includes(fname)) {
-        _heatFiles.unshift(fname);
+    // ---- Zobrazit CSS overlay obdelnik v #map divu ----
+    function roiShowOverlay() {
+      // Overlay musi byt v #map divu — pak top:50%,left:50% = stred mapy
+      const mapDiv = document.getElementById('map');
+      if (!mapDiv) return;
+      let overlay = document.getElementById('roi-select-overlay');
+      if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'roi-select-overlay';
+        mapDiv.appendChild(overlay);
       }
-      _heatActiveFile = fname;
-      // Nová heatmapa se NEZAŠKRTNE v pravém výběru (pro mazání/sdílení)
-      // Jen se zobrazí na mapě (levý checkbox)
-      lsSet('heat_selection', JSON.stringify(_heatSelection));
-      heatRenderList(_heatFiles);
+      // V normalnim modu: centrovaci transform, overlay sleduje pohyb mapy vizualne
+      overlay.style.cssText = [
+        'position:absolute',
+        'top:50%', 'left:50%',
+        'transform:translate(-50%,-50%)',
+        'border:2px solid #ffb300',
+        'background:rgba(255,179,0,0.08)',
+        'pointer-events:none',
+        'z-index:1050',
+        'box-sizing:border-box',
+        'display:block'
+      ].join(';');
+
+      // Nastavit rozmer z _roiCornerLL (nebo vychozi)
+      roiInitCornerLL();
+      const pxPts = roiCornerLLtoPx();
+      if (pxPts.length === 4) {
+        const xs = pxPts.map(p => p.x), ys = pxPts.map(p => p.y);
+        const w = Math.max(...xs) - Math.min(...xs);
+        const h = Math.max(...ys) - Math.min(...ys);
+        overlay.style.width  = Math.max(40, w) + 'px';
+        overlay.style.height = Math.max(30, h) + 'px';
+      } else {
+        overlay.style.width  = '200px';
+        overlay.style.height = '150px';
+      }
+
+      roiShowSelectPanel();
+      roiMapHint(T[LANG].roi_hint_move);
     }
 
-    // ============================================================
-    // HEATMAP — IDW interpolace na 1m gridu
-    // ============================================================
-    let _heatGrid    = null;   // { lat0, lon0, rows, cols, res, data: Float32Array } - aktivní pro generování
-    let _heatCanvas  = null;   // L.imageOverlay aktivní pro generování
-    let _heatDataUrl = null;   // PNG dataURL offCanvas pro export
-    let _heatVisible = true;
-    // _heatPanelOpen přesunuto výše
+    // ---- Zobrazit panel EDITOVAT / ULOZIT / ZRUSIT ----
+    function roiShowSelectPanel() {
+      // Panel se pripne k #map divu
+      const mapDiv = document.getElementById('map');
+      if (!mapDiv) return;
+      let panel = document.getElementById('roi-select-panel');
+      if (!panel) {
+        panel = document.createElement('div');
+        panel.id = 'roi-select-panel';
+        mapDiv.appendChild(panel);
+      }
+      panel.style.cssText = [
+        'position:absolute', 'bottom:0', 'left:0', 'right:0',
+        'z-index:1100',
+        'background:rgba(10,14,10,0.96)',
+        'border-top:1px solid #ffb300',
+        'display:flex', 'align-items:center', 'gap:6px',
+        'padding:6px 8px',
+        'font-family:Share Tech Mono,monospace'
+      ].join(';');
+      panel.innerHTML = '';
 
-    function heatLoadSettings() {
-      const el = (id) => document.getElementById(id);
-      if (el('heat-radius'))  el('heat-radius').value  = lsGet('heat_radius',  '100');
-      if (el('heat-maxdist')) el('heat-maxdist').value = lsGet('heat_maxdist', '3');
-      if (el('heat-grid'))    el('heat-grid').value    = lsGet('heat_grid',    '1');
-      if (el('heat-opacity')) el('heat-opacity').value = lsGet('heat_opacity', '100');
+      const btnEdit = document.createElement('button');
+      btnEdit.id = 'roi-edit-btn';
+      btnEdit.textContent = _roiMapEditMode ? T[LANG].roi_save_bounds : T[LANG].roi_edit;
+      btnEdit.style.cssText = 'flex:1;font-family:Share Tech Mono,monospace;font-size:0.65rem;padding:6px;border-radius:4px;cursor:pointer;border:1px solid ' +
+        (_roiMapEditMode ? '#00ff41' : '#ffb300') + ';background:' +
+        (_roiMapEditMode ? '#003d0f' : 'rgba(255,179,0,0.1)') + ';color:' +
+        (_roiMapEditMode ? '#00ff41' : '#ffb300') + ';';
+      btnEdit.onclick = () => { if (_roiMapEditMode) roiExitEditMode(true); else roiEnterEditMode(); };
+
+      const sizeInfo = document.createElement('div');
+      sizeInfo.id = 'roi-size-info';
+      sizeInfo.style.cssText = 'font-size:0.6rem;color:#ffb300;text-align:center;flex:1;';
+      roiUpdateSizeInfo(sizeInfo);
+
+      const btnCancel = document.createElement('button');
+      btnCancel.textContent = T[LANG].roi_cancel;
+      btnCancel.style.cssText = 'flex:0 0 auto;font-family:Share Tech Mono,monospace;font-size:0.6rem;padding:6px 10px;border-radius:4px;cursor:pointer;border:1px solid #4a6a4a;background:transparent;color:#4a6a4a;';
+      btnCancel.onclick = () => roiCancelMapSelect();
+
+      panel.appendChild(btnEdit);
+      panel.appendChild(sizeInfo);
+      panel.appendChild(btnCancel);
     }
 
-    function heatSaveSettings() {
-      const el = (id) => document.getElementById(id);
-      if (el('heat-radius'))  lsSet('heat_radius',  el('heat-radius').value);
-      if (el('heat-maxdist')) lsSet('heat_maxdist', el('heat-maxdist').value);
-      if (el('heat-grid'))    lsSet('heat_grid',    el('heat-grid').value);
-      if (el('heat-opacity')) lsSet('heat_opacity', el('heat-opacity').value);
+    // ---- Vstoupit do editacniho modu ----
+    function roiEnterEditMode() {
+      _roiMapEditMode = true;
+      leafletMap.dragging.disable();
+      leafletMap.touchZoom.disable();
+      leafletMap.doubleClickZoom.disable();
+      leafletMap.scrollWheelZoom.disable();
+      if (leafletMap.tap) leafletMap.tap.disable();
+
+      // _roiCornerLL uz inicializovano v roiShowOverlay — pouzijeme primo
+      // Prepnout overlay na absolutni px pozici z lat/lon
+      const overlay = document.getElementById('roi-select-overlay');
+      if (overlay) {
+        overlay.style.borderColor = '#ff3333';
+        overlay.style.background  = 'rgba(255,51,51,0.08)';
+        overlay.style.pointerEvents = 'none';
+      }
+      roiApplyCornerLLToOverlay();
+      roiAddCssHandles();
+      roiShowSelectPanel();
+      roiMapHint(T[LANG].roi_hint_edit);
     }
 
-    function toggleHeatPanel() {
-      _heatPanelOpen = !_heatPanelOpen;
-      const panel = document.getElementById('heat-panel');
-      const btn   = document.getElementById('btn-heat');
-      if (panel) panel.classList.toggle('open', _heatPanelOpen);
-      if (btn)   btn.classList.toggle('active', _heatPanelOpen);
-      if (_heatPanelOpen) heatLoadSettings();
+    // ---- Odejit z editacniho modu ----
+    function roiExitEditMode(save) {
+      _roiMapEditMode = false;
+      leafletMap.dragging.enable();
+      leafletMap.touchZoom.enable();
+      leafletMap.doubleClickZoom.enable();
+      leafletMap.scrollWheelZoom.enable();
+      if (leafletMap.tap) leafletMap.tap.enable();
+      roiRemoveCssHandles();
+
+      if (save) {
+        roiCommitBounds();
+        // Skryt overlay a panel
+        const overlay = document.getElementById('roi-select-overlay');
+        if (overlay) overlay.style.display = 'none';
+        const panel = document.getElementById('roi-select-panel');
+        if (panel) panel.style.display = 'none';
+        roiMapHint('');
+      } else {
+        // Bez ulozeni — vratit overlay na centrovaci rezim
+        const overlay = document.getElementById('roi-select-overlay');
+        if (overlay) {
+          overlay.style.transform   = 'translate(-50%,-50%)';
+          overlay.style.left        = '50%';
+          overlay.style.top         = '50%';
+          overlay.style.borderColor = '#ffb300';
+          overlay.style.background  = 'rgba(255,179,0,0.08)';
+          // Rozmer zachovat z _roiCornerLL
+          const pxPts = roiCornerLLtoPx();
+          if (pxPts.length === 4) {
+            const xs = pxPts.map(p => p.x), ys = pxPts.map(p => p.y);
+            overlay.style.width  = Math.max(40, Math.max(...xs) - Math.min(...xs)) + 'px';
+            overlay.style.height = Math.max(30, Math.max(...ys) - Math.min(...ys)) + 'px';
+          }
+        }
+        roiShowSelectPanel();
+        roiMapHint(T[LANG].roi_hint_move);
+      }
     }
 
-    function heatStatus(msg) {
-      const el = document.getElementById('heat-status');
+    // ---- Ulozit bounds z _roiCornerLL ----
+    function roiCommitBounds() {
+      if (!_roiSelectFile || !_roiOpenData) return;
+      // Ulozit jako SW/NE bounds z _roiCornerLL
+      const lats = _roiCornerLL.map(ll => ll.lat);
+      const lons = _roiCornerLL.map(ll => ll.lon);
+      _roiOpenData.bounds = {
+        lat0: Math.min(...lats),
+        lon0: Math.min(...lons),
+        lat1: Math.max(...lats),
+        lon1: Math.max(...lons)
+      };
+      roiSave(_roiSelectFile, _roiOpenData, _roiOpenData.blocks || []);
+      const item = _roiList.find(r => r.filename === _roiSelectFile);
+      if (item) item.bounds = _roiOpenData.bounds;
+      roiStatus(T[LANG].roi_saved);
+      roiMapHint(T[LANG].roi_saved_hint);
+      const btn = document.getElementById('btn-roi-map');
+      if (btn) btn.style.display = '';
+    }
+
+    // ---- Zrusit vyber ----
+    function roiCancelMapSelect() {
+      if (_roiMapEditMode) {
+        _roiMapEditMode = false;
+        if (leafletMap) {
+          leafletMap.dragging.enable();
+          leafletMap.touchZoom.enable();
+          leafletMap.doubleClickZoom.enable();
+          leafletMap.scrollWheelZoom.enable();
+          if (leafletMap.tap) leafletMap.tap.enable();
+        }
+      }
+      roiRemoveCssHandles();
+      const overlay = document.getElementById('roi-select-overlay');
+      if (overlay) overlay.style.display = 'none';
+      const panel = document.getElementById('roi-select-panel');
+      if (panel) panel.style.display = 'none';
+      roiMapHint('');
+      _roiSelectFile = null;
+      _roiCornerLL   = [];
+    }
+
+    // ---- CSS rohove handlery — pohyb prevedt na lat/lon ----
+    // Indexy: 0=TL, 1=TR, 2=BR, 3=BL
+    // TL(0): sdili lat s TR(1), sdili lon s BL(3) — BR(2) pevne
+    // TR(1): sdili lat s TL(0), sdili lon s BR(2) — BL(3) pevne
+    // BR(2): sdili lat s BL(3), sdili lon s TR(1) — TL(0) pevne
+    // BL(3): sdili lat s BR(2), sdili lon s TL(0) — TR(1) pevne
+    const _roiSharedLat = [[1], [0], [3], [2]]; // ktery druhy roh sdili lat
+    const _roiSharedLon = [[3], [2], [1], [0]]; // ktery druhy roh sdili lon
+
+    function roiAddCssHandles() {
+      roiRemoveCssHandles();
+      const mapDiv = document.getElementById('map');
+      if (!mapDiv || !_roiCornerLL.length) return;
+      const cursors = ['nwse-resize', 'nesw-resize', 'nwse-resize', 'nesw-resize'];
+
+      _roiCornerLL.forEach((ll, idx) => {
+        const h = document.createElement('div');
+        const pxPts = roiCornerLLtoPx();
+        const pos = pxPts[idx] || { x: 0, y: 0 };
+        h.style.cssText = [
+          'position:absolute',
+          'width:28px', 'height:28px',
+          'background:#ff3333',
+          'border:2px solid #fff',
+          'border-radius:50%',
+          'z-index:1060',
+          'cursor:' + cursors[idx],
+          'touch-action:none',
+          'left:' + (pos.x - 14) + 'px',
+          'top:'  + (pos.y - 14) + 'px',
+          'box-shadow:0 0 6px rgba(0,0,0,0.7)'
+        ].join(';');
+
+        let startClientX, startClientY, startLL;
+        const onStart = (ex, ey) => {
+          startClientX = ex; startClientY = ey;
+          startLL = _roiCornerLL.map(c => ({ lat: c.lat, lon: c.lon }));
+        };
+        const onMove = (ex, ey) => {
+          // Delta klientskych souradnic -> delta lat/lon pres containerPointToLatLng
+          const pxPts0 = roiCornerLLtoPx();
+          const origPx = pxPts0[idx];
+          const dx = ex - startClientX, dy = ey - startClientY;
+          const newPx = { x: origPx.x + (ex - startClientX), y: origPx.y + (ey - startClientY) };
+          // Ale lepsi: pouzit startLL a delta primo
+          const startPx = leafletMap.latLngToContainerPoint([startLL[idx].lat, startLL[idx].lon]);
+          const newLatLng = leafletMap.containerPointToLatLng([startPx.x + dx, startPx.y + dy]);
+          // Aktualizovat tazeny roh
+          _roiCornerLL[idx].lat = newLatLng.lat;
+          _roiCornerLL[idx].lon = newLatLng.lng;
+          // Aktualizovat prihlehle rohy — sdilena souradnice
+          const shLat = _roiSharedLat[idx][0];
+          const shLon = _roiSharedLon[idx][0];
+          // Prihlehly roh se stejnou lat
+          const startPxShLat = leafletMap.latLngToContainerPoint([startLL[shLat].lat, startLL[shLat].lon]);
+          const newShLat = leafletMap.containerPointToLatLng([startPxShLat.x, startPxShLat.y + dy]);
+          _roiCornerLL[shLat].lat = newShLat.lat;
+          // Prihlehly roh se stejnym lon
+          const startPxShLon = leafletMap.latLngToContainerPoint([startLL[shLon].lat, startLL[shLon].lon]);
+          const newShLon = leafletMap.containerPointToLatLng([startPxShLon.x + dx, startPxShLon.y]);
+          _roiCornerLL[shLon].lon = newShLon.lng;
+          // Prekreslit overlay a handlery
+          roiApplyCornerLLToOverlay();
+          roiUpdateCssHandlePositions();
+          roiUpdateSizeInfo();
+        };
+
+        h.addEventListener('mousedown', (e) => {
+          e.stopPropagation(); e.preventDefault();
+          onStart(e.clientX, e.clientY);
+          const onMM = (e2) => onMove(e2.clientX, e2.clientY);
+          const onMU = () => { document.removeEventListener('mousemove', onMM); document.removeEventListener('mouseup', onMU); };
+          document.addEventListener('mousemove', onMM);
+          document.addEventListener('mouseup', onMU);
+        });
+        h.addEventListener('touchstart', (e) => {
+          e.stopPropagation(); e.preventDefault();
+          const t = e.touches[0];
+          onStart(t.clientX, t.clientY);
+          const onTM = (e2) => { const t2 = e2.touches[0]; onMove(t2.clientX, t2.clientY); };
+          const onTE = () => { document.removeEventListener('touchmove', onTM); document.removeEventListener('touchend', onTE); };
+          document.addEventListener('touchmove', onTM, { passive: false });
+          document.addEventListener('touchend', onTE);
+        }, { passive: false });
+
+        mapDiv.appendChild(h);
+        _roiCssHandles.push(h);
+      });
+    }
+
+    function roiUpdateCssHandlePositions() {
+      if (!_roiCssHandles.length || !_roiCornerLL.length) return;
+      const pxPts = roiCornerLLtoPx();
+      _roiCssHandles.forEach((h, i) => {
+        if (pxPts[i]) {
+          h.style.left = (pxPts[i].x - 14) + 'px';
+          h.style.top  = (pxPts[i].y - 14) + 'px';
+        }
+      });
+    }
+
+    function roiRemoveCssHandles() {
+      _roiCssHandles.forEach(h => { try { h.parentNode && h.parentNode.removeChild(h); } catch(e) {} });
+      _roiCssHandles = [];
+    }
+
+    // ---- Prekreslit pozice vsech handlu podle _roiCornerLL ----
+    function roiUpdateHandlePositions() {
+      roiUpdateCssHandlePositions();
+    }
+
+    function roiRemoveCssHandles() {
+      _roiCssHandles.forEach(h => { try { h.parentNode && h.parentNode.removeChild(h); } catch(e) {} });
+      _roiCssHandles = [];
+    }
+
+    // ---- Hint text v mape ----
+    function roiMapHint(msg) {
+      const el = document.getElementById('roi-map-hint');
+      if (!el) return;
+      el.textContent = msg;
+      el.classList.toggle('visible', !!msg);
+    }
+
+    // ---- Ulozit bounds pri prepnuti z mapy zpet na zalozku HEAT ----
+    function roiOnLeaveMap() {
+      if (_roiSelectFile) {
+        // Nejdriv ukoncit editacni mod (odemkne mapu), pak ulozit
+        if (_roiMapEditMode) roiExitEditMode(true);
+        else roiCommitBounds();
+        // Skryt overlay a panel
+        const overlay = document.getElementById('roi-select-overlay');
+        if (overlay) overlay.style.display = 'none';
+        const panel = document.getElementById('roi-select-panel');
+        if (panel) panel.style.display = 'none';
+        roiMapHint('');
+      }
+    }
+
+    // ---- Generovat heatmapu (volano z tlacitka v zalozce HEAT) ----
+    function roiGenerate(filename) {
+      if (filename && filename !== _roiOpenFile) { _roiOpenFile = filename; try { const raw = IS_ANDROID && typeof AndroidSerial !== 'undefined' ? AndroidSerial.readROI(filename) : ''; _roiOpenData = roiParseHeader(raw); } catch(e) {} }
+      if (!_roiOpenFile || !_roiOpenData) { roiStatus(T[LANG].roi_no_open); return; }
+      roiGenerateAndShow(false);
+    }
+    let _roiList        = [];    // pole { filename, name, created, blockCount, bounds }
+    let _roiOpenFile    = null;  // aktuálně otevřený soubor (filename)
+    let _roiOpenData    = null;  // parsovaná data otevřeného ROI { meta, blocks[] }
+
+    function roiStatus(msg) {
+      const el = document.getElementById('roi-status');
       if (el) el.textContent = msg;
     }
 
-    // Sbírá body ze všech viditelných tras
-    function heatCollectPoints() {
-      const pts = [];
-      // Aktuální trasa v paměti
-      for (const p of trackPoints) {
-        if (p.lat && p.lon && p.cps > 0) pts.push({ lat: p.lat, lon: p.lon, cps: p.cps });
+    // ---- Načtení seznamu ROI souborů ze zařízení ----
+    function roiLoadList() {
+      if (!IS_ANDROID || typeof AndroidSerial === 'undefined') {
+        roiRenderList([]);
+        return;
       }
-      // Uložené trasy — číst přímo z CSV jako redrawSavedTracks
-      if (IS_ANDROID && typeof AndroidSerial !== 'undefined' && AndroidSerial.readCSV) {
-        savedSelection.forEach(filename => {
-          try {
-            const csv = AndroidSerial.readCSV(filename);
-            if (!csv) return;
-            const lines = csv.replace(/\r/g,'').split('\n');
-            let headerSeen = false, latI=-1, lonI=-1, cpsI=-1;
-            for (const line of lines) {
-              if (!line || line.startsWith('#')) continue;
-              if (!headerSeen) {
-                const h = line.toLowerCase().split(',');
-                latI = h.indexOf('lat'); lonI = h.indexOf('lon'); cpsI = h.indexOf('cps');
-                headerSeen = true; continue;
-              }
-              if (latI < 0) continue;
-              const cols = line.split(',');
-              const lat = +cols[latI], lon = +cols[lonI], cps = +cols[cpsI];
-              if (lat && lon && cps > 0) pts.push({ lat, lon, cps });
-            }
-          } catch(e) { console.warn('heatCollect:', e); }
+      try {
+        const raw = AndroidSerial.listROI();
+        let arr = [];
+        try { arr = JSON.parse(raw) || []; } catch(e) { arr = []; }
+        _roiList = arr.map(f => {
+          const parsed = roiParseHeader(AndroidSerial.readROI(f.name));
+          return {
+            filename: f.name,
+            name: parsed.name || f.name.replace(/^CF_ROI_/, '').replace(/\.roi$/, ''),
+            created: parsed.created || '',
+            blockCount: parsed.blocks ? parsed.blocks.length : 0,
+            bounds: parsed.bounds || null,
+            size: f.size || 0
+          };
         });
+        _roiList.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
+      } catch(e) {
+        console.warn('roiLoadList:', e);
+        _roiList = [];
       }
-      return pts;
+      roiRenderList(_roiList);
     }
 
-    // Metrická vzdálenost ve stupních → metry (přibližně)
-    function heatDist(lat1, lon1, lat2, lon2) {
-      const R = 111320;
-      const dx = (lon2 - lon1) * R * Math.cos(lat1 * Math.PI / 180);
-      const dy = (lat2 - lat1) * R;
-      return Math.sqrt(dx * dx + dy * dy);
-    }
+    // ---- Parsování hlavičky + bloků ROI souboru ----
+    function roiParseHeader(text) {
+      if (!text) return {};
+      const lines = text.replace(/\r/g, '').split('\n');
+      const meta = { name: '', created: '', bounds: null, gridRes: 1, radius: 50, maxDist: 3, specMin: null, specMax: null };
+      const blocks = [];
+      let currentBlock = null;
+      let inData = false;
 
-    // Hlavní výpočet heatmapy
-    function heatGenerate(merge) {
-      if (!leafletMap) return;
-      const radius  = parseFloat(document.getElementById('heat-radius')?.value  || 50);
-      const maxDist = parseFloat(document.getElementById('heat-maxdist')?.value || 10);
-      const gridRes = parseFloat(document.getElementById('heat-grid')?.value    || 1);
-
-      heatSaveSettings();
-      heatStatus(T[LANG].heat_collecting);
-      const pts = heatCollectPoints();
-      if (pts.length < 2) { heatStatus(T[LANG].heat_not_enough); return; }
-
-      // Oblast — střed mapy nebo střed všech bodů
-      const center = leafletMap.getCenter();
-      const cLat = center.lat, cLon = center.lng;
-
-      // Filtrovat body do oblasti radius
-      const local = pts.filter(p => heatDist(cLat, cLon, p.lat, p.lon) <= radius);
-      if (local.length < 2) { heatStatus(`V oblasti ${radius}m není dost bodů (${local.length})`); return; }
-
-      heatStatus(`Počítám IDW grid (${local.length} bodů)...`);
-
-      // Bounding box oblasti
-      const latM = 1 / 111320;
-      const lonM = 1 / (111320 * Math.cos(cLat * Math.PI / 180));
-      const lat0 = cLat - radius * latM;
-      const lon0 = cLon - radius * lonM;
-      const lat1 = cLat + radius * latM;
-      const lon1 = cLon + radius * lonM;
-
-      const rows = Math.ceil((lat1 - lat0) / (gridRes * latM));
-      const cols = Math.ceil((lon1 - lon0) / (gridRes * lonM));
-
-      // IDW výpočet — váhovaný průměr inversní vzdáleností
-      const data = new Float32Array(rows * cols).fill(-1);
-
-      // Obrácený přístup: pro každý bod aktualizuj okolní buňky
-      // O(body × maxDist²) místo O(buňky × body) — mnohem rychlejší
-      const wSum  = new Float64Array(rows * cols);
-      const cpsSm = new Float64Array(rows * cols);
-
-      const maxDistCells = Math.ceil(maxDist / gridRes) + 1;
-
-      for (const p of local) {
-        // Grid souřadnice bodu
-        const pr = (p.lat - lat0) / (gridRes * latM);
-        const pc = (p.lon - lon0) / (gridRes * lonM);
-        const r0 = Math.max(0, Math.floor(pr - maxDistCells));
-        const r1 = Math.min(rows - 1, Math.ceil(pr + maxDistCells));
-        const c0 = Math.max(0, Math.floor(pc - maxDistCells));
-        const c1 = Math.min(cols - 1, Math.ceil(pc + maxDistCells));
-
-        for (let r = r0; r <= r1; r++) {
-          const gLat = lat0 + r * gridRes * latM;
-          for (let c = c0; c <= c1; c++) {
-            const gLon = lon0 + c * gridRes * lonM;
-            const d = heatDist(gLat, gLon, p.lat, p.lon);
-            if (d > maxDist) continue;
-            const w = d < 0.1 ? 1e6 : 1 / (d * d);
-            wSum[r * cols + c]  += w;
-            cpsSm[r * cols + c] += w * p.cps;
+      for (const line of lines) {
+        if (line.startsWith('# CF_ROI v1')) continue;
+        if (line.startsWith('# name=')) { meta.name = line.substring('# name='.length).trim(); continue; }
+        if (line.startsWith('# created=')) { meta.created = line.substring('# created='.length).trim(); continue; }
+        if (line.startsWith('# bounds=')) {
+          const parts = line.substring('# bounds='.length).trim().split(',');
+          if (parts.length === 4) meta.bounds = { lat0: +parts[0], lon0: +parts[1], lat1: +parts[2], lon1: +parts[3] };
+          continue;
+        }
+        if (line.startsWith('# gridRes=')) {
+          const m = line.match(/gridRes=([^,]+)(?:,radius=([^,]+))?(?:,maxDist=([^,]+))?(?:,specMin=([^,]+))?(?:,specMax=([^,]+))?/);
+          if (m) {
+            meta.gridRes = parseFloat(m[1]) || 1;
+            if (m[2]) meta.radius  = parseFloat(m[2]);
+            if (m[3]) meta.maxDist = parseFloat(m[3]);
+            if (m[4]) meta.specMin = parseFloat(m[4]);
+            if (m[5]) meta.specMax = parseFloat(m[5]);
           }
+          continue;
         }
-      }
-
-      for (let i = 0; i < data.length; i++) {
-        if (wSum[i] > 0) data[i] = cpsSm[i] / wSum[i];
-      }
-
-      // Merge s existujícím gridem (maximum)
-      if (merge && _heatGrid &&
-          Math.abs(_heatGrid.lat0 - lat0) < 0.0001 &&
-          Math.abs(_heatGrid.lon0 - lon0) < 0.0001 &&
-          _heatGrid.rows === rows && _heatGrid.cols === cols) {
-        for (let i = 0; i < data.length; i++) {
-          if (_heatGrid.data[i] >= 0 && data[i] >= 0) data[i] = Math.max(data[i], _heatGrid.data[i]);
-          else if (_heatGrid.data[i] >= 0) data[i] = _heatGrid.data[i];
+        if (line.startsWith('# [block]')) {
+          inData = false;
+          currentBlock = { name: '', visible: true, sourceStart: '', points: 0, data: [] };
+          const nm = line.match(/name=([^\s]+)/);    if (nm) currentBlock.name = nm[1].replace(/_/g, ' ');
+          const vm = line.match(/visible=([01])/);   if (vm) currentBlock.visible = vm[1] === '1';
+          const sm = line.match(/source_start=(\d+)/); if (sm) currentBlock.sourceStart = sm[1];
+          const sfm = line.match(/source_file=(\S+)/); if (sfm) currentBlock.sourceFile = sfm[1];
+          const pm = line.match(/points=(\d+)/);     if (pm) currentBlock.points = parseInt(pm[1]);
+          blocks.push(currentBlock);
+          continue;
         }
-      }
-
-      _heatGrid = { lat0, lon0, lat1, lon1, rows, cols, res: gridRes, data };
-      _heatVisible = true;
-      const validCells = data.filter(v => v >= 0).length;
-      heatDrawCanvas();
-      heatSave();
-      heatStatus('\u2713 Hotovo \u2014 grid ' + cols + '\xd7' + rows + ', ' + local.length + ' bod\u016f + ' + validCells + ' bu\u0148ek');
-    }
-
-    function heatMerge() {
-      if (!_heatGrid) { heatStatus(T[LANG].heat_no_grid); return; }
-      heatGenerate(true);
-    }
-
-    // Načíst CSV do grid objektu (bez kreslení)
-    function heatLoadToGrid(csv, filename) {
-      const lines = csv.split('\n');
-      let lat0 = 0, lon0 = 0, rows = 0, cols = 0, res = 1;
-      let specMin = null, specMax = null;
-      // Načíst metadata z hlavičky
-      for (const l of lines) {
-        if (l.startsWith('# lat0=')) {
-          const m = l.match(/lat0=([^,]+),lon0=([^,]+),rows=([^,]+),cols=([^,]+),res=([^ ,\r\n]+)/);
-          if (m) { lat0=+m[1]; lon0=+m[2]; rows=+m[3]; cols=+m[4]; res=+m[5]; }
-        }
-        if (l.startsWith('# spec_min=')) specMin = parseFloat(l.substring('# spec_min='.length).trim());
-        if (l.startsWith('# spec_max=')) specMax = parseFloat(l.substring('# spec_max='.length).trim());
-        if (filename) {
-          if (l.startsWith('# title=')) {
-            const title = l.substring('# title='.length).trim();
-            if (title && !_heatNames[filename]) { _heatNames[filename] = title; lsSet('heat_names', JSON.stringify(_heatNames)); }
-          }
-          if (l.startsWith('# note=')) {
-            const note = l.substring('# note='.length).trim();
-            if (note && !_heatNotes[filename]) { _heatNotes[filename] = note; lsSet('heat_notes', JSON.stringify(_heatNotes)); }
-          }
-        }
-      }
-      if (!rows || !cols) return null;
-      const data = new Float32Array(rows * cols).fill(-1);
-      const latM = 1 / 111320;
-      const lonM = 1 / (111320 * Math.cos(lat0 * Math.PI / 180));
-      for (const l of lines) {
-        if (l.startsWith('#') || l.startsWith('lat')) continue;
-        const p = l.split(',');
-        if (p.length < 3) continue;
-        const pLat = +p[0], pLon = +p[1], cps = +p[2];
-        const r = Math.round((pLat - lat0) / (res * latM));
-        const c = Math.round((pLon - lon0) / (res * lonM));
-        if (r >= 0 && r < rows && c >= 0 && c < cols) data[r * cols + c] = cps;
-      }
-      const lat1 = lat0 + rows * res * latM;
-      const lon1 = lon0 + cols * res * lonM;
-      return { lat0, lon0, lat1, lon1, rows, cols, res, data, specMin, specMax };
-    }
-
-    // Vykreslit jednu vrstvu heatmapy
-    function heatDrawLayer(filename) {
-      if (!leafletMap) return;
-      const entry = _heatLayers[filename];
-      if (!entry || !entry.grid) return;
-      if (entry.canvas) { leafletMap.removeLayer(entry.canvas); entry.canvas = null; }
-      if (entry.clickRect) { leafletMap.removeLayer(entry.clickRect); entry.clickRect = null; }
-      const g = entry.grid;
-      const opacity = parseFloat(document.getElementById('heat-opacity')?.value || 100) / 100;
-      const bounds = L.latLngBounds([[g.lat0, g.lon0],[g.lat1, g.lon1]]);
-      const latM = 1 / 111320;
-      const lonM = 1 / (111320 * Math.cos(g.lat0 * Math.PI / 180));
-      const scale = 2;
-      const offCanvas = document.createElement('canvas');
-      offCanvas.width  = g.cols * scale;
-      offCanvas.height = g.rows * scale;
-      const ctx = offCanvas.getContext('2d');
-      ctx.globalAlpha = opacity;
-      if (!Array.isArray(_specColors) || _specColors.length !== 8) _specColors = [...DEFAULT_SPEC_COLORS];
-      // Použít per-heatmapa min/max pokud existuje, jinak globální
-      const drawMin = (g.specMin !== null && g.specMin !== undefined) ? g.specMin : _specMin;
-      const drawMax = (g.specMax !== null && g.specMax !== undefined) ? g.specMax : _specMax;
-      for (let r = 0; r < g.rows; r++) {
-        for (let c = 0; c < g.cols; c++) {
-          const cps = g.data[r * g.cols + c];
-          if (cps < 0) continue;
-          ctx.fillStyle = getTrackColorRange(cps, drawMin, drawMax);
-          ctx.fillRect(c * scale, (g.rows - 1 - r) * scale, scale, scale);
-        }
-      }
-      entry.canvas = L.imageOverlay(offCanvas.toDataURL(), bounds, {
-        opacity: 1, interactive: true, zIndex: 300
-      }).addTo(leafletMap);
-      // Odstranit starý clickRect pokud existuje
-      if (entry.clickRect) { leafletMap.removeLayer(entry.clickRect); entry.clickRect = null; }
-      const _hFn = filename;
-      const _offCv = offCanvas; // reference pro pixel detekci
-      entry.canvas.on('click', (e) => {
-        // Pixel-přesná detekce — klik mimo data ignorovat
-        const latFrac = (e.latlng.lat - g.lat0) / (g.lat1 - g.lat0);
-        const lonFrac = (e.latlng.lng - g.lon0) / (g.lon1 - g.lon0);
-        if (latFrac < 0 || latFrac > 1 || lonFrac < 0 || lonFrac > 1) return;
-        const px = Math.floor(lonFrac * g.cols) * scale;
-        const py = Math.floor((1 - latFrac) * g.rows) * scale;
-        const imgCtx = _offCv.getContext('2d');
-        const pixel = imgCtx.getImageData(px, py, 1, 1).data;
-        if (pixel[3] < 10) return; // průhledný pixel — klik mimo data
-        L.DomEvent.stopPropagation(e);
-        if (e.originalEvent) e.originalEvent.stopPropagation();
-        const _name = _heatNames[_hFn] || _hFn.replace(/^CF_heat_/,'').replace(/\.csv$/,'');
-        const _note = _heatNotes[_hFn] || '';
-        const div = document.createElement('div');
-        div.style.cssText = 'min-width:180px;font-family:Arial,sans-serif;';
-        div.innerHTML = '<div style="font-size:1rem;font-weight:bold;color:#111;margin-bottom:6px;">' + _name + '</div>'
-          + (_note ? '<div style="font-size:0.8rem;color:#555;margin-bottom:4px;">' + _note + '</div>' : '')
-          + '<div style="margin-top:8px;">'
-          + '<button id="_hpe" style="font-family:Share Tech Mono,monospace;font-size:0.6rem;padding:4px 10px;cursor:pointer;background:#003d0f;border:1px solid #00ff41;color:#00ff41;border-radius:3px;">✏ Editovat</button>'
-          + '</div>';
-        const popup = L.popup({ autoPan: false, maxWidth: Math.min(250, window.innerWidth-32), closeButton: true })
-          .setLatLng(e.latlng).setContent(div).openOn(leafletMap);
-        setTimeout(() => {
-          const be = document.getElementById('_hpe');
-          if (be) be.onclick = () => { leafletMap.closePopup(); heatListEdit(_hFn); };
-        }, 50);
-      });
-    }
-
-    // Vykreslení přes Leaflet canvas overlay
-    function heatDrawCanvas() {
-      if (!_heatGrid || !leafletMap) return;
-      if (_heatCanvas) { leafletMap.removeLayer(_heatCanvas); _heatCanvas = null; }
-      if (!_heatVisible) return;
-
-      const opacity = parseFloat(document.getElementById('heat-opacity')?.value || 70) / 100;
-      const g = _heatGrid;
-
-      // Použít SVG overlay — nejjednodušší a nejspolehlivější
-      const bounds = L.latLngBounds([[g.lat0, g.lon0],[g.lat1, g.lon1]]);
-      const latM = 1 / 111320;
-      const lonM = 1 / (111320 * Math.cos(g.lat0 * Math.PI / 180));
-
-      // Vytvořit offscreen canvas
-      const offCanvas = document.createElement('canvas');
-      // Rozlišení — 2px na buňku pro lepší viditelnost
-      const scale = 2;
-      offCanvas.width  = g.cols * scale;
-      offCanvas.height = g.rows * scale;
-      const ctx = offCanvas.getContext('2d');
-      ctx.globalAlpha = opacity;
-
-      for (let r = 0; r < g.rows; r++) {
-        for (let c = 0; c < g.cols; c++) {
-          const cps = g.data[r * g.cols + c];
-          if (cps < 0) continue;
-          ctx.fillStyle = getTrackColor(cps);
-          // Leaflet má lat0 jako jih, canvas má 0 nahoře — obrátit řádky
-          ctx.fillRect(c * scale, (g.rows - 1 - r) * scale, scale, scale);
-        }
-      }
-
-      const _dataUrl = offCanvas.toDataURL();
-      _heatDataUrl = _dataUrl;
-      _heatCanvas = L.imageOverlay(_dataUrl, bounds, {
-        opacity: 1,
-        interactive: false,
-        zIndex: 300
-      }).addTo(leafletMap);
-    }
-
-    function heatToggleVisible() {
-      if (!_heatGrid) { heatStatus('Žádná heatmapa'); return; }
-      _heatVisible = !_heatVisible;
-      heatDrawCanvas();
-      heatStatus(_heatVisible ? 'Zobrazeno' : 'Skryto');
-    }
-
-    function heatClear() {
-      if (_heatCanvas) { leafletMap.removeLayer(_heatCanvas); _heatCanvas = null; }
-      _heatDataUrl = null;
-      _heatGrid = null;
-      heatStatus('Smazáno');
-    }
-
-    // Uložit grid jako CSV
-    function heatSave() {
-      if (!_heatGrid || !IS_ANDROID || typeof AndroidSerial === 'undefined') return;
-      const g = _heatGrid;
-      const latM = 1 / 111320;
-      const lonM = 1 / (111320 * Math.cos(g.lat0 * Math.PI / 180));
-      const _ts = localTimestamp().replace(/[: ]/g, '-');
-
-      // Předvyplnit jméno a poznámku z aktivní heatmapy pokud existuje
-      const _activeRawName = _heatActiveFile
-        ? (_heatActiveFile.replace(/^CF_heat_/,'').replace(/\.csv$/,''))
-        : _ts;
-      const _defaultName = _heatActiveFile ? (_heatNames[_heatActiveFile] || _activeRawName) : _ts;
-      const _defaultNote = _heatActiveFile ? (_heatNotes[_heatActiveFile] || '') : '';
-
-      cfPrompt(T[LANG].heat_name_prompt, _defaultName, (heatName) => {
-        if (heatName === null) return;
-        cfPrompt(T[LANG].heat_note_prompt, _defaultNote, (heatNote) => {
-          const safeName = (heatName || _ts).trim().replace(/[^a-zA-Z0-9_\-záčďéěíňóřšťůúýžÁČĎÉĚÍŇÓŘŠŤŮÚÝŽ]/g, '_');
-          const fname = 'CF_heat_' + safeName + '.csv';
-          // Sestavit hlavičku
-          let csv = '# CurieFinder Heatmap v1\n';
-          csv += '# title=' + (heatName || safeName) + '\n';
-          if (heatNote) csv += '# note=' + heatNote + '\n';
-          csv += '# created=' + localTimestamp() + '\n';
-          csv += '# lat0=' + g.lat0 + ',lon0=' + g.lon0 + ',rows=' + g.rows + ',cols=' + g.cols + ',res=' + g.res + '\n';
-          // Vypočítat skutečný min/max z dat
-          let dataMin = Infinity, dataMax = -Infinity;
-          for (let i = 0; i < g.data.length; i++) {
-            if (g.data[i] >= 0) { if (g.data[i] < dataMin) dataMin = g.data[i]; if (g.data[i] > dataMax) dataMax = g.data[i]; }
-          }
-          if (dataMin === Infinity) { dataMin = _specMin; dataMax = _specMax; }
-          csv += '# spec_min=' + dataMin.toFixed(2) + '\n';
-          csv += '# spec_max=' + dataMax.toFixed(2) + '\n';
-          csv += 'lat,lon,cps\n';
-          for (let r = 0; r < g.rows; r++) {
-            for (let c = 0; c < g.cols; c++) {
-              const cps = g.data[r * g.cols + c];
-              if (cps < 0) continue;
-              const lat = g.lat0 + r * g.res * latM;
-              const lon = g.lon0 + c * g.res * lonM;
-              csv += lat.toFixed(7) + ',' + lon.toFixed(7) + ',' + cps.toFixed(1) + '\n';
+        if (line.startsWith('lat,lon') && currentBlock) { inData = true; continue; }
+        if (inData && currentBlock && line && !line.startsWith('#')) {
+          const p = line.split(',');
+          if (p.length >= 3) {
+            const lat = parseFloat(p[0]), lon = parseFloat(p[1]), cps = parseFloat(p[2]);
+            const ts  = p[3] ? p[3].trim() : '';
+            if (!isNaN(lat) && !isNaN(lon) && !isNaN(cps)) {
+              currentBlock.data.push({ lat, lon, cps, ts });
             }
           }
-          AndroidSerial.saveCSV(csv, fname);
-          // Uložit jméno a poznámku
-          _heatNames[fname] = heatName || safeName;
-          if (heatNote) _heatNotes[fname] = heatNote;
-          lsSet('heat_names', JSON.stringify(_heatNames));
-          lsSet('heat_notes', JSON.stringify(_heatNotes));
-          heatStatus('Uloženo: ' + fname);
-          setTimeout(() => heatSaveAndRegister(fname), 800);
-        });
-      });
-    }
-
-    // Export aktuálního gridu jako CSV
-    function heatExportCSV() {
-      if (!_heatGrid) { heatStatus(T[LANG].heat_no_grid); return; }
-      const g = _heatGrid;
-      const latM = 1 / 111320;
-      const lonM = 1 / (111320 * Math.cos(g.lat0 * Math.PI / 180));
-      const _ts = localTimestamp().replace(/[: ]/g, '-');
-      let csv = '# CurieFinder Heatmap v1\n';
-      csv += '# created=' + localTimestamp() + '\n';
-      csv += '# lat0=' + g.lat0 + ',lon0=' + g.lon0 + ',rows=' + g.rows + ',cols=' + g.cols + ',res=' + g.res + '\n';
-      csv += 'lat,lon,cps\n';
-      for (let r = 0; r < g.rows; r++) {
-        for (let c = 0; c < g.cols; c++) {
-          const cps = g.data[r * g.cols + c];
-          if (cps < 0) continue;
-          const lat = g.lat0 + r * g.res * latM;
-          const lon = g.lon0 + c * g.res * lonM;
-          csv += lat.toFixed(7) + ',' + lon.toFixed(7) + ',' + cps.toFixed(1) + '\n';
         }
       }
-      const fname = 'CF_heat_export_' + _ts + '.csv';
-      if (IS_ANDROID && typeof AndroidSerial !== 'undefined' && AndroidSerial.saveCSV) {
-        AndroidSerial.saveCSV(csv, fname);
-        heatStatus('Exportováno: ' + fname);
+      return { ...meta, blocks };
+    }
+
+    // ---- Serializace ROI do textového formátu ----
+    function roiSerialize(meta, blocks) {
+      let out = '# CF_ROI v1\n';
+      out += '# name=' + (meta.name || '') + '\n';
+      out += '# created=' + (meta.created || localTimestamp()) + '\n';
+      if (meta.bounds) {
+        const b = meta.bounds;
+        out += '# bounds=' + b.lat0.toFixed(7) + ',' + b.lon0.toFixed(7) + ',' + b.lat1.toFixed(7) + ',' + b.lon1.toFixed(7) + '\n';
+      }
+      out += '# gridRes=' + (meta.gridRes||1) + ',radius=' + (meta.radius||50) + ',maxDist=' + (meta.maxDist||3);
+      if (meta.specMin !== null && meta.specMin !== undefined) out += ',specMin=' + meta.specMin.toFixed(2);
+      if (meta.specMax !== null && meta.specMax !== undefined) out += ',specMax=' + meta.specMax.toFixed(2);
+      out += '\n';
+      for (const blk of blocks) {
+        const safeName = (blk.name || 'blok').replace(/\s/g, '_');
+        out += '# [block] name=' + safeName + ' visible=' + (blk.visible ? '1' : '0') + ' source_start=' + (blk.sourceStart || '') + ' source_file=' + (blk.sourceFile || '') + ' points=' + blk.data.length + '\n';
+        out += 'lat,lon,cps,timestamp\n';
+        for (const p of blk.data) {
+          out += p.lat.toFixed(7) + ',' + p.lon.toFixed(7) + ',' + p.cps.toFixed(2) + ',' + (p.ts || '') + '\n';
+        }
+      }
+      return out;
+    }
+
+    // ---- Uložit ROI data ----
+    function roiSave(filename, meta, blocks) {
+      if (!IS_ANDROID || typeof AndroidSerial === 'undefined') return;
+      const data = roiSerialize(meta, blocks);
+      AndroidSerial.saveROI(data, filename);
+    }
+
+    // ---- Render seznamu ROI ----
+    function roiRenderList(list) {
+      const el = document.getElementById('roi-list');
+      if (!el) return;
+      if (!list || !list.length) {
+        el.innerHTML = '<div class="roi-empty">' + T[LANG].roi_no_areas + '</div>';
+        return;
+      }
+      el.innerHTML = list.map((r, i) => {
+        const isOpen = _roiOpenFile === r.filename;
+        const boundsStr = r.bounds
+          ? r.bounds.lat0.toFixed(5) + ',' + r.bounds.lon0.toFixed(5) + ' → ' + r.bounds.lat1.toFixed(5) + ',' + r.bounds.lon1.toFixed(5)
+          : T[LANG].roi_bounds_none;
+        return `<div class="roi-item${isOpen ? ' active' : ''}" id="roi-item-${i}">
+          <div class="roi-item-header" onclick="roiToggleOpen('${r.filename}',${i})">
+            <span class="roi-item-name">${r.name}</span>
+            <span class="roi-item-meta">${r.blockCount} bl. · ${r.created ? r.created.substring(0,10) : ''} · ${r.size > 1048576 ? (r.size/1048576).toFixed(1)+'MB' : r.size > 1024 ? (r.size/1024).toFixed(1)+'kB' : r.size+'B'}</span>
+          </div>
+          ${isOpen && _roiOpenData ? roiRenderDetail(_roiOpenData, r.filename) : ''}
+          ${!isOpen ? `<div class="roi-item-btns">
+            <button class="roi-btn green" onclick="roiQuickShow('${r.filename}')">👁 ${T[LANG].roi_show||'ZOBRAZIT'}</button>
+            <button class="roi-btn red"   onclick="roiDelete('${r.filename}')">${T[LANG].roi_delete}</button>
+            <button class="roi-btn blue"  onclick="roiShare('${r.filename}')">${T[LANG].roi_share}</button>
+          </div>` : ''}
+        </div>`;
+      }).join('');
+    }
+    function roiRenderDetail(data, filename) {
+      const b = data.bounds;
+      const boundsHtml = b
+        ? `<div class="roi-coords-row">
+             <span class="roi-coord-val">SZ: ${b.lat0.toFixed(5)}, ${b.lon0.toFixed(5)}</span>
+             <span class="roi-coord-val">JV: ${b.lat1.toFixed(5)}, ${b.lon1.toFixed(5)}</span>
+           </div>`
+        : '<div style="font-size:0.6rem;color:#ff6633;">' + T[LANG].roi_bounds_none + '</div>';
+
+      const blocksHtml = data.blocks && data.blocks.length
+        ? data.blocks.map((blk, bi) => `
+            <div class="roi-block-item">
+              <input type="checkbox" class="roi-block-cb" ${blk.visible ? 'checked' : ''}
+                onchange="roiBlockToggle('${filename}',${bi},this.checked)">
+              <span class="roi-block-name">${blk.name || ('Blok ' + (bi+1))}</span>
+              <span class="roi-block-pts">${blk.data.length} b.</span>
+              <button class="roi-block-del" onclick="roiBlockDelete('${filename}',${bi})">✕</button>
+            </div>`).join('')
+        : '<div style="font-size:0.6rem;color:#4a6a4a;padding:4px 0;">Žádné bloky tras</div>';
+
+      // Tlacitko VYBRAT V MAPE — zobrazit jen pokud bounds NEJSOU nastaveny
+      const mapSelectBtn = !b
+        ? `<button class="roi-btn orange" style="margin-top:2px;width:100%;" onclick="roiStartMapSelect('${filename}')">${T[LANG].roi_select_new || '🗺️ VYBRAT OBLAST'}</button>`
+        : `<button class="roi-btn" style="margin-top:2px;width:100%;color:#2a5a2a;border-color:#2a5a2a;" onclick="roiStartMapSelect('${filename}')">${T[LANG].roi_select_edit || '✏️ ZMĚNIT OBLAST'}</button>`;
+
+      return `<div class="roi-item-body open">
+        <div style="display:flex;gap:4px;margin-bottom:4px;padding-bottom:4px;border-bottom:1px solid #1a2e1a;align-items:center;">
+          <button class="roi-btn green" style="flex:1" onclick="roiQuickShow('${filename}')">👁 ${T[LANG].roi_show||'ZOBRAZIT'}</button>
+          <button class="roi-btn red"   style="flex:0 0 auto" onclick="roiDelete('${filename}')">${T[LANG].roi_delete}</button>
+          <button class="roi-btn blue"  style="flex:0 0 auto" onclick="roiShare('${filename}')">${T[LANG].roi_share}</button>
+        </div>
+        <div style="font-size:0.55rem;color:#4a6a4a;margin-bottom:4px;">
+          ${data._size > 1048576 ? (data._size/1048576).toFixed(1)+'MB' : data._size > 1024 ? (data._size/1024).toFixed(1)+'kB' : (data._size||0)+'B'} · ${data.created ? data.created.substring(0,16) : ''}
+        </div>
+        <div class="roi-field-row">
+          <label>${T[LANG].roi_name_lbl}</label>
+          <input type="text" value="${data.name || ''}" onchange="roiSetName('${filename}',this.value)" placeholder="${T[LANG].roi_name_lbl}">
+        </div>
+        <div style="display:flex;gap:4px;margin:3px 0;">
+          <div style="flex:1;display:flex;flex-direction:column;">
+            <span style="font-size:0.5rem;color:#4a6a4a;text-align:center;display:block;margin-bottom:1px;">Grid</span>
+            <input type="number" title="Grid rozlišení (m) — velikost buňky" value="${data.gridRes !== undefined ? data.gridRes : 1}" min="0.5" max="5" step="0.5"
+              style="width:100%;background:#0a1a0a;border:1px solid #2a5a2a;color:#00ff41;font-family:Share Tech Mono,monospace;font-size:0.65rem;padding:3px 4px;border-radius:3px;text-align:center;box-sizing:border-box;" onchange="roiSetParam('${filename}','gridRes',this.value)">
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;">
+            <span style="font-size:0.5rem;color:#4a6a4a;text-align:center;display:block;margin-bottom:1px;">IDW</span>
+            <input type="number" title="IDW radius (m) — vliv bodu na okolí" value="${data.radius !== undefined ? data.radius : 3}" min="1" max="500"
+              style="width:100%;background:#0a1a0a;border:1px solid #2a5a2a;color:#00ff41;font-family:Share Tech Mono,monospace;font-size:0.65rem;padding:3px 4px;border-radius:3px;text-align:center;box-sizing:border-box;" onchange="roiSetParam('${filename}','radius',this.value)">
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;">
+            <span style="font-size:0.5rem;color:#4a6a4a;text-align:center;display:block;margin-bottom:1px;">Gap</span>
+            <input type="number" title="Max mezera (m) — GPS výpadky" value="${data.maxDist !== undefined ? data.maxDist : 3}" min="1" max="50"
+              style="width:100%;background:#0a1a0a;border:1px solid #2a5a2a;color:#00ff41;font-family:Share Tech Mono,monospace;font-size:0.65rem;padding:3px 4px;border-radius:3px;text-align:center;box-sizing:border-box;" onchange="roiSetParam('${filename}','maxDist',this.value)">
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;">
+            <span style="font-size:0.5rem;color:#4a6a4a;text-align:center;display:block;margin-bottom:1px;">Min</span>
+            <input type="number" title="Min CPS — zelená barva" value="${data.specMin !== null && data.specMin !== undefined ? data.specMin : _specMin}" min="0" max="9999" step="0.1"
+              style="width:100%;background:#0a1a0a;border:1px solid #2a5a2a;color:#00ff41;font-family:Share Tech Mono,monospace;font-size:0.65rem;padding:3px 4px;border-radius:3px;text-align:center;box-sizing:border-box;" onchange="roiSetParam('${filename}','specMin',this.value)">
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;">
+            <span style="font-size:0.5rem;color:#4a6a4a;text-align:center;display:block;margin-bottom:1px;">Max</span>
+            <input type="number" title="Max CPS — červená barva" value="${data.specMax !== null && data.specMax !== undefined ? data.specMax : _specMax}" min="0" max="9999" step="0.1"
+              style="width:100%;background:#0a1a0a;border:1px solid #2a5a2a;color:#00ff41;font-family:Share Tech Mono,monospace;font-size:0.65rem;padding:3px 4px;border-radius:3px;text-align:center;box-sizing:border-box;" onchange="roiSetParam('${filename}','specMax',this.value)">
+          </div>
+        </div>
+        <div style="font-size:0.55rem;color:#4a6a4a;margin-top:2px;">${T[LANG].roi_bounds_lbl}</div>
+        ${boundsHtml}
+        <div style="display:flex;gap:4px;margin-top:3px;">
+          ${mapSelectBtn}
+          <button class="roi-btn orange" style="flex:1" onclick="roiAddTracks('${filename}')">${T[LANG].roi_add_tracks}</button>
+          <button class="roi-btn green"  style="flex:1" onclick="roiGenerate('${filename}')">${T[LANG].roi_generate}</button>
+        </div>
+        <div class="roi-blocks-header">${T[LANG].roi_blocks} (${data.blocks ? data.blocks.length : 0})</div>
+        ${blocksHtml}
+      </div>`;
+    }
+
+    // ---- Otevřít / zavřít detail oblasti ----
+    function roiToggleOpen(filename, idx) {
+      if (_roiOpenFile === filename) {
+        _roiOpenFile = null;
+        _roiOpenData = null;
       } else {
-        // Web fallback — stáhnout jako soubor
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const url  = URL.createObjectURL(blob);
-        const a    = document.createElement('a');
-        a.href = url; a.download = fname; a.click();
-        URL.revokeObjectURL(url);
-        heatStatus('Staženo: ' + fname);
+        _roiOpenFile = filename;
+        try {
+          const raw = IS_ANDROID && typeof AndroidSerial !== 'undefined' ? AndroidSerial.readROI(filename) : '';
+          _roiOpenData = roiParseHeader(raw);
+          // Doplnit velikost ze seznamu
+          const item = _roiList.find(r => r.filename === filename);
+          if (_roiOpenData && item) _roiOpenData._size = item.size || 0;
+        } catch(e) { _roiOpenData = null; }
       }
+      // Zobrazit/skryt tlacitko ROI v mape
+      const roiMapBtn = document.getElementById('btn-roi-map');
+      if (roiMapBtn) roiMapBtn.style.display = _roiOpenFile ? '' : 'none';
+      roiRenderList(_roiList);
     }
 
-    // Export heatmapy jako PNG — heatmap canvas + OSM podkladová mapa
-    function heatExportPNG() {
-      if (!_heatGrid || !_heatDataUrl) { heatStatus(T[LANG].heat_no_grid); return; }
-      if (!leafletMap) { heatStatus('Nejprve otevři záložku MAPA'); return; }
-      // Dialog pro poznámku + volba lat/lon
-      _heatExportDialog(function(note, showLatLon) {
-        _heatExportDo(note, showLatLon);
+    // ---- Nastavit název oblasti ----
+    function roiSetName(filename, val) {
+      if (!_roiOpenData) return;
+      _roiOpenData.name = val.trim();
+      roiSave(filename, _roiOpenData, _roiOpenData.blocks || []);
+      const item = _roiList.find(r => r.filename === filename);
+      if (item) item.name = _roiOpenData.name;
+      roiStatus('Uloženo');
+    }
+
+    // ---- Nastavit parametr oblasti ----
+    function roiSetParam(filename, key, val) {
+      if (!_roiOpenData) return;
+      _roiOpenData[key] = parseFloat(val);
+      roiSave(filename, _roiOpenData, _roiOpenData.blocks || []);
+      roiStatus('Uloženo');
+    }
+
+    // ---- Přepnout viditelnost bloku ----
+    function roiBlockToggle(filename, blockIdx, checked) {
+      if (!_roiOpenData || !_roiOpenData.blocks) return;
+      _roiOpenData.blocks[blockIdx].visible = checked;
+      roiSave(filename, _roiOpenData, _roiOpenData.blocks);
+      roiStatus('Blok ' + (checked ? 'zobrazen' : 'skryt'));
+    }
+
+    // ---- Export ROI oblasti jako GeoJSON pro QGIS ----
+
+
+    // ---- Smazat blok ----
+    function roiBlockDelete(filename, blockIdx) {
+      if (!_roiOpenData || !_roiOpenData.blocks) return;
+      const blkName = _roiOpenData.blocks[blockIdx].name || ('Blok ' + (blockIdx+1));
+      cfConfirm(T[LANG].roi_delete_block(blkName), () => {
+        _roiOpenData.blocks.splice(blockIdx, 1);
+        roiSave(filename, _roiOpenData, _roiOpenData.blocks);
+        const item = _roiList.find(r => r.filename === filename);
+        if (item) item.blockCount = _roiOpenData.blocks.length;
+        roiRenderList(_roiList);
+        roiStatus('Blok smazán');
       });
     }
 
-    function _heatExportDialog(onOk) {
+    // ---- Nová oblast ----
+    function roiNew() {
+      cfPrompt(T[LANG].roi_new_area, '', (name) => {
+        if (name === null) return;
+        const safeName = (name || localTimestamp()).trim().replace(/[^a-zA-Z0-9_\-záčďéěíňóřšťůúýžÁČĎÉĚÍŇÓŘŠŤŮÚÝŽ]/g, '_');
+        const filename = 'CF_ROI_' + safeName + '.roi';
+        const meta = { name: name || safeName, created: localTimestamp(), bounds: null, gridRes: 1, radius: 3, maxDist: 3, specMin: null, specMax: null };
+        roiSave(filename, meta, []);
+        _roiOpenFile = filename;
+        _roiOpenData = { ...meta, blocks: [] };
+        roiLoadList();
+        roiStatus('Oblast "' + meta.name + '" vytvořena');
+      });
+    }
+
+    // ---- Smazat oblast ----
+    function roiDelete(filename) {
+      const item = _roiList.find(r => r.filename === filename);
+      const name = item ? item.name : filename;
+      cfConfirm(T[LANG].roi_delete_confirm(name), () => {
+        if (IS_ANDROID && typeof AndroidSerial !== 'undefined') {
+          AndroidSerial.deleteROI(filename);
+        }
+        if (_roiOpenFile === filename) { _roiOpenFile = null; _roiOpenData = null; }
+        roiLoadList();
+        roiStatus('Smazáno: ' + name);
+      });
+    }
+
+    // ---- Sdílet oblast ----
+    function roiShare(filename) {
+      // Dialog s výběrem formátu
       const overlay = document.getElementById('cf-dialog-overlay');
       const msgEl   = document.getElementById('cf-dialog-msg');
       const btnYes  = document.getElementById('cf-dialog-yes');
       const btnNo   = document.getElementById('cf-dialog-no');
-      if (!overlay) { onOk('', true); return; }
+      if (!overlay) return;
 
-      // Input pro poznámku
-      let inputEl = document.getElementById('cf-dialog-input');
-      if (!inputEl) {
-        inputEl = document.createElement('input');
-        inputEl.id = 'cf-dialog-input';
-        inputEl.type = 'text';
-        inputEl.style.cssText = 'width:100%;background:#0a0e0a;border:1px solid #2a5a2a;color:#00ff41;font-family:Share Tech Mono,monospace;font-size:0.8rem;padding:8px;border-radius:4px;margin-bottom:12px;box-sizing:border-box;';
-        msgEl.parentNode.insertBefore(inputEl, btnYes.parentNode);
-      }
-      inputEl.value = '';
-      inputEl.style.display = 'block';
-      inputEl.placeholder = 'Poznámka (volitelné)';
+      const inputEl = document.getElementById('cf-dialog-input');
+      if (inputEl) inputEl.style.display = 'none';
+      const cbWrap = document.getElementById('cf-heat-latlon-wrap');
+      if (cbWrap) cbWrap.style.display = 'none';
 
-      // Checkbox pro lat/lon
-      let cbWrap = document.getElementById('cf-heat-latlon-wrap');
-      if (!cbWrap) {
-        cbWrap = document.createElement('div');
-        cbWrap.id = 'cf-heat-latlon-wrap';
-        cbWrap.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:0.75rem;color:#b0c8b0;font-family:Share Tech Mono,monospace;';
-        const cb = document.createElement('input');
-        cb.type = 'checkbox'; cb.id = 'cf-heat-latlon-cb'; cb.checked = true;
-        cb.style.accentColor = '#00ff41';
-        const lbl = document.createElement('label');
-        lbl.htmlFor = 'cf-heat-latlon-cb';
-        lbl.textContent = 'Zobrazit souřadnice středu';
-        cbWrap.appendChild(cb); cbWrap.appendChild(lbl);
-        msgEl.parentNode.insertBefore(cbWrap, btnYes.parentNode);
-      }
-      cbWrap.style.display = 'flex';
-      document.getElementById('cf-heat-latlon-cb').checked = true;
+      // Sestavit volby jako tlačítka uvnitř dialogu
+      msgEl.innerHTML = '';
+      const title = document.createElement('div');
+      title.style.cssText = 'font-size:0.75rem;color:#00ff41;margin-bottom:10px;letter-spacing:1px;';
+      title.textContent = 'FORMÁT EXPORTU';
+      msgEl.appendChild(title);
 
-      msgEl.textContent = 'Export heatmapy PNG';
-      btnYes.textContent = 'EXPORT';
-      btnNo.style.display = '';
-      btnNo.textContent = 'ZRUŠIT';
-      overlay.classList.add('visible');
-      setTimeout(() => inputEl.focus(), 100);
+      const btnStyles = 'display:block;width:100%;font-family:Share Tech Mono,monospace;font-size:0.65rem;' +
+        'padding:8px 10px;margin-bottom:6px;cursor:pointer;border-radius:4px;text-align:left;';
 
-      const close = () => {
+      // ROI — záloha/přenos
+      const bRoi = document.createElement('button');
+      bRoi.style.cssText = btnStyles + 'border:1px solid #00ff41;background:#003d0f;color:#00ff41;';
+      bRoi.innerHTML = '📦 ROI &nbsp;<span style="font-size:0.55rem;color:#4a8a4a;">kompletní oblast se všemi bloky</span>';
+      bRoi.onclick = () => {
         overlay.classList.remove('visible');
-        inputEl.style.display = 'none';
-        cbWrap.style.display = 'none';
-        btnYes.textContent = T[LANG].btn_yes;
-        btnNo.textContent  = T[LANG].btn_no;
+        btnNo.style.display = ''; btnYes.style.display = '';
+        if (IS_ANDROID && typeof AndroidSerial !== 'undefined') {
+          try { AndroidSerial.shareROI(filename); } catch(e) { roiStatus('Chyba: ' + e.message); }
+        }
       };
-      btnYes.onclick = () => {
-        const note       = inputEl.value.trim();
-        const showLatLon = document.getElementById('cf-heat-latlon-cb').checked;
-        close(); onOk(note, showLatLon);
+
+      // CSV — body jako trasa
+      const bCsv = document.createElement('button');
+      bCsv.style.cssText = btnStyles + 'border:1px solid #ffb300;background:rgba(255,179,0,0.08);color:#ffb300;';
+      bCsv.innerHTML = '📄 CSV &nbsp;<span style="font-size:0.55rem;color:#aa8833;">body jako trasa (lat,lon,cps,timestamp)</span>';
+      bCsv.onclick = () => {
+        overlay.classList.remove('visible');
+        btnNo.style.display = ''; btnYes.style.display = '';
+        roiExportAndShareCSV(filename);
       };
-      btnNo.onclick = () => { close(); };
+
+      // GeoJSON — pro QGIS
+      const bGeo = document.createElement('button');
+      bGeo.style.cssText = btnStyles + 'border:1px solid #00aaff;background:rgba(0,170,255,0.08);color:#00aaff;';
+      bGeo.innerHTML = '🗺️ GeoJSON &nbsp;<span style="font-size:0.55rem;color:#336688;">hranice + body pro QGIS</span>';
+      bGeo.onclick = () => {
+        overlay.classList.remove('visible');
+        btnNo.style.display = ''; btnYes.style.display = '';
+        roiExportAndShareGeoJSON(filename);
+      };
+
+      msgEl.appendChild(bRoi);
+      msgEl.appendChild(bCsv);
+      msgEl.appendChild(bGeo);
+
+      // Skrýt standardní ANO/NE, zobrazit jen ZRUŠIT
+      btnYes.style.display = 'none';
+      btnNo.textContent = T[LANG].btn_cancel;
+      btnNo.style.display = '';
+      btnNo.onclick = () => {
+        overlay.classList.remove('visible');
+        btnNo.style.display = ''; btnYes.style.display = '';
+        btnNo.textContent = T[LANG].btn_no;
+      };
+
+      overlay.classList.add('visible');
     }
 
-    function _heatExportDo(exportNote, showLatLon) {
-      heatStatus('Generuji PNG...');
-      const fname   = 'CF_heat_' + localTimestamp().replace(/[: ]/g, '-') + '.png';
-      const opacity = parseFloat(document.getElementById('heat-opacity')?.value || 100) / 100;
-      const mapDiv  = document.getElementById('map');
-      const density = window.devicePixelRatio || 1;
-      const W = Math.round(mapDiv.offsetWidth  * density);
-      const H = Math.round(mapDiv.offsetHeight * density);
-
-      const outCanvas = document.createElement('canvas');
-      outCanvas.width  = W;
-      outCanvas.height = H;
-      const ctx = outCanvas.getContext('2d');
-
-      function latLonToPx(lat, lon) {
-        const px = leafletMap.latLngToContainerPoint([lat, lon]);
-        return { x: px.x * density, y: px.y * density };
-      }
-
-      function saveResult() {
-        const dataUrl = outCanvas.toDataURL('image/png');
-        if (typeof AndroidSerial !== 'undefined' && AndroidSerial.saveImage) {
-          try { AndroidSerial.saveImage(dataUrl, fname); heatStatus('PNG uloženo: ' + fname); }
-          catch(e) { heatStatus('Chyba: ' + e.message); }
-        } else {
-          const a = document.createElement('a'); a.href = dataUrl; a.download = fname; a.click();
-          heatStatus('PNG uloženo: ' + fname);
-        }
-      }
-
-      // Krok 1: OSM dlaždice přes Leaflet projekci (přesné zarovnání)
-      // Použít latLngToContainerPoint pro každou dlaždici — eliminuje chybu getBoundingClientRect
-      let tileCount = 0;
-      leafletMap.eachLayer(layer => {
-        if (!layer._tiles || !layer._tileSize) return;
-        const tileSize = layer._tileSize.x; // px na dlaždici (typicky 256)
-        Object.values(layer._tiles).forEach(tile => {
-          const img = tile.el;
-          if (!img || !img.complete || img.naturalWidth === 0) return;
-          try {
-            const coords = tile.coords;
-            // Pixel pozice levého horního rohu dlaždice v mapové projekci
-            const nwPx = leafletMap.project(
-              layer._tileCoordsToBounds(coords).getNorthWest(),
-              coords.z
-            );
-            // Převod na container (CSS) souřadnice
-            const mapOriginPx = leafletMap.project(leafletMap.getBounds().getNorthWest(), coords.z);
-            // Použít getPixelOrigin pro přesný offset
-            const origin = leafletMap.getPixelOrigin();
-            const tilePt = nwPx.subtract(origin);
-            const dx = Math.round(tilePt.x * density);
-            const dy = Math.round(tilePt.y * density);
-            const dw = Math.round(tileSize * density);
-            const dh = Math.round(tileSize * density);
-            ctx.drawImage(img, dx, dy, dw, dh);
-            tileCount++;
-          } catch(e) {}
-        });
-      });
-
-      // Krok 2: Heatmap overlay
-      const heatImg = new Image();
-      heatImg.onload = function() {
-        const g  = _heatGrid;
-        const p0 = latLonToPx(g.lat1, g.lon0);
-        const p1 = latLonToPx(g.lat0, g.lon1);
-        ctx.globalAlpha = opacity;
-        ctx.drawImage(heatImg, p0.x, p0.y, p1.x - p0.x, p1.y - p0.y);
-        ctx.globalAlpha = 1.0;
-
-        // Krok 3: POI body
-        ctx.font         = `${Math.round(22 * density)}px serif`;
-        ctx.textAlign    = 'center';
-        ctx.textBaseline = 'middle';
-        poiPoints.forEach(pt => {
-          if (pt.visible === false) return;
-          const cp = latLonToPx(pt.lat, pt.lon);
-          if (cp.x < 0 || cp.x > W || cp.y < 0 || cp.y > H) return;
-          ctx.fillText(pt.icon || '📍', cp.x, cp.y);
-          if (pt.name) {
-            const fs = Math.round(11 * density);
-            ctx.font = `bold ${fs}px sans-serif`;
-            ctx.strokeStyle = '#000'; ctx.lineWidth = 2 * density; ctx.fillStyle = '#fff';
-            ctx.strokeText(pt.name, cp.x, cp.y + 16 * density);
-            ctx.fillText(pt.name,   cp.x, cp.y + 16 * density);
-            ctx.font = `${Math.round(22 * density)}px serif`;
-          }
-        });
-
-        // ── Krok 4: Barevná legenda (bez pozadí, černý text) ─────────────────
-        const center  = leafletMap.getCenter();
-        const zoom    = leafletMap.getZoom();
-        const legendW = Math.round(28 * density);
-        const legendH = Math.round(160 * density);
-        const legendX = Math.round(12 * density);
-        const legendY = Math.round(H - legendH - 60 * density);
-        const legendGrad = ctx.createLinearGradient(0, legendY + legendH, 0, legendY);
-        for (let i = 0; i < _specColors.length; i++) {
-          legendGrad.addColorStop(i / (_specColors.length - 1), _specColors[i]);
-        }
-        // Gradient bar — bez pozadí
-        ctx.fillStyle = legendGrad;
-        ctx.fillRect(legendX, legendY, legendW, legendH);
-        // Tenký černý rámeček kolem baru
-        ctx.strokeStyle = '#000';
-        ctx.lineWidth = Math.round(1 * density);
-        ctx.strokeRect(legendX, legendY, legendW, legendH);
-        // Popisky černé
-        const lFs = Math.round(10 * density);
-        ctx.font = `bold ${lFs}px sans-serif`;
-        ctx.fillStyle = '#000';
-        ctx.textAlign = 'left';
-        ctx.textBaseline = 'top';
-        ctx.fillText(_specMax + ' CPS', legendX + legendW + Math.round(4*density), legendY);
-        ctx.textBaseline = 'middle';
-        ctx.fillText(Math.round((_specMin+_specMax)/2) + '', legendX + legendW + Math.round(4*density), legendY + legendH/2);
-        ctx.textBaseline = 'bottom';
-        ctx.fillText(_specMin + ' CPS', legendX + legendW + Math.round(4*density), legendY + legendH);
-
-        // ── Krok 5: Měřítko (bez pozadí, černý text, o kousek výše) ─────────
-        const metersPerPx = 156543.03392 * Math.cos(center.lat * Math.PI / 180) / Math.pow(2, zoom);
-        const targetPx = Math.round(100 * density);
-        let scaleM = metersPerPx * targetPx / density;
-        const niceVals = [1,2,5,10,20,50,100,200,500,1000,2000,5000,10000];
-        scaleM = niceVals.reduce((a,b) => Math.abs(b-scaleM) < Math.abs(a-scaleM) ? b : a);
-        const scalePx = Math.round(scaleM / metersPerPx * density);
-        const scaleX  = Math.round(12 * density);
-        const scaleY  = Math.round(H - 36 * density);  // výše než dříve
-        const scaleH  = Math.round(3 * density);
-        // Lišta černá
-        ctx.fillStyle = '#000';
-        ctx.fillRect(scaleX, scaleY - Math.round(scaleH/2), scalePx, scaleH);
-        // Vertikální zarážky
-        ctx.fillRect(scaleX, scaleY - Math.round(5*density), Math.round(2*density), Math.round(10*density));
-        ctx.fillRect(scaleX + scalePx - Math.round(2*density), scaleY - Math.round(5*density), Math.round(2*density), Math.round(10*density));
-        // Text černý
-        const scaleLabel = scaleM >= 1000 ? (scaleM/1000) + ' km' : scaleM + ' m';
-        ctx.font = `bold ${Math.round(9*density)}px sans-serif`;
-        ctx.fillStyle = '#000';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'bottom';
-        ctx.fillText(scaleLabel, scaleX + scalePx/2, scaleY - Math.round(4*density));
-
-        // ── Krok 6: Kompas (bez kruhového pozadí, černý text N) ──────────────
-        const bearing = (leafletMap.getBearing ? leafletMap.getBearing() : 0);
-        const cxC = Math.round(W - 30 * density);
-        const cyC = Math.round(30 * density);
-        const rC  = Math.round(18 * density);
-        ctx.save();
-        ctx.translate(cxC, cyC);
-        ctx.rotate(-bearing * Math.PI / 180);
-        // Červená šipka sever
-        ctx.fillStyle = '#cc0000';
-        ctx.beginPath();
-        ctx.moveTo(0, -rC); ctx.lineTo(-Math.round(5*density), 0); ctx.lineTo(Math.round(5*density), 0);
-        ctx.closePath(); ctx.fill();
-        // Tmavá šipka jih
-        ctx.fillStyle = '#333333';
-        ctx.beginPath();
-        ctx.moveTo(0, rC); ctx.lineTo(-Math.round(5*density), 0); ctx.lineTo(Math.round(5*density), 0);
-        ctx.closePath(); ctx.fill();
-        // Obrys obou šipek
-        ctx.strokeStyle = '#000';
-        ctx.lineWidth = Math.round(0.5 * density);
-        ctx.stroke();
-        // 'N' popisek černý
-        ctx.rotate(bearing * Math.PI / 180);
-        ctx.fillStyle = '#000';
-        ctx.font = `bold ${Math.round(9*density)}px sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('N', 0, -rC - Math.round(7*density));
-        ctx.restore();
-
-        // ── Krok 7: Info text dole — na střed, černý, bez pozadí ─────────────
-        const latStr  = center.lat.toFixed(6);
-        const lonStr  = center.lng.toFixed(6);
-        let infoTxt = '';
-        if (exportNote) infoTxt += exportNote;
-        if (showLatLon) infoTxt += (infoTxt ? '  |  ' : '') + latStr + ', ' + lonStr;
-        if (infoTxt) {
-          ctx.font = `bold ${Math.round(10*density)}px sans-serif`;
-          ctx.fillStyle = '#000';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'bottom';
-          ctx.fillText(infoTxt, W / 2, H - Math.round(6*density));
-        }
-
-        heatStatus('Dlaždic: ' + tileCount + ' | ' + W + '×' + H + 'px');
-        try { saveResult(); }
-        catch(e) {
-          heatStatus('CORS chyba — zálohuji nativně');
-          if (typeof AndroidSerial !== 'undefined' && AndroidSerial.captureMap) {
-            AndroidSerial.captureMap(fname);
+    // ---- Export a sdílení jako CSV ----
+    function roiExportAndShareCSV(filename) {
+      try {
+        const raw = IS_ANDROID && typeof AndroidSerial !== 'undefined' ? AndroidSerial.readROI(filename) : '';
+        const data = roiParseHeader(raw);
+        if (!data) return;
+        const areaName = (data.name || filename.replace(/^CF_ROI_/, '').replace(/\.roi$/, '')).trim();
+        let csv = '# CurieFinder CSV v1\n';
+        csv += '# title=' + areaName + '\n';
+        csv += '# created=' + localTimestamp() + '\n';
+        csv += '# source=ROI export\n\n';
+        csv += 'timestamp,lat,lon,cps,poi,label,icon,rate\n';
+        for (const blk of (data.blocks || [])) {
+          for (const p of blk.data) {
+            csv += (p.ts || '') + ',' + p.lat.toFixed(7) + ',' + p.lon.toFixed(7) + ',' + p.cps.toFixed(2) + ',,,,\n';
           }
         }
-      };
-      heatImg.onerror = function() { saveResult(); };
-      heatImg.src = _heatDataUrl;
-    }  // konec _heatExportDo
-
-    // Načíst existující heatmap soubor
-    function heatLoad(csv, filename) {
-      const g = heatLoadToGrid(csv);
-      if (!g) return;
-      _heatGrid = g;
-      _heatVisible = true;
-      heatDrawCanvas();
-      // Pokud je filename, přidat do _heatLayers
-      if (filename) {
-        if (!_heatLayers[filename]) _heatLayers[filename] = { grid: null, canvas: null, visible: false };
-        _heatLayers[filename].grid = g;
-        _heatLayers[filename].visible = true;
-        heatDrawLayer(filename);
+        const safeName = filename.replace(/^CF_ROI_/, 'CF_').replace(/\.roi$/, '_export.csv');
+        if (IS_ANDROID && typeof AndroidSerial !== 'undefined') {
+          AndroidSerial.saveCSV(csv, safeName);
+          // saveCSV zavolá onCurieSaved — tam přidáme share
+          window._roiPendingShare = safeName;
+          roiStatus('CSV připraveno: ' + safeName);
+        }
+      } catch(e) {
+        roiStatus('Chyba CSV: ' + e.message);
       }
+    }
+
+    // ---- Export a sdílení jako GeoJSON ----
+    function roiExportAndShareGeoJSON(filename) {
+      try {
+        const raw = IS_ANDROID && typeof AndroidSerial !== 'undefined' ? AndroidSerial.readROI(filename) : '';
+        const data = roiParseHeader(raw);
+        if (!data) return;
+        const features = [];
+        if (data.bounds) {
+          const b = data.bounds;
+          const lat0 = Math.min(b.lat0, b.lat1), lat1 = Math.max(b.lat0, b.lat1);
+          const lon0 = Math.min(b.lon0, b.lon1), lon1 = Math.max(b.lon0, b.lon1);
+          features.push({
+            type: 'Feature',
+            properties: { type: 'roi_boundary', name: data.name || filename },
+            geometry: { type: 'Polygon', coordinates: [[[lon0,lat0],[lon1,lat0],[lon1,lat1],[lon0,lat1],[lon0,lat0]]] }
+          });
+        }
+        for (const blk of (data.blocks || [])) {
+          for (const p of blk.data) {
+            features.push({
+              type: 'Feature',
+              properties: { cps: p.cps, block: blk.name, timestamp: p.ts || '' },
+              geometry: { type: 'Point', coordinates: [p.lon, p.lat] }
+            });
+          }
+        }
+        const geojson = JSON.stringify({ type: 'FeatureCollection', features }, null, 2);
+        const safeName = filename.replace(/^CF_ROI_/, 'CF_').replace(/\.roi$/, '_export.geojson');
+        if (IS_ANDROID && typeof AndroidSerial !== 'undefined') {
+          AndroidSerial.saveCSV(geojson, safeName);
+          window._roiPendingShare = safeName;
+          roiStatus('GeoJSON připraveno: ' + safeName);
+        }
+      } catch(e) {
+        roiStatus('Chyba GeoJSON: ' + e.message);
+      }
+    }
+
+    // ---- Rychlé zobrazení heatmapy oblasti bez otevření detailu ----
+    function roiQuickShow(filename) {
+      try {
+        const raw = IS_ANDROID && typeof AndroidSerial !== 'undefined' ? AndroidSerial.readROI(filename) : '';
+        const data = roiParseHeader(raw);
+        if (!data) { roiStatus(T[LANG].roi_no_open); return; }
+        // Nastavit data pro generování
+        _roiOpenFile = filename;
+        _roiOpenData = data;
+        // Pozastavit GPS follow
+        _followPaused = true;
+        // Generovat — až callback doběhne, obnovit stav
+        roiGenerateAndShow(false);
+        // Obnovit: _roiOpenFile/Data necháme nastavené aby mapa věděla co zobrazuje,
+        // ale roiRenderList zavoláme s _roiOpenFile=null aby se nezobrazila editace
+        setTimeout(() => {
+          _roiOpenFile = null;
+          _roiOpenData = null;
+          _followPaused = false;
+        }, 100);
+      } catch(e) { roiStatus('Chyba: ' + e.message); }
+    }
+
+    // ---- Import ROI ----
+    function roiImport() {
+      if (IS_ANDROID && typeof AndroidSerial !== 'undefined' && AndroidSerial.importCSV) {
+        AndroidSerial.importCSV();
+      }
+    }
+
+    // ---- Přidat trasy do oblasti (ořez na bounds) ----
+    function roiAddTracks(filename) {
+      if (filename && filename !== _roiOpenFile) { _roiOpenFile = filename; try { const raw = IS_ANDROID && typeof AndroidSerial !== 'undefined' ? AndroidSerial.readROI(filename) : ''; _roiOpenData = roiParseHeader(raw); } catch(e) {} }
+      if (!_roiOpenFile || !_roiOpenData) { roiStatus(T[LANG].roi_no_open); return; }
+      if (!IS_ANDROID || typeof AndroidSerial === 'undefined') return;
+
+      // Načíst seznam viditelných/zaškrtnutých tras ze savedTracks / _selChecked
+      // Použít aktuálně zobrazené trasy (savedSelection) nebo trackPoints v paměti
+      const b = _roiOpenData.bounds;
+
+      // Sbírat body — z paměti (aktuální trasa) i ze souborů (savedSelection)
+      const sourceFiles = [];
+      if (typeof savedSelection !== 'undefined' && savedSelection.length > 0) {
+        savedSelection.forEach(f => sourceFiles.push(f));
+      }
+
+      // Dedup: firstTs (timestamp prvniho bodu) jako primarni klic
+      //   - pokracovani trasy = stejny firstTs v jinem souboru => preskocit
+      //   - sourceFile jako fallback pro trasy bez ts
+      const existingStarts    = new Set((_roiOpenData.blocks || []).map(blk => blk.sourceStart).filter(Boolean));
+      const existingFilenames = new Set((_roiOpenData.blocks || []).map(blk => blk.sourceFile).filter(Boolean));
+
+      let addedCount = 0;
+
+      // Zpracovat každý soubor
+      for (const fname of sourceFiles) {
+        try {
+          // Dedup podle jmena souboru — rychla kontrola
+          if (existingFilenames.has(fname)) continue;
+
+          const csv = AndroidSerial.readCSV(fname);
+          if (!csv) continue;
+          const lines = csv.replace(/\r/g, '').split('\n');
+          let latI = -1, lonI = -1, cpsI = -1, tsI = -1;
+          let headerSeen = false;
+          let firstTs = '';
+          const pts = [];
+
+          for (const line of lines) {
+            if (!line || line.startsWith('#')) continue;
+            if (!headerSeen) {
+              const h = line.toLowerCase().split(',');
+              latI = h.indexOf('lat'); lonI = h.indexOf('lon');
+              cpsI = h.indexOf('cps'); tsI  = h.indexOf('timestamp');
+              headerSeen = true; continue;
+            }
+            if (latI < 0) continue;
+            const cols = line.split(',');
+            const ts = tsI >= 0 ? (cols[tsI] || '').trim() : '';
+            // Zjistit firstTs co nejdrive — pred orizem na bounds
+            if (!firstTs && ts) firstTs = ts;
+            const lat = parseFloat(cols[latI]), lon = parseFloat(cols[lonI]);
+            const cps = parseFloat(cols[cpsI] || '0');
+            if (isNaN(lat) || isNaN(lon)) continue;
+            // Ořez na bounds
+            if (b) {
+              const latMin = Math.min(b.lat0, b.lat1), latMax = Math.max(b.lat0, b.lat1);
+              const lonMin = Math.min(b.lon0, b.lon1), lonMax = Math.max(b.lon0, b.lon1);
+              if (lat < latMin || lat > latMax || lon < lonMin || lon > lonMax) continue;
+            }
+            if (cps > 0) pts.push({ lat, lon, cps, ts });
+          }
+
+          // Dedup podle firstTs — PRIMARNI klic (pokracovani trasy ma stejny firstTs)
+          if (firstTs && existingStarts.has(firstTs)) continue;
+
+          if (!pts.length) continue;
+
+          const safeFname = fname.replace(/^CF_/, '').replace(/\.csv$/, '').replace(/[_-]/g, ' ');
+          const blk = {
+            name: safeFname,
+            visible: true,
+            sourceStart: firstTs,
+            sourceFile: fname,
+            points: pts.length,
+            data: pts
+          };
+          if (!_roiOpenData.blocks) _roiOpenData.blocks = [];
+          _roiOpenData.blocks.push(blk);
+          if (firstTs) existingStarts.add(firstTs);
+          existingFilenames.add(fname);
+          addedCount++;
+        } catch(e) { console.warn('roiAddTracks file:', fname, e); }
+      }
+
+      // Zpracovat aktuální trasu v paměti (trackPoints)
+      if (typeof trackPoints !== 'undefined' && trackPoints.length > 0) {
+        const firstTs = trackPoints[0]?.ts || trackPoints[0]?.timestamp || '';
+        if (!firstTs || !existingStarts.has(firstTs)) {
+          const pts = [];
+          for (const p of trackPoints) {
+            if (!p.lat || !p.lon || p.cps <= 0) continue;
+            if (b) {
+              const latMin = Math.min(b.lat0, b.lat1), latMax = Math.max(b.lat0, b.lat1);
+              const lonMin = Math.min(b.lon0, b.lon1), lonMax = Math.max(b.lon0, b.lon1);
+              if (p.lat < latMin || p.lat > latMax || p.lon < lonMin || p.lon > lonMax) continue;
+            }
+            pts.push({ lat: p.lat, lon: p.lon, cps: p.cps, ts: p.ts || p.timestamp || '' });
+          }
+          if (pts.length > 0) {
+            const blk = { name: 'Aktuální trasa', visible: true, sourceStart: firstTs, points: pts.length, data: pts };
+            _roiOpenData.blocks.push(blk);
+            if (firstTs) existingStarts.add(firstTs);
+            addedCount++;
+          }
+        }
+      }
+
+      if (addedCount === 0) {
+        roiStatus(T[LANG].roi_no_new);
+        return;
+      }
+
+      roiSave(_roiOpenFile, _roiOpenData, _roiOpenData.blocks);
+      const item = _roiList.find(r => r.filename === _roiOpenFile);
+      if (item) item.blockCount = _roiOpenData.blocks.length;
+      roiRenderList(_roiList);
+      roiStatus(T[LANG].roi_added(addedCount, _roiOpenData.blocks.reduce((s,b) => s + b.data.length, 0)));
     }
 
     // ============================================================
@@ -6408,20 +6737,111 @@
       setStatusBoxSearching();
     }
 
+    // ---- Zkratit jmeno zarizeni pro zobrazeni (bez suffixu _XXXX) ----
+    function wizShortName(devName) {
+      if (!devName) return '';
+      // Pokud zacina na "⚡ Hledat", extrahovat vlastni jmeno
+      if (devName.startsWith('⚡ Hledat ')) return devName.replace('⚡ Hledat ', '').replace(' BLE/USB','').replace(' BLE','').replace(' USB','');
+      // Jinak vzit prvni cast pred podtrzitkem (Raysid_1234 → Raysid)
+      return devName.split('_')[0];
+    }
+
     function wizDoConnect(devName) {
       if (_wizConnectTimer) { clearTimeout(_wizConnectTimer); _wizConnectTimer = null; }
       _offlineMode = false;
       const statusEl = document.getElementById('wiz-status');
-      statusEl.textContent = '⟳ Připojuji...'; statusEl.className = 'wiz-status busy';
+      const shortName = wizShortName(devName);
+      const isSearch  = devName.startsWith('⚡ Hledat');
+      statusEl.textContent = isSearch
+        ? '⏳ Hledám ' + shortName + '...'
+        : '⏳ Připojuji ' + shortName + '...';
+      statusEl.className = 'wiz-status busy';
       lsSet('bt_device_name', devName);
       _savedBtDevice = devName;
       if (IS_ANDROID && typeof AndroidSerial !== 'undefined') AndroidSerial.setBtDevice(devName);
       startReconnectLoop();
       _wizConnectTimer = setTimeout(() => {
         if (!isConnected) {
-          statusEl.textContent = '✗ Zařízení nenalezeno'; statusEl.className = 'wiz-status error';
+          statusEl.textContent = '✗ Nenalezeno: ' + shortName;
+          statusEl.className = 'wiz-status error';
         }
       }, 20000);
+    }
+
+    // ---- Skrýt/zobrazit aktuální trasu ----
+    let _currentTrackVisible = true;
+    function toggleCurrentTrackVisible() {
+      _currentTrackVisible = !_currentTrackVisible;
+      const btn = document.getElementById('btn-track-hide');
+      if (trackLayer && leafletMap) {
+        if (_currentTrackVisible) {
+          if (!leafletMap.hasLayer(trackLayer)) trackLayer.addTo(leafletMap);
+          if (btn) { btn.classList.remove('active'); btn.textContent = '👁 TRASA'; }
+        } else {
+          if (leafletMap.hasLayer(trackLayer)) leafletMap.removeLayer(trackLayer);
+          if (btn) { btn.classList.add('active'); btn.textContent = '🚫 TRASA'; }
+        }
+      } else {
+        // Mapa nebo trackLayer ještě neexistuje — jen aktualizovat tlačítko
+        if (btn) {
+          if (_currentTrackVisible) { btn.classList.remove('active'); btn.textContent = '👁 TRASA'; }
+          else { btn.classList.add('active'); btn.textContent = '🚫 TRASA'; }
+        }
+      }
+    }
+
+    // ---- Render tras v záložce BODY ----
+    function renderTrasaPanelPoi() {
+      const panel = document.getElementById('trasa-panel-poi');
+      const countEl = document.getElementById('poi-trasy-count');
+      if (!panel) return;
+      const { files, sizes } = getFilesList();
+      currentFiles = files;
+      if (countEl) countEl.textContent = (T[LANG].tracks_section || 'TRASY') + ' (' + files.length + ')';
+
+      const _noteMap = {};
+      files.forEach(f => {
+        _noteMap[f] = _noteCache[f] !== undefined ? _noteCache[f] : (_noteCache[f] = getFileNote(f));
+      });
+      const sortedFiles = sortFiles(files, _trasaSort, _noteMap);
+      currentFiles = sortedFiles;
+
+      if (files.length === 0) {
+        panel.innerHTML = '<div class="trasa-empty">' + T[LANG].no_tracks + '</div>';
+        return;
+      }
+      const items = sortedFiles.map((f, i) => {
+        const shown    = savedSelection.includes(f);
+        const selState = _selChecked[f] || false;
+        const name     = fmtDate(f);
+        const note     = _noteMap[f];
+        const noteHtml = note ? '<span class="trasa-note">' + note + '</span>' : '<span class="trasa-note"></span>';
+        return '<div class="trasa-item">' +
+          '<input type="checkbox" class="cb-show" data-file="' + f + '" id="tsp_' + i + '" ' + (shown ? 'checked' : '') + '>' +
+          '<label for="tsp_' + i + '" data-file="' + f + '">' + name + '</label>' +
+          noteHtml +
+          '<span class="trasa-size">' + fmtSize(sizes[f]) + '</span>' +
+          '<input type="checkbox" class="cb-sel" data-file="' + f + '" id="tcp_' + i + '" ' + (selState ? 'checked' : '') + '>' +
+          '</div>';
+      }).join('');
+      panel.innerHTML = '<div class="trasa-list" id="trasa-list-poi">' + items + '</div>';
+
+      panel.querySelectorAll('.cb-show').forEach(cb => {
+        cb.addEventListener('change', function() {
+          trasaToggleShow(this.dataset.file, this.checked);
+          renderTrasaPanelPoi();
+        });
+      });
+      panel.querySelectorAll('.cb-sel').forEach(cb => {
+        cb.addEventListener('change', function() {
+          _selChecked[this.dataset.file] = this.checked;
+        });
+      });
+      // Sync sort buttons
+      const btnDate = document.getElementById('poi-trasa-sort-date');
+      const btnName = document.getElementById('poi-trasa-sort-name');
+      if (btnDate) { btnDate.style.background = _trasaSort==='date'?'#003d0f':'#0a0e0a'; btnDate.style.color = _trasaSort==='date'?'#00ff41':'#4a8a4a'; }
+      if (btnName) { btnName.style.background = _trasaSort==='name'?'#003d0f':'#0a0e0a'; btnName.style.color = _trasaSort==='name'?'#00ff41':'#4a8a4a'; }
     }
 
     function wizConnect() {}  // zpětná kompatibilita
@@ -6430,7 +6850,13 @@
       if (_wizConnectTimer) { clearTimeout(_wizConnectTimer); _wizConnectTimer = null; }
       const overlay = document.getElementById('wiz-overlay');
       if (!overlay || !overlay.classList.contains('visible')) return;
-      overlay.classList.remove('visible');
+      // Zobrazit "Pripojeno k X" krátce před zavřením
+      const statusEl = document.getElementById('wiz-status');
+      if (statusEl) {
+        statusEl.textContent = '✓ Připojeno: ' + wizShortName(_savedBtDevice);
+        statusEl.className = 'wiz-status ok';
+      }
+      setTimeout(() => overlay.classList.remove('visible'), 800);
     }
 
     function wizOnError(msg) {
@@ -6438,8 +6864,11 @@
       const overlay = document.getElementById('wiz-overlay');
       if (!overlay || !overlay.classList.contains('visible')) return;
       const statusEl = document.getElementById('wiz-status');
-      statusEl.textContent = '✗ Chyba: ' + (msg || ''); statusEl.className = 'wiz-status error';
+      const shortName = wizShortName(_savedBtDevice);
+      statusEl.textContent = '✗ Odpojené: ' + shortName + (msg ? ' · ' + msg : '');
+      statusEl.className = 'wiz-status error';
     }
+
 
 </script>
 </body>

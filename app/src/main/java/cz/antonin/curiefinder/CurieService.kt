@@ -408,6 +408,7 @@ class CurieService : Service(), SerialInputOutputManager.Listener {
                 broadcast(BROADCAST_DATA) { putExtra(EXTRA_DATA, line) }
             },
             onConnect    = {
+                saveRealDeviceName(name)
                 broadcast(BROADCAST_CONNECTED) { putExtra(EXTRA_TYPE, "BLE"); putExtra(EXTRA_DEVICE_NAME, name) }
                 updateNotification("$name připojen")
                 android.os.Handler(android.os.Looper.getMainLooper()).post { startGps() }
@@ -432,6 +433,7 @@ class CurieService : Service(), SerialInputOutputManager.Listener {
                 broadcast(BROADCAST_DATA) { putExtra(EXTRA_DATA, line) }
             },
             onConnect    = {
+                saveRealDeviceName(name)
                 broadcast(BROADCAST_CONNECTED) { putExtra(EXTRA_TYPE, "BLE"); putExtra(EXTRA_DEVICE_NAME, name) }
                 updateNotification("$name připojen")
                 android.os.Handler(android.os.Looper.getMainLooper()).post { startGps() }
@@ -540,6 +542,7 @@ class CurieService : Service(), SerialInputOutputManager.Listener {
             },
             onConnect    = { transport ->
                 isRadProMode = true
+                saveRealDeviceName(name)
                 broadcast(BROADCAST_CONNECTED) { putExtra(EXTRA_TYPE, transport); putExtra(EXTRA_DEVICE_NAME, name) }
                 updateNotification("$name připojen ($transport)")
                 android.os.Handler(android.os.Looper.getMainLooper()).post { startGps() }
@@ -629,6 +632,7 @@ class CurieService : Service(), SerialInputOutputManager.Listener {
             onConnect = {
                 isNusMode = true
                 Log.d(TAG, "NUS connected: $name")
+                saveRealDeviceName(name)
                 broadcast(BROADCAST_CONNECTED) { putExtra(EXTRA_TYPE, "NUS"); putExtra(EXTRA_DEVICE_NAME, name) }
                 updateNotification("NUS: $name")
             },
@@ -680,6 +684,15 @@ class CurieService : Service(), SerialInputOutputManager.Listener {
      * 2. Selže → tiše projdi všechna spárovaná (SPP) + BLE scan paralelně
      * 3. Vše selže → zobraz wizard
      */
+
+    /** Uloží skutečné jméno zařízení do prefs — přepíše "⚡ Hledat..." pokud tam bylo */
+    private fun saveRealDeviceName(name: String) {
+        if (name.isEmpty()) return
+        val prefs = getSharedPreferences("curie_prefs", Context.MODE_PRIVATE)
+        prefs.edit().putString(PREF_BT_NAME, name).apply()
+        Log.d(TAG, "saveRealDeviceName: $name")
+    }
+
     private fun autoConnect() {
         try {
             val prefs = getSharedPreferences("curie_prefs", Context.MODE_PRIVATE)
