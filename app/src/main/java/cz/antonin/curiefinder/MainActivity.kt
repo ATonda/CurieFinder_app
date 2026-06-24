@@ -41,6 +41,7 @@ class MainActivity : AppCompatActivity() {
         const val DIR_LOGS = "logs"
         const val DIR_HEATMAP = "heatmap"
         const val DIR_LAYERS = "layers"
+        const val DIR_ROI = "roi"
     }
 
     private val serviceReceiver = object : BroadcastReceiver() {
@@ -180,6 +181,7 @@ class MainActivity : AppCompatActivity() {
             java.io.File(root, DIR_LOGS).mkdirs()
             java.io.File(root, DIR_HEATMAP).mkdirs()
             java.io.File(root, DIR_LAYERS).mkdirs()
+            java.io.File(root, DIR_ROI).mkdirs()
             Log.d(TAG, "Directories created: ${root.absolutePath}")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to create directories: ${e.message}")
@@ -233,6 +235,7 @@ class MainActivity : AppCompatActivity() {
                         val header = String(content.take(200).toByteArray(), Charsets.UTF_8)
 
                         val targetDir = when {
+                            header.contains("# CF_ROI v1") -> java.io.File(rootDir, DIR_ROI).also { it.mkdirs() }
                             header.contains("# CurieFinder Heatmap") -> java.io.File(rootDir, DIR_HEATMAP).also { it.mkdirs() }
                             header.contains("# CurieFinder CSV v1") -> java.io.File(rootDir, DIR_LOGS).also { it.mkdirs() }
                             header.contains("# CurieFinder") -> java.io.File(rootDir, DIR_LOGS).also { it.mkdirs() }
@@ -352,6 +355,7 @@ class MainActivity : AppCompatActivity() {
             isLogFile(filename) -> java.io.File(rootDir, DIR_LOGS).also { it.mkdirs() }
             isHeatmapFile(filename) -> java.io.File(rootDir, DIR_HEATMAP).also { it.mkdirs() }
             isLayerFile(filename) -> java.io.File(rootDir, DIR_LAYERS).also { it.mkdirs() }
+            isRoiFile(filename) -> java.io.File(rootDir, DIR_ROI).also { it.mkdirs() }
             else -> rootDir.also { it.mkdirs() }
         }
     }
@@ -361,6 +365,7 @@ class MainActivity : AppCompatActivity() {
         if (filename.startsWith("CF_heat_")) return false
         if (filename.startsWith("CF_LAYER_")) return false
         if (filename.startsWith("CF_POI")) return false
+        if (filename.startsWith("CF_ROI_")) return false
         return filename.endsWith(".csv")
     }
 
@@ -376,11 +381,16 @@ class MainActivity : AppCompatActivity() {
         return false
     }
 
+    private fun isRoiFile(filename: String): Boolean {
+        return filename.startsWith("CF_ROI_") && filename.endsWith(".roi")
+    }
+
     private fun getBackupDir(filename: String): java.io.File? {
         return try {
             val subDir = when {
                 isLogFile(filename) -> "logs"
                 isHeatmapFile(filename) -> "heatmaps"
+                isRoiFile(filename) -> "roi"
                 isLayerFile(filename) && filename.startsWith("CF_POI") -> "poi"
                 isLayerFile(filename) -> "layers"
                 else -> "logs"
@@ -831,6 +841,108 @@ class MainActivity : AppCompatActivity() {
                 }
                 @Suppress("DEPRECATION")
                 startActivityForResult(intent, IMPORT_CSV_REQUEST)
+            }
+        }
+
+        @JavascriptInterface
+        fun listROI(): String {
+            return try {
+                val root = rootDir()
+                val dir = java.io.File(root, DIR_ROI)
+                val files = dir.listFiles()
+                    ?.filter { it.name.startsWith("CF_ROI_") && it.name.endsWith(".roi") }
+                    ?.sortedBy { it.name }
+                    ?.map { f ->
+                        val obj = org.json.JSONObject()
+                        obj.put("name", f.name)
+                        obj.put("size", f.length())
+                        obj.put("modified", f.lastModified())
+                        obj
+                    } ?: emptyList()
+                org.json.JSONArray(files).toString()
+            } catch (e: Exception) {
+                Log.e(TAG, "listROI error: ${e.message}")
+                "[]"
+            }
+        }
+
+        @JavascriptInterface
+        fun readROI(filename: String): String {
+            return try {
+                val root = rootDir()
+                val file = java.io.File(java.io.File(root, DIR_ROI), filename)
+                if (file.exists()) file.readText() else ""
+            } catch (e: Exception) {
+                Log.e(TAG, "readROI error: ${e.message}")
+                ""
+            }
+        }
+
+        @JavascriptInterface
+        fun saveROI(data: String, filename: String) {
+            thread {
+                try {
+                    val root = rootDir()
+                    val dir = java.io.File(root, DIR_ROI).also { it.mkdirs() }
+                    java.io.File(dir, filename).writeText(data)
+                    Log.d(TAG, "ROI saved: $filename")
+                    // Záloha do Documents/CurieFinder/backup/roi/
+                    try {
+                        val backupDir = getBackupDir(filename)
+                        backupDir?.let { java.io.File(it, filename).writeText(data) }
+                    } catch (e: Exception) {
+                        Log.w(TAG, "ROI backup error: ${e.message}")
+                    }
+                    runOnUiThread {
+                        webView.evaluateJavascript("window.onCurieSaved && window.onCurieSaved('$filename')", null)
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "saveROI error: ${e.message}")
+                    val msg = e.message?.replace("'", "") ?: "Chyba uložení ROI"
+                    runOnUiThread {
+                        webView.evaluateJavascript("window.onCurieError && window.onCurieError('$msg')", null)
+                    }
+                }
+            }
+        }
+
+        @JavascriptInterface
+        fun deleteROI(filename: String) {
+            try {
+                val root = rootDir()
+                java.io.File(java.io.File(root, DIR_ROI), filename).delete()
+                // Smazat zálohu
+                try {
+                    val backupDir = getBackupDir(filename)
+                    backupDir?.let { java.io.File(it, filename).delete() }
+                } catch (e: Exception) {
+                    Log.w(TAG, "ROI backup delete error: ${e.message}")
+                }
+                Log.d(TAG, "ROI deleted: $filename")
+            } catch (e: Exception) {
+                Log.e(TAG, "deleteROI error: ${e.message}")
+            }
+        }
+
+        @JavascriptInterface
+        fun shareROI(filename: String) {
+            runOnUiThread {
+                try {
+                    val root = rootDir()
+                    val file = java.io.File(java.io.File(root, DIR_ROI), filename)
+                    if (!file.exists()) return@runOnUiThread
+                    val uri = androidx.core.content.FileProvider.getUriForFile(
+                        this@MainActivity, "$packageName.provider", file
+                    )
+                    val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                        type = "text/plain"
+                        putExtra(android.content.Intent.EXTRA_STREAM, uri)
+                        addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    }
+                    startActivity(android.content.Intent.createChooser(intent, "Sdílet oblast ROI"))
+                } catch (e: Exception) {
+                    Log.e(TAG, "shareROI error: ${e.message}")
+                }
             }
         }
     }
