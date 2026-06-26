@@ -469,6 +469,8 @@
         .wiz-bt-item { padding:10px 12px; background:#111a11; border:1px solid #1a2e1a; border-radius:4px; cursor:pointer; font-size:0.75rem; color:#b0c8b0; display:flex; justify-content:space-between; align-items:center; }
         .wiz-bt-item:hover, .wiz-bt-item.selected { border-color:#2a5a2a; color:#00ff41; }
         .wiz-bt-item.ours { border-color:#1a3a1a; color:#00cc44; }
+        .wiz-bt-item.last-used { border-color:#00ff41 !important; background:#001a05; }
+        .wiz-bt-item.last-used::after { content:'↩ naposledy'; font-size:0.5rem; color:#00ff41; margin-left:auto; opacity:0.7; }
         .wiz-bt-mac { font-size:0.5rem; color:#4a6a4a; }
         .wiz-checklist { display:flex; flex-direction:column; gap:8px; }
         .wiz-check-item { display:flex; align-items:center; gap:10px; cursor:pointer; }
@@ -853,19 +855,12 @@
             poi_delete_sel:(n) => `Smazat ${n} bod${n>1?'ů':''}?`,
             poi_select_first:'Nejprve vyberte body (žlutý checkbox).',
             poi_delete_all:'Smazat všechny POI body?',
-            heat_select_first:'Nejprve vyberte heatmapy (žlutý checkbox).',
-            heat_delete_sel:(n) => `Smazat ${n} heatmap?`,
-            heat_rename:'Přejmenovat heatmapu', heat_note_lbl:'Poznámka',
-            heat_delete_one:(name) => `Smazat heatmapu ${name}?`,
-            heat_name_prompt:'Název heatmapy', heat_note_prompt:'Poznámka (volitelné)',
             ram_restore:(n,m) => `⚠️ Nalezena záloha RAM trasy (${n} bodů, stará ${m} min).\nObnovit do paměti?`,
             btn_yes:'ANO', btn_no:'NE', btn_ok:'OK', btn_add:'PŘIDAT', btn_cancel:'ZRUŠIT',
             btn_select:'VYBRAT', btn_skip:'PŘESKOČIT',
             hist_usv_label:'HISTORIE µSv/h', hist_cps_label:'HISTORIE CPS',
             poi_add_confirm:'📍 Přidat bod na aktuální pozici?',
-            poi_move_where:'📌 Přesunout bod kam?', poi_move_gps:'📍 GPS pozice', poi_move_map:'🎯 Střed mapy',
-            heat_no_grid:'Žádná heatmapa', heat_not_enough:'Nedostatek bodů (min 2)',
-            heat_collecting:'Sbírám body...', heat_done:'✓ Hotovo', roi_select_new:'🗺️ VYBRAT OBLAST', roi_select_edit:'✏️ ZMĚNIT OBLAST', roi_show:'ZOBRAZIT',
+            poi_move_where:'📌 Přesunout bod kam?', poi_move_gps:'📍 GPS pozice', poi_move_map:'🎯 Střed mapy', roi_select_new:'🗺️ VYBRAT OBLAST', roi_select_edit:'✏️ ZMĚNIT OBLAST', roi_show:'ZOBRAZIT',
             roi_new_area:'Název nové oblasti', roi_new_btn:'➕ NOVÁ OBLAST', roi_import_btn:'📥 IMPORT', roi_no_areas:'Žádné oblasti. Klepni ➕ NOVÁ OBLAST.',
             roi_blocks:'BLOKY TRAS', roi_no_blocks:'Žádné bloky tras',
             roi_name_lbl:'Název oblasti', roi_grid_lbl:'Grid rozl. (m)', roi_radius_lbl:'IDW radius (m)', roi_maxdist_lbl:'Max. vzd. (m)',
@@ -926,19 +921,12 @@
             poi_delete_sel:(n) => `Zmazať ${n} bod${n>1?'ov':''}?`,
             poi_select_first:'Najprv vyberte body (žltý checkbox).',
             poi_delete_all:'Zmazať všetky POI body?',
-            heat_select_first:'Najprv vyberte heatmapy (žltý checkbox).',
-            heat_delete_sel:(n) => `Zmazať ${n} heatmáp?`,
-            heat_rename:'Premenovať heatmapu', heat_note_lbl:'Poznámka',
-            heat_delete_one:(name) => `Zmazať heatmapu ${name}?`,
-            heat_name_prompt:'Názov heatmapy', heat_note_prompt:'Poznámka (voliteľné)',
             ram_restore:(n,m) => `⚠️ Nájdená záloha RAM trasy (${n} bodov, stará ${m} min).\nObnoviť do pamäte?`,
             btn_yes:'ÁNO', btn_no:'NIE', btn_ok:'OK', btn_add:'PRIDAŤ', btn_cancel:'ZRUŠIŤ',
             btn_select:'VYBRAŤ', btn_skip:'PRESKOČIŤ',
             hist_usv_label:'HISTÓRIA µSv/h', hist_cps_label:'HISTÓRIA CPS',
             poi_add_confirm:'📍 Pridať bod na aktuálnu polohu?',
-            poi_move_where:'📌 Presunúť bod kam?', poi_move_gps:'📍 GPS poloha', poi_move_map:'🎯 Stred mapy',
-            heat_no_grid:'Žiadna heatmapa', heat_not_enough:'Nedostatok bodov (min 2)',
-            heat_collecting:'Zbierám body...', heat_done:'✓ Hotovo', roi_select_new:'🗺️ VYBRAŤ OBLASŤ', roi_select_edit:'✏️ ZMENIŤ OBLASŤ', roi_show:'ZOBRAZIŤ',
+            poi_move_where:'📌 Presunúť bod kam?', poi_move_gps:'📍 GPS poloha', poi_move_map:'🎯 Stred mapy', roi_select_new:'🗺️ VYBRAŤ OBLASŤ', roi_select_edit:'✏️ ZMENIŤ OBLASŤ', roi_show:'ZOBRAZIŤ',
             roi_new_area:'Názov novej oblasti', roi_new_btn:'➕ NOVÁ OBLASŤ', roi_import_btn:'📥 IMPORT', roi_no_areas:'Žiadne oblasti. Klepni ➕ NOVÁ OBLASŤ.',
             roi_blocks:'BLOKY TRÁS', roi_no_blocks:'Žiadne bloky trás',
             roi_name_lbl:'Názov oblasti', roi_grid_lbl:'Grid rozl. (m)', roi_radius_lbl:'IDW polomer (m)', roi_maxdist_lbl:'Max. vzd. (m)',
@@ -1012,19 +1000,12 @@
             poi_delete_sel:(n) => `Eliminare ${n} punt${n>1?'i':'o'}?`,
             poi_select_first:'Prima seleziona i punti (checkbox giallo).',
             poi_delete_all:'Eliminare tutti i punti POI?',
-            heat_select_first:'Prima seleziona le heatmap (checkbox giallo).',
-            heat_delete_sel:(n) => `Eliminare ${n} heatmap?`,
-            heat_rename:'Rinomina heatmap', heat_note_lbl:'Nota',
-            heat_delete_one:(name) => `Eliminare heatmap ${name}?`,
-            heat_name_prompt:'Nome heatmap', heat_note_prompt:'Nota (opzionale)',
             ram_restore:(n,m) => `⚠️ Trovato backup RAM traccia (${n} punti, età ${m} min).\nRipristinare in memoria?`,
             btn_yes:'SÌ', btn_no:'NO', btn_ok:'OK', btn_add:'AGGIUNGI', btn_cancel:'ANNULLA',
             btn_select:'SELEZIONA', btn_skip:'SALTA',
             hist_usv_label:'STORIA µSv/h', hist_cps_label:'STORIA CPS',
             poi_add_confirm:'📍 Aggiungere punto alla posizione attuale?',
-            poi_move_where:'📌 Spostare il punto dove?', poi_move_gps:'📍 Posizione GPS', poi_move_map:'🎯 Centro mappa',
-            heat_no_grid:'Nessuna heatmap', heat_not_enough:'Punti insufficienti (min 2)',
-            heat_collecting:'Raccolta punti...', heat_done:'✓ Fatto', roi_select_new:'🗺️ SELEZIONA AREA', roi_select_edit:"✏️ MODIFICA AREA", roi_show:'MOSTRA',
+            poi_move_where:'📌 Spostare il punto dove?', poi_move_gps:'📍 Posizione GPS', poi_move_map:'🎯 Centro mappa', roi_select_new:'🗺️ SELEZIONA AREA', roi_select_edit:"✏️ MODIFICA AREA", roi_show:'MOSTRA',
             roi_new_area:'Nome nuova area', roi_new_btn:'➕ NUOVA AREA', roi_import_btn:'📥 IMPORTA', roi_no_areas:'Nessuna area. Tocca ➕ NUOVA AREA.',
             roi_blocks:'BLOCCHI TRACCE', roi_no_blocks:'Nessun blocco traccia',
             roi_name_lbl:'Nome area', roi_grid_lbl:'Risoluzione griglia (m)', roi_radius_lbl:'Raggio IDW (m)', roi_maxdist_lbl:'Dist. max (m)',
@@ -1088,19 +1069,12 @@
             poi_delete_sel:(n) => `Delete ${n} point${n>1?'s':''}?`,
             poi_select_first:'First select points (yellow checkbox).',
             poi_delete_all:'Delete all POI points?',
-            heat_select_first:'First select heatmaps (yellow checkbox).',
-            heat_delete_sel:(n) => `Delete ${n} heatmap${n>1?'s':''}?`,
-            heat_rename:'Rename heatmap', heat_note_lbl:'Note',
-            heat_delete_one:(name) => `Delete heatmap ${name}?`,
-            heat_name_prompt:'Heatmap name', heat_note_prompt:'Note (optional)',
             ram_restore:(n,m) => `⚠️ Found RAM track backup (${n} points, ${m} min old).\nRestore to memory?`,
             btn_yes:'YES', btn_no:'NO', btn_ok:'OK', btn_add:'ADD', btn_cancel:'CANCEL',
             btn_select:'SELECT', btn_skip:'SKIP',
             hist_usv_label:'µSv/h HISTORY', hist_cps_label:'CPS HISTORY',
             poi_add_confirm:'📍 Add point at current position?',
-            poi_move_where:'📌 Move point where?', poi_move_gps:'📍 GPS position', poi_move_map:'🎯 Map center',
-            heat_no_grid:'No heatmap', heat_not_enough:'Not enough points (min 2)',
-            heat_collecting:'Collecting points...', heat_done:'✓ Done', roi_select_new:'🗺️ SELECT AREA', roi_select_edit:'✏️ EDIT AREA', roi_show:'SHOW',
+            poi_move_where:'📌 Move point where?', poi_move_gps:'📍 GPS position', poi_move_map:'🎯 Map center', roi_select_new:'🗺️ SELECT AREA', roi_select_edit:'✏️ EDIT AREA', roi_show:'SHOW',
             roi_new_area:'New area name', roi_new_btn:'➕ NEW AREA', roi_import_btn:'📥 IMPORT', roi_no_areas:'No areas. Tap ➕ NEW AREA.',
             roi_blocks:'TRACK BLOCKS', roi_no_blocks:'No track blocks',
             roi_name_lbl:'Area name', roi_grid_lbl:'Grid res. (m)', roi_radius_lbl:'IDW radius (m)', roi_maxdist_lbl:'Max dist (m)',
@@ -1163,19 +1137,12 @@
             poi_delete_sel:(n) => `Usunąć ${n} punkt${n>1?'y':''}?`,
             poi_select_first:'Najpierw wybierz punkty (żółty checkbox).',
             poi_delete_all:'Usunąć wszystkie punkty POI?',
-            heat_select_first:'Najpierw wybierz mapy cieplne (żółty checkbox).',
-            heat_delete_sel:(n) => `Usunąć ${n} mapę${n>1?' cieplne':' cieplną'}?`,
-            heat_rename:'Zmień nazwę mapy cieplnej', heat_note_lbl:'Notatka',
-            heat_delete_one:(name) => `Usunąć mapę cieplną ${name}?`,
-            heat_name_prompt:'Nazwa mapy cieplnej', heat_note_prompt:'Notatka (opcjonalnie)',
             ram_restore:(n,m) => `⚠️ Znaleziono kopię zapasową trasy RAM (${n} punktów, ${m} min temu).\nPrzywrócić do pamięci?`,
             btn_yes:'TAK', btn_no:'NIE', btn_ok:'OK', btn_add:'DODAJ', btn_cancel:'ANULUJ',
             btn_select:'WYBIERZ', btn_skip:'POMIŃ',
             hist_usv_label:'HISTORIA µSv/h', hist_cps_label:'HISTORIA CPS',
             poi_add_confirm:'📍 Dodać punkt w bieżącej pozycji?',
             poi_move_where:'📌 Przenieść punkt gdzie?', poi_move_gps:'📍 Pozycja GPS', poi_move_map:'🎯 Środek mapy',
-            heat_no_grid:'Brak mapy cieplnej', heat_not_enough:'Za mało punktów (min 2)',
-            heat_collecting:'Zbieranie punktów...', heat_done:'✓ Gotowe', roi_select_new:'🗺️ WYBIERZ OBSZAR', roi_select_edit:'✏️ EDYTUJ OBSZAR', roi_show:'POKAŻ',
             roi_new_area:'Nazwa nowego obszaru', roi_new_btn:'➕ NOWY OBSZAR', roi_import_btn:'📥 IMPORT', roi_no_areas:'Brak obszarów. Dotknij ➕ NOWY OBSZAR.',
             roi_blocks:'BLOKI TRAS', roi_no_blocks:'Brak bloków tras',
             roi_name_lbl:'Nazwa obszaru', roi_grid_lbl:'Rozdzielczość siatki (m)', roi_radius_lbl:'Promień IDW (m)', roi_maxdist_lbl:'Maks. odl. (m)',
@@ -1194,7 +1161,7 @@
             roi_imported:'Zaimportowano: ', roi_hint_move:'Przesuń mapę — obszar pozostaje w centrum',
             roi_hint_edit:'✏ Tryb edycji — przeciągnij rogi, przeciwległy zostaje na miejscu',
             roi_edit:'✏ EDYTUJ', roi_save_bounds:'✓ ZAPISZ', roi_cancel:'ANULUJ' },
-      hu: { searching:'KERESÉS...', disconnected_msg:'Kapcsolja be a CurieFinder eszközt', conn_lost:'Kapcsolat megszakadt',
+      'hu': { searching:'KERESÉS...', disconnected_msg:'Kapcsolja be a CurieFinder eszközt', conn_lost:'Kapcsolat megszakadt',
             connected:'CSATLAKOZVA', disconnected:'LEVÁLASZTVA', conn_err:'CSATLAKOZÁSI HIBA: ',
             conn_cancel:'Megszakítva', searching_ble:'BLE keresése...',
             avg_label:'ÁTLAG CPS', ratio_label:'CPS / HÁTTÉR', hist_label:'CPS ELŐZMÉNYEK',
@@ -1238,19 +1205,12 @@
             poi_delete_sel:(n) => `Töröl ${n} pontot?`,
             poi_select_first:'Először válasszon pontokat (sárga jelölőnégyzet).',
             poi_delete_all:'Töröl minden POI pontot?',
-            heat_select_first:'Először válasszon hőtérképeket (sárga jelölőnégyzet).',
-            heat_delete_sel:(n) => `Töröl ${n} hőtérképet?`,
-            heat_rename:'Hőtérkép átnevezése', heat_note_lbl:'Megjegyzés',
-            heat_delete_one:(name) => `Törli a(z) ${name} hőtérképet?`,
-            heat_name_prompt:'Hőtérkép neve', heat_note_prompt:'Megjegyzés (opcionális)',
             ram_restore:(n,m) => `⚠️ RAM nyomvonal biztonsági mentés található (${n} pont, ${m} perccel ezelőtt).\nVisszaállítja a memóriába?`,
             btn_yes:'IGEN', btn_no:'NEM', btn_ok:'OK', btn_add:'HOZZÁADÁS', btn_cancel:'MÉGSE',
             btn_select:'KIVÁLASZTÁS', btn_skip:'KIHAGYÁS',
             hist_usv_label:'µSv/h ELŐZMÉNYEK', hist_cps_label:'CPS ELŐZMÉNYEK',
             poi_add_confirm:'📍 Pont hozzáadása az aktuális pozícióhoz?',
             poi_move_where:'📌 Hova helyezi a pontot?', poi_move_gps:'📍 GPS pozíció', poi_move_map:'🎯 Térkép közepe',
-            heat_no_grid:'Nincs hőtérkép', heat_not_enough:'Nincs elég pont (min 2)',
-            heat_collecting:'Pontok gyűjtése...', heat_done:'✓ Kész', roi_select_new:'🗺️ TERÜLET KIJELÖLÉS', roi_select_edit:'✏️ TERÜLET SZERKESZTÉS', roi_show:'MEGJELENÍTÉS',
             roi_new_area:'Új terület neve', roi_new_btn:'➕ ÚJ TERÜLET', roi_import_btn:'📥 IMPORT', roi_no_areas:'Nincs terület. Érintse meg ➕ ÚJ TERÜLET.',
             roi_blocks:'ÚTVONAL BLOKKOK', roi_no_blocks:'Nincsenek útvonal blokkok',
             roi_name_lbl:'Terület neve', roi_grid_lbl:'Rács felbontás (m)', roi_radius_lbl:'IDW sugár (m)', roi_maxdist_lbl:'Max táv. (m)',
@@ -1479,13 +1439,20 @@
       // Nespouštět reconnect pokud uživatel nevybral zařízení
       if (!_savedBtDevice) return;
       _reconnectInProgress = false;
+      // BLE scan trva az 20s — interval 25s aby se skeny neprekryvaly
+      const _reconnectInterval = (_savedBtDevice && (
+        _savedBtDevice.startsWith('⚡ Hledat') ||
+        _savedBtDevice.startsWith('Raysid') ||
+        _savedBtDevice.startsWith('RadPro') ||
+        _savedBtDevice.startsWith('RadiaCode')
+      )) ? 25000 : 12000;
       _reconnectTimer = setInterval(() => {
         if (isConnected) { stopReconnectLoop(); return; }
         if (_reconnectInProgress) return;
         _reconnectInProgress = true;
         try { AndroidSerial.connect(); } catch(e) { console.warn('reconnect error:', e); }
-        setTimeout(() => { _reconnectInProgress = false; }, 8000);
-      }, 10000);
+        setTimeout(() => { _reconnectInProgress = false; }, _reconnectInterval - 2000);
+      }, _reconnectInterval);
       // První pokus hned po 1s
       setTimeout(() => {
         if (!isConnected && !_reconnectInProgress && _savedBtDevice) {
@@ -3241,7 +3208,8 @@
       const topoL  = L.tileLayer('https://tile.opentopomap.org/{z}/{x}/{y}.png',               { maxZoom: 17, crossOrigin: true });
       const voyagerL = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { maxZoom: 20, maxNativeZoom: 19, crossOrigin: true });
       const darkL  = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',  { maxZoom: 20, maxNativeZoom: 19, crossOrigin: true });
-      const lightL = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom: 20, maxNativeZoom: 19, crossOrigin: true });
+      const lightL   = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom: 20, maxNativeZoom: 19, crossOrigin: true });
+      const freemapL = L.tileLayer('https://outdoor.tiles.freemap.sk/{z}/{x}/{y}', { maxZoom: 19, maxNativeZoom: 19, crossOrigin: true, attribution: '© freemap.sk' });
 
       // Fallback pro OpenTopoMap — při chybě dlaždice přepnout na Voyager
       let _topoFailed = false;
@@ -3266,7 +3234,7 @@
       }, 100);
 
       L.control.layers(
-        { '🗺️ Mapa':osmL, '🛰️ Satelit':satL, '🏔️ Turistická':topoL, '🚗 Voyager':voyagerL, '🌑 Tmavá':darkL, '⬜ Světlá':lightL },
+        { '🗺️ Mapa':osmL, '🛰️ Satelit':satL, '🏔️ Turistická':topoL, '🚗 Voyager':voyagerL, '🌑 Tmavá':darkL, '⬜ Světlá':lightL, '🇸🇰 Freemap':freemapL },
         {}, { position:'topright', collapsed:true }
       ).addTo(leafletMap);
 
@@ -3382,7 +3350,7 @@
       drawCompass();
       poiInit();
       // Nakreslit vrstvy které byly načteny před inicializací mapy
-      setTimeout(() => cfLayersDrawAll(), 300);
+      setTimeout(() => { if (cfLayers.length === 0) cfLayersDiscover(); else cfLayersDrawAll(); }, 300);
 
       // Long press na mapu → fullscreen mód
       let _mapFullscreen = false;
@@ -4800,8 +4768,8 @@
         try { savedSelection = JSON.parse(lsGet('saved_selection_manual', '[]')); } catch(e) { savedSelection = []; }
       }
       lsSet('saved_selection', JSON.stringify(savedSelection));
-      // Aktualizovat checkboxy přímo — bez pomalého překreslení celého panelu
-      document.querySelectorAll('#trasa-panel .cb-show').forEach(cb => {
+      // Aktualizovat checkboxy v obou panelech
+      document.querySelectorAll('#trasa-panel .cb-show, #trasa-panel-poi .cb-show').forEach(cb => {
         cb.checked = savedSelection.includes(cb.dataset.file);
       });
       const showCount = currentFiles.filter(f => savedSelection.includes(f)).length;
@@ -4810,6 +4778,9 @@
       const labels = { all:T[LANG].show_all, none:T[LANG].show_none, selection:T[LANG].show_sel };
       const btnVse = document.getElementById('btn-vse-show');
       if (btnVse) btnVse.textContent = labels[showMode];
+      // Aktualizovat tlacitko VŠE v poi panelu
+      const btnAll2 = document.getElementById('poi-trasa-btn-all');
+      if (btnAll2) btnAll2.textContent = T[LANG].roi_show || labels[showMode];
       applyZobrazitDebounced();
     }
 
@@ -4839,6 +4810,17 @@
     function applyZobrazitDebounced() {
       if (_applyDebounce) clearTimeout(_applyDebounce);
       _applyDebounce = setTimeout(() => { _applyDebounce = null; applyZobrazit(); }, 400);
+    }
+
+    // ---- Přepnout zobrazení jedné trasy ----
+    function trasaToggleShow(file, shown) {
+      if (shown) {
+        if (!savedSelection.includes(file)) savedSelection.push(file);
+      } else {
+        savedSelection = savedSelection.filter(x => x !== file);
+      }
+      lsSet('saved_selection', JSON.stringify(savedSelection));
+      applyZobrazitDebounced();
     }
 
     function applyZobrazit() {
@@ -5003,12 +4985,13 @@
     }
 
     function getSelectedCheckboxes() {
-      // Preferovat DOM stav; fallback na _selChecked
+      // Hledat v obou panelech — starem (#trasa-panel) i novem (#trasa-panel-poi)
       const fromDom = Array.from(
-        document.querySelectorAll('#trasa-panel .cb-sel:checked')
+        document.querySelectorAll('#trasa-panel .cb-sel:checked, #trasa-panel-poi .cb-sel:checked')
       ).map(c => c.dataset.file).filter(Boolean);
       if (fromDom.length > 0) return fromDom;
-      return Array.from(_selChecked);
+      // Fallback na _selChecked
+      return Object.keys(_selChecked).filter(f => _selChecked[f]);
     }
 
     function sdiletTrasy() {
@@ -5146,7 +5129,7 @@
         savedSelection = savedSelection.filter(f => !files.includes(f));
         files.forEach(f => { delete _noteCache[f]; delete _trackCache[f]; });
         lsSet('saved_selection', JSON.stringify(savedSelection));
-        setTimeout(() => { renderTrasaPanel(); applyZobrazit(); updateLogStatus(); }, 500);
+        setTimeout(() => { renderTrasaPanel(); renderTrasaPanelPoi(); applyZobrazit(); updateLogStatus(); }, 500);
       }
     }
 
@@ -5428,7 +5411,7 @@
           offCanvas.width  = cols * scale;
           offCanvas.height = rows * scale;
           const ctx = offCanvas.getContext('2d');
-          ctx.globalAlpha = parseFloat(document.getElementById('heat-opacity')?.value || 100) / 100;
+          ctx.globalAlpha = 0.8;
 
           const specMin = (_roiOpenData.specMin !== null && _roiOpenData.specMin !== undefined) ? _roiOpenData.specMin : _specMin;
           const specMax = (_roiOpenData.specMax !== null && _roiOpenData.specMax !== undefined) ? _roiOpenData.specMax : _specMax;
@@ -5510,18 +5493,24 @@
           { lat: lat0, lon: lon1 }, // BR
           { lat: lat0, lon: lon0 }  // BL
         ];
-      } else {
-        // Vychozi: stred mapy + vychozi rozmer v metrech
+      } else if (leafletMap) {
+        // Nova oblast — pouzit px rozmer 60%x40% #map a prevest na lat/lon
         const c = leafletMap.getCenter();
-        const latM = 1 / 111320;
-        const lonM = 1 / (111320 * Math.cos(c.lat * Math.PI / 180));
-        const dLat = ROI_DEFAULT_H_M / 2 * latM;
-        const dLon = ROI_DEFAULT_W_M / 2 * lonM;
+        const mapDiv2 = document.getElementById('map');
+        const mapW = mapDiv2 ? mapDiv2.offsetWidth  : 300;
+        const mapH = mapDiv2 ? mapDiv2.offsetHeight : 400;
+        const pw = mapW * 0.6, ph = mapH * 0.4;
+        // Stred mapy v px
+        const cPx = leafletMap.latLngToContainerPoint([c.lat, c.lng]);
+        const tl = leafletMap.containerPointToLatLng([cPx.x - pw/2, cPx.y - ph/2]);
+        const tr = leafletMap.containerPointToLatLng([cPx.x + pw/2, cPx.y - ph/2]);
+        const br = leafletMap.containerPointToLatLng([cPx.x + pw/2, cPx.y + ph/2]);
+        const bl = leafletMap.containerPointToLatLng([cPx.x - pw/2, cPx.y + ph/2]);
         _roiCornerLL = [
-          { lat: c.lat + dLat, lon: c.lng - dLon }, // TL
-          { lat: c.lat + dLat, lon: c.lng + dLon }, // TR
-          { lat: c.lat - dLat, lon: c.lng + dLon }, // BR
-          { lat: c.lat - dLat, lon: c.lng - dLon }  // BL
+          { lat: tl.lat, lon: tl.lng },
+          { lat: tr.lat, lon: tr.lng },
+          { lat: br.lat, lon: br.lng },
+          { lat: bl.lat, lon: bl.lng }
         ];
       }
     }
@@ -5605,18 +5594,28 @@
         'display:block'
       ].join(';');
 
-      // Nastavit rozmer z _roiCornerLL (nebo vychozi)
+      // Inicializovat rohy z ulozenych bounds nebo ze stredu mapy
       roiInitCornerLL();
-      const pxPts = roiCornerLLtoPx();
-      if (pxPts.length === 4) {
-        const xs = pxPts.map(p => p.x), ys = pxPts.map(p => p.y);
-        const w = Math.max(...xs) - Math.min(...xs);
-        const h = Math.max(...ys) - Math.min(...ys);
-        overlay.style.width  = Math.max(40, w) + 'px';
-        overlay.style.height = Math.max(30, h) + 'px';
+      // Rozmer overlay v normalnim modu:
+      // Existujici bounds → prepocitat px rozmer pri aktualnim zoomu (ale omezit na max 80% displeje)
+      // Nova oblast → fixni proporce ze #map divu (60% x 40%)
+      const mapDiv2 = document.getElementById('map');
+      const mapW = mapDiv2 ? mapDiv2.offsetWidth  : 300;
+      const mapH = mapDiv2 ? mapDiv2.offsetHeight : 400;
+      const b = _roiOpenData && _roiOpenData.bounds ? _roiOpenData.bounds : null;
+      if (b && leafletMap) {
+        // Existujici bounds — prepocitat px rozmer
+        const swPx = leafletMap.latLngToContainerPoint([Math.min(b.lat0,b.lat1), Math.min(b.lon0,b.lon1)]);
+        const nePx = leafletMap.latLngToContainerPoint([Math.max(b.lat0,b.lat1), Math.max(b.lon0,b.lon1)]);
+        const pw = Math.abs(nePx.x - swPx.x);
+        const ph = Math.abs(nePx.y - swPx.y);
+        // Omezit na 80% displeje — aby overlay nepresahoval
+        overlay.style.width  = Math.max(40, Math.min(pw, mapW * 0.8)) + 'px';
+        overlay.style.height = Math.max(30, Math.min(ph, mapH * 0.8)) + 'px';
       } else {
-        overlay.style.width  = '200px';
-        overlay.style.height = '150px';
+        // Nova oblast — fixni proporce ze #map divu
+        overlay.style.width  = Math.round(mapW * 0.6) + 'px';
+        overlay.style.height = Math.round(mapH * 0.4) + 'px';
       }
 
       roiShowSelectPanel();
@@ -5678,10 +5677,28 @@
       leafletMap.scrollWheelZoom.disable();
       if (leafletMap.tap) leafletMap.tap.disable();
 
-      // _roiCornerLL uz inicializovano v roiShowOverlay — pouzijeme primo
-      // Prepnout overlay na absolutni px pozici z lat/lon
+      // Znovu inicializovat _roiCornerLL ze STREDU AKTUALNI MAPY a rozmeru overlaye
+      // (uzivatel mohl posunout mapu od posledni inicializace)
       const overlay = document.getElementById('roi-select-overlay');
-      if (overlay) {
+      const mapDiv2 = document.getElementById('map');
+      if (leafletMap && mapDiv2 && overlay) {
+        // Ziskat aktualni px rozmer overlaye (nastaven v roiShowOverlay)
+        const ow = overlay.offsetWidth  || mapDiv2.offsetWidth  * 0.6;
+        const oh = overlay.offsetHeight || mapDiv2.offsetHeight * 0.4;
+        // Stred mapy v px
+        const c   = leafletMap.getCenter();
+        const cPx = leafletMap.latLngToContainerPoint([c.lat, c.lng]);
+        // Prepocitat _roiCornerLL ze stredu mapy a px rozmeru
+        const tl = leafletMap.containerPointToLatLng([cPx.x - ow/2, cPx.y - oh/2]);
+        const tr = leafletMap.containerPointToLatLng([cPx.x + ow/2, cPx.y - oh/2]);
+        const br = leafletMap.containerPointToLatLng([cPx.x + ow/2, cPx.y + oh/2]);
+        const bl = leafletMap.containerPointToLatLng([cPx.x - ow/2, cPx.y + oh/2]);
+        _roiCornerLL = [
+          { lat: tl.lat, lon: tl.lng },
+          { lat: tr.lat, lon: tr.lng },
+          { lat: br.lat, lon: br.lng },
+          { lat: bl.lat, lon: bl.lng }
+        ];
         overlay.style.borderColor = '#ff3333';
         overlay.style.background  = 'rgba(255,51,51,0.08)';
         overlay.style.pointerEvents = 'none';
@@ -6297,9 +6314,20 @@
         roiExportAndShareGeoJSON(filename);
       };
 
+      // HTML — vizualizace v prohlizeci
+      const bHtml = document.createElement('button');
+      bHtml.style.cssText = btnStyles + 'border:1px solid #ff9900;background:rgba(255,153,0,0.08);color:#ff9900;';
+      bHtml.innerHTML = '🌐 HTML &nbsp;<span style="font-size:0.55rem;color:#886633;">interaktivní mapa v prohlížeči</span>';
+      bHtml.onclick = () => {
+        overlay.classList.remove('visible');
+        btnNo.style.display = ''; btnYes.style.display = '';
+        roiExportAndShareHTML(filename);
+      };
+
       msgEl.appendChild(bRoi);
       msgEl.appendChild(bCsv);
       msgEl.appendChild(bGeo);
+      msgEl.appendChild(bHtml);
 
       // Skrýt standardní ANO/NE, zobrazit jen ZRUŠIT
       btnYes.style.display = 'none';
@@ -6312,6 +6340,328 @@
       };
 
       overlay.classList.add('visible');
+    }
+
+    // ---- Export jako interaktivni HTML s Leaflet mapou ----
+    function roiExportAndShareHTML(filename) {
+      try {
+        const raw = IS_ANDROID && typeof AndroidSerial !== 'undefined' ? AndroidSerial.readROI(filename) : '';
+        const data = roiParseHeader(raw);
+        if (!data) return;
+        const areaName = (data.name || filename.replace(/\.roi$/, '')).trim();
+        const b = data.bounds;
+        if (!b) { roiStatus('Chybí bounds oblasti'); return; }
+
+        // Body ze vsech bloku
+        const allPts = [];
+        for (const blk of (data.blocks || [])) {
+          for (const p of blk.data) allPts.push([p.lat, p.lon, p.cps]);
+        }
+
+        // Parametry — pouzit ulozene z oblasti nebo globalni
+        const gridRes = data.gridRes || 1;
+        const radius  = data.radius  || 3;
+        const specMin = (data.specMin !== null && data.specMin !== undefined) ? data.specMin : _specMin;
+        const specMax = (data.specMax !== null && data.specMax !== undefined) ? data.specMax : _specMax;
+        // Barevna skala — stejna jako v app
+        const specColors = [..._specColors];
+
+        const lat0 = Math.min(b.lat0, b.lat1), lat1 = Math.max(b.lat0, b.lat1);
+        const lon0 = Math.min(b.lon0, b.lon1), lon1 = Math.max(b.lon0, b.lon1);
+
+        // POI body v oblasti - nacist ze souboru pokud neni v pameti
+        let _poiForExport = (typeof poiPoints !== 'undefined' && poiPoints.length > 0) ? poiPoints : [];
+        if (_poiForExport.length === 0 && IS_ANDROID && typeof AndroidSerial !== 'undefined') {
+          try {
+            const _poiRaw = AndroidSerial.readCSV('CF_POI.csv');
+            if (_poiRaw) {
+              const _poiLines = _poiRaw.replace(/\r/g, '').split('\n');
+              let _hdr = false;
+              for (const _l of _poiLines) {
+                if (!_l || _l.startsWith('#')) continue;
+                if (!_hdr) { _hdr = true; continue; }
+                const _p = _l.split(',');
+                if (_p.length < 6) continue;
+                const _pt = { ts:_p[0], lat:parseFloat(_p[1]), lon:parseFloat(_p[2]), name:_p[3], desc:_p[4], icon:_p[5]||'?', log:_p[6]||'' };
+                if (!isNaN(_pt.lat) && !isNaN(_pt.lon)) _poiForExport.push(_pt);
+              }
+            }
+          } catch(e) { console.warn('POI export load:', e); }
+        }
+        const poiInBounds = _poiForExport.filter(p => {
+          if (!p.lat || !p.lon) return false;
+          return p.lat >= lat0 && p.lat <= lat1 && p.lon >= lon0 && p.lon <= lon1;
+        }).map(p => ({ lat: p.lat, lon: p.lon, name: p.name || '', desc: p.desc || '', icon: p.icon || '?' }));
+
+        // Dulni dila v oblasti - nacist ze souboru pokud cfLayers prazdne
+        const dulniInBounds = [];
+        // Nejprve zkusit z cfLayers (pokud uz jsou nactene v pameti)
+        const _hasCfData = typeof cfLayers !== 'undefined' && cfLayers.some(l => l.loaded && l.points && l.points.length > 0);
+        if (_hasCfData) {
+          for (const lyr of cfLayers) {
+            if (!lyr.points || !lyr.loaded) continue;
+            for (const p of lyr.points) {
+              if (!p.lat || !p.lon) continue;
+              if (p.lat >= lat0 && p.lat <= lat1 && p.lon >= lon0 && p.lon <= lon1) {
+                dulniInBounds.push({ lat:p.lat, lon:p.lon, name:p.name||'', druh:p.druh||'', id:p.id||'', surovina:p.surovina||'', profil:p.profil||'', rozmery:p.rozmery||'', hloubka:p.hloubka||'', ukonceni:p.ukonceni||'' });
+              }
+            }
+          }
+        } else if (IS_ANDROID && typeof AndroidSerial !== 'undefined') {
+          // Nacist primo ze souboru
+          try {
+            const _cfFiles = ['dulni_dila_filtr.csv','dulni_dila.csv'];
+            for (const _cfFile of _cfFiles) {
+              const _cfRaw = AndroidSerial.readCSV(_cfFile);
+              if (!_cfRaw) continue;
+              const _cfLines = _cfRaw.replace(/\r/g,'').split('\n');
+              let _cfHdr = null;
+              for (const _cl of _cfLines) {
+                if (!_cl || _cl.startsWith('#')) continue;
+                const sep = _cl.includes(';') ? ';' : '\t';
+                if (!_cfHdr) { _cfHdr = _cl.split(sep).map(h=>h.trim().toLowerCase()); continue; }
+                const _cc = _cl.split(sep);
+                const _g = k => { const i=_cfHdr.indexOf(k); return i>=0?(_cc[i]||'').trim():''; };
+                const _lat = parseFloat(_g('y')||_g('lat')), _lon = parseFloat(_g('x')||_g('lon'));
+                if (isNaN(_lat)||isNaN(_lon)) continue;
+                if (_lat<lat0||_lat>lat1||_lon<lon0||_lon>lon1) continue;
+                dulniInBounds.push({
+                  lat:_lat, lon:_lon,
+                  name: _g('name')||_g('nazev_dila'),
+                  druh: _g('type')||_g('druh_dila'),
+                  surovina: _g('surovina')||_g('desc'),
+                  profil: _g('profil_dila'),
+                  rozmery: _g('rozmery_usti'),
+                  hloubka: _g('hloubka_delka_dila'),
+                  ukonceni: _g('ukonceni_provozu')
+                });
+              }
+              if (dulniInBounds.length > 0) break; // prvni soubor ktery ma data
+            }
+          } catch(e) { console.warn('dulni export load:', e); }
+        }
+
+        const jsonData = JSON.stringify({
+          name: areaName,
+          bounds: { lat0, lon0, lat1, lon1 },
+          center: { lat: (lat0+lat1)/2, lon: (lon0+lon1)/2 },
+          gridRes, radius, specMin, specMax,
+          specColors,
+          points: allPts,
+          created: data.created || '',
+          blockCount: (data.blocks || []).length,
+          pointCount: allPts.length,
+          poi: poiInBounds,
+          dulni: dulniInBounds
+        });
+
+        const html = `<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>CurieFinder · ${areaName}</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"><\/script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:monospace;background:#0a0e0a;color:#b0c8b0;display:flex;flex-direction:column;height:100vh}
+#hdr{padding:6px 10px;background:#060e06;border-bottom:1px solid #1a2e1a;display:flex;align-items:center;gap:8px;flex-shrink:0;flex-wrap:wrap}
+#hdr h1{font-size:0.85rem;color:#00ff41;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#hdr span{font-size:0.6rem;color:#4a6a4a;white-space:nowrap}
+#hdr-status{font-size:0.6rem;color:#88aa88;margin-left:auto}
+#map{flex:1;min-height:0;position:relative}
+/* Legenda vertikalne vlevo dole */#leg{position:absolute;bottom:28px;left:10px;z-index:1000;display:flex;flex-direction:column;align-items:center;gap:3px}
+#inp-max,#inp-min{width:44px;background:rgba(10,14,10,0.85);border:1px solid #2a5a2a;color:#00ff41;font-family:monospace;font-size:0.6rem;padding:2px 3px;border-radius:3px;text-align:center}
+#leg-canvas{width:16px;border-radius:2px}
+</style>
+</head>
+<body>
+<div id="hdr">
+  <h1>☢ ${areaName}</h1>
+  <span id="hdr-pts">${allPts.length} bodů</span>
+  <span id="hdr-grid">Grid ${gridRes}m · IDW ${radius}m</span>
+  <span id="hdr-status"></span>
+</div>
+<div id="map"></div>
+<div id="leg">
+  <input type="number" id="inp-max" value="${specMax.toFixed(2)}" step="0.1" title="Max CPS">
+  <canvas id="leg-canvas" width="16" height="120"></canvas>
+  <input type="number" id="inp-min" value="${specMin.toFixed(2)}" step="0.1" title="Min CPS">
+</div>
+<script>
+const DATA=${jsonData};
+let heatLayer=null;
+
+// Inicializace mapy
+const map=L.map('map',{zoomControl:true}).setView([DATA.center.lat,DATA.center.lon],16);
+const baseLayers={'Mapa':L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OSM'}),'Freemap.sk':L.tileLayer('https://outdoor.tiles.freemap.sk/{z}/{x}/{y}',{maxZoom:19,attribution:'© freemap.sk'}),'Satelit':L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19}),'Turisticka':L.tileLayer('https://tile.opentopomap.org/{z}/{x}/{y}.png',{maxZoom:17})};
+baseLayers['Mapa'].addTo(map);
+L.control.layers(baseLayers,{},{position:'topright',collapsed:true}).addTo(map);
+L.rectangle([[DATA.bounds.lat0,DATA.bounds.lon0],[DATA.bounds.lat1,DATA.bounds.lon1]],{
+  color:'#ffb300',weight:1.5,fill:false,interactive:false
+}).addTo(map);
+map.fitBounds([[DATA.bounds.lat0,DATA.bounds.lon0],[DATA.bounds.lat1,DATA.bounds.lon1]],{padding:[20,20]});
+
+// Barevna skala — stejna jako v app (interpolace mezi specColors)
+function hexToRgb(h){return[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)]}
+function cpsToColor(cps,min,max,colors){
+  const norm=Math.max(0,Math.min(1,(cps-min)/(max-min)));
+  const N=colors.length-1;
+  const idx=Math.min(Math.floor(norm*N),N-1);
+  const t=norm*N-idx;
+  const [r1,g1,b1]=hexToRgb(colors[idx]);
+  const [r2,g2,b2]=hexToRgb(colors[idx+1]||colors[idx]);
+  return[Math.round(r1+(r2-r1)*t),Math.round(g1+(g2-g1)*t),Math.round(b1+(b2-b1)*t)];
+}
+
+// Legenda - vertikalni gradient (max nahore, min dole)
+function drawLegend(min,max){
+  const c=document.getElementById('leg-canvas');
+  if(!c)return;
+  const ctx=c.getContext('2d');
+  const h=c.height||120;
+  c.width=16;
+  for(let y=0;y<h;y++){
+    const t=1-(y/h); // t=1 nahore=max, t=0 dole=min
+    const cps=min+(max-min)*t;
+    const [rv,gv,bv]=cpsToColor(cps,min,max,DATA.specColors);
+    ctx.fillStyle='rgb('+rv+','+gv+','+bv+')';
+    ctx.fillRect(0,y,16,1);
+  }
+}
+
+// Debounce auto-prepocet po 2s necinnosti
+let _genDebounce=null;
+function scheduleGenerate(){
+  if(_genDebounce)clearTimeout(_genDebounce);
+  _genDebounce=setTimeout(()=>{_genDebounce=null;generate();},2000);
+}
+document.getElementById('inp-min').addEventListener('input',()=>{drawLegend(parseFloat(document.getElementById('inp-min').value)||DATA.specMin,parseFloat(document.getElementById('inp-max').value)||DATA.specMax);scheduleGenerate();});
+document.getElementById('inp-max').addEventListener('input',()=>{drawLegend(parseFloat(document.getElementById('inp-min').value)||DATA.specMin,parseFloat(document.getElementById('inp-max').value)||DATA.specMax);scheduleGenerate();});
+
+// SVG ikony dulnich del - stejna logika jako v app
+const DD_ICONS={
+  "Dob\u00fdvka":(rad)=>'<svg width="14" height="14"><polygon points="7,0 14,7 7,14 0,7" fill="#22aa22" stroke="#005500" stroke-width="1"/>'+(rad?'<circle cx="7" cy="7" r="2.5" fill="#00ff41"/>':'')+ '</svg>',
+  "J\u00e1ma":    (rad)=>'<svg width="14" height="14"><polygon points="7,14 0,0 14,0" fill="#3355ff" stroke="#001199" stroke-width="1"/>'+(rad?'<circle cx="7" cy="7" r="2.5" fill="#00ff41"/>':'')+ '</svg>',
+  "Jin\u00e9":    (rad)=>'<svg width="14" height="14"><circle cx="7" cy="7" r="6" fill="#aa5500" stroke="#663300" stroke-width="1"/>'+(rad?'<circle cx="7" cy="7" r="2.5" fill="#00ff41"/>':'')+ '</svg>',
+  "Kom\u00edn":   (rad)=>'<svg width="14" height="14"><polygon points="7,0 14,14 0,14" fill="#cc2200" stroke="#880000" stroke-width="1"/>'+(rad?'<circle cx="7" cy="7" r="2.5" fill="#00ff41"/>':'')+ '</svg>',
+  "Pinka":   (rad)=>'<svg width="10" height="10"><circle cx="5" cy="5" r="4" fill="#55aaff" stroke="#2266bb" stroke-width="1"/>'+(rad?'<circle cx="5" cy="5" r="1.8" fill="#00ff41"/>':'')+ '</svg>',
+  "Propad":  (rad)=>'<svg width="12" height="12"><circle cx="6" cy="6" r="5" fill="#2244cc" stroke="#001188" stroke-width="1"/>'+(rad?'<circle cx="6" cy="6" r="2" fill="#00ff41"/>':'')+ '</svg>',
+  "\u0160achtice":(rad)=>'<svg width="14" height="14"><polygon points="0,7 14,0 14,14" fill="#115511" stroke="#003300" stroke-width="1"/>'+(rad?'<circle cx="7" cy="7" r="2.5" fill="#00ff41"/>':'')+ '</svg>',
+  "\u0160tola":   (rad)=>'<svg width="14" height="14"><circle cx="7" cy="7" r="6" fill="#111111" stroke="#333" stroke-width="1"/>'+(rad?'<circle cx="7" cy="7" r="2.5" fill="#00ff41"/>':'')+ '</svg>',
+  "\u00dapadnice":(rad)=>'<svg width="14" height="14"><circle cx="7" cy="7" r="6" fill="#222222" stroke="#444" stroke-width="1"/>'+(rad?'<circle cx="7" cy="7" r="2.5" fill="#00ff41"/>':'')+ '</svg>',
+  "Vrt":     (rad)=>'<svg width="14" height="14"><circle cx="7" cy="7" r="6" fill="none" stroke="#333" stroke-width="1.5"/><circle cx="7" cy="7" r="3" fill="none" stroke="#333" stroke-width="1.5"/>'+(rad?'<circle cx="7" cy="7" r="1.5" fill="#00ff41"/>':'')+ '</svg>'
+};
+const DD_DEFAULT=(rad)=>'<svg width="12" height="12"><circle cx="6" cy="6" r="5" fill="#556655" stroke="#334433" stroke-width="1"/>'+(rad?'<circle cx="6" cy="6" r="2" fill="#00ff41"/>':'')+ '</svg>';
+function ddSvg(druh,rad){return (DD_ICONS[druh]||DD_DEFAULT)(rad);}
+function ddSize(druh){return druh==='Pinka'?10:druh==='Propad'?12:14;}
+
+// IDW + vykresleni
+function generate(){
+  const min=parseFloat(document.getElementById('inp-min').value)||DATA.specMin;
+  const max=parseFloat(document.getElementById('inp-max').value)||DATA.specMax;
+  (document.getElementById('hdr-status')||{}).textContent='⏳ Generuji...';
+  drawLegend(min,max);
+  setTimeout(()=>{
+    const pts=DATA.points;
+    const b=DATA.bounds;
+    const gridRes=DATA.gridRes,radius=DATA.radius;
+    const latM=1/111320;
+    const lonM=1/(111320*Math.cos(b.lat0*Math.PI/180));
+    const rows=Math.max(1,Math.round((b.lat1-b.lat0)/(gridRes*latM)));
+    const cols=Math.max(1,Math.round((b.lon1-b.lon0)/(gridRes*lonM)));
+    const data=new Float32Array(rows*cols).fill(-1);
+    const wSum=new Float32Array(rows*cols).fill(0);
+    const cpsSm=new Float32Array(rows*cols).fill(0);
+    for(const[plat,plon,pcps]of pts){
+      const pr=(plat-b.lat0)/(gridRes*latM);
+      const pc=(plon-b.lon0)/(gridRes*lonM);
+      const r0=Math.max(0,Math.floor(pr-radius/gridRes));
+      const r1=Math.min(rows-1,Math.ceil(pr+radius/gridRes));
+      const c0=Math.max(0,Math.floor(pc-radius/gridRes));
+      const c1=Math.min(cols-1,Math.ceil(pc+radius/gridRes));
+      for(let r=r0;r<=r1;r++){for(let c=c0;c<=c1;c++){
+        const dr=(r-pr)*gridRes,dc=(c-pc)*gridRes;
+        const d=Math.sqrt(dr*dr+dc*dc);
+        if(d>radius)continue;
+        const w=d<1e-6?1e6:1/(d*d);
+        wSum[r*cols+c]+=w;cpsSm[r*cols+c]+=w*pcps;
+      }}
+    }
+    for(let i=0;i<data.length;i++)if(wSum[i]>0)data[i]=cpsSm[i]/wSum[i];
+    const scale=2;
+    const canvas=document.createElement('canvas');
+    canvas.width=cols*scale;canvas.height=rows*scale;
+    const ctx=canvas.getContext('2d');
+    ctx.globalAlpha=0.8;
+    for(let r=0;r<rows;r++){for(let c=0;c<cols;c++){
+      const cps=data[r*cols+c];
+      if(cps<0)continue;
+      const[rv,gv,bv]=cpsToColor(cps,min,max,DATA.specColors);
+      ctx.fillStyle='rgb('+rv+','+gv+','+bv+')';
+      ctx.fillRect(c*scale,(rows-1-r)*scale,scale,scale);
+    }}
+    if(heatLayer){map.removeLayer(heatLayer);}
+    heatLayer=L.imageOverlay(canvas.toDataURL(),[[b.lat0,b.lon0],[b.lat1,b.lon1]],{opacity:1,interactive:false,zIndex:200}).addTo(map);
+    heatLayer.bringToBack();
+    const valid=data.filter(v=>v>=0).length;
+    (document.getElementById('hdr-status')||{}).textContent='✓ '+cols+'×'+rows+' grid · '+pts.length+' bodů · '+valid+' buněk · min='+min.toFixed(2)+' max='+max.toFixed(2);
+  },50);
+}
+
+// POI body s vlastnimi ikonami
+if (DATA.poi && DATA.poi.length > 0) {
+  DATA.poi.forEach(p => {
+    const ic = p.icon || '?';
+    const iEl = '<div style="font-size:1.4rem;line-height:1;filter:drop-shadow(0 1px 3px rgba(0,0,0,0.8));text-align:center;">'+ic+'</div>';
+    const divIc = L.divIcon({ html:iEl, className:'', iconSize:[28,28], iconAnchor:[14,14] });
+    const popHtml = '<b>'+ic+' '+(p.name||'')+'</b>'
+      +(p.desc?'<br><span style="font-size:0.75rem;color:#666;">'+p.desc+'</span>':'')
+      +'<br><span style="font-size:0.65rem;color:#999;">'+p.lat.toFixed(6)+', '+p.lon.toFixed(6)+'</span>';
+    L.marker([p.lat, p.lon], { icon:divIc }).bindPopup(popHtml, { maxWidth:220 }).addTo(map);
+  });
+}
+
+// Dulni dila
+// Meritko jako v app
+L.control.scale({position:'bottomleft',imperial:false,maxWidth:100,metric:true}).addTo(map);
+
+// Dulni dila - SVG ikony stejne jako v app
+if (DATA.dulni && DATA.dulni.length > 0) {
+  const dulniGroup = L.layerGroup().addTo(map);
+  DATA.dulni.forEach(p => {
+    const isRad = (p.surovina||p.druh||'').toLowerCase().includes('uran') || (p.surovina||'').toLowerCase().includes('radioaktivn');
+    const svg = ddSvg(p.druh, isRad);
+    const sz = ddSize(p.druh);
+    const ic = L.divIcon({className:'',html:svg,iconSize:[sz,sz],iconAnchor:[sz/2,sz/2]});
+    const popup = '<b>'+(p.druh||'')+(p.druh&&p.name?': ':'')+(p.name||p.id||'')+'</b>'
+      +(p.surovina?'<br>Surovina: '+p.surovina:'')
+      +(p.profil?'<br>Profil: '+p.profil:'')
+      +(p.rozmery?'<br>Rozměry: '+p.rozmery:'')
+      +(p.hloubka?'<br>Hloubka/délka: '+p.hloubka:'')
+      +(p.ukonceni?'<br>Ukončení: '+p.ukonceni:'')
+      +'<br><span style="font-size:0.65rem;color:#999;">'+p.lat.toFixed(6)+', '+p.lon.toFixed(6)+'</span>';
+    L.marker([p.lat, p.lon], { icon:ic, interactive:true }).bindPopup(popup, { maxWidth:250 }).addTo(dulniGroup);
+  });
+}
+
+// Spustit pri nacteni
+window.addEventListener('load',()=>{generate();});
+<\/script>
+</body>
+</html>`;
+
+        const safeName = filename.replace(/\.roi$/, '_mapa.html');
+        if (IS_ANDROID && typeof AndroidSerial !== 'undefined' && AndroidSerial.saveCSV) {
+          AndroidSerial.saveCSV(html, safeName);
+          window._roiPendingShare = safeName;
+          roiStatus('HTML připraveno: ' + safeName);
+        }
+      } catch(e) {
+        roiStatus('Chyba HTML: ' + e.message);
+        console.error('roiExportAndShareHTML:', e);
+      }
     }
 
     // ---- Export a sdílení jako CSV ----
@@ -6596,14 +6946,15 @@
           items.push({ name: d.name, mac: d.mac, ours: true, showMac: d.mac && nameCounts[d.name] > 1 });
       });
       // RadPro BLE/USB
-      items.push({ name: '⚡ Hledat RadPro BLE/USB', label: '☢️ RadPro BLE/USB', ours: true });
+      items.push({ name: '⚡ Hledat RadPro BLE/USB', label: '● RadPro BLE/USB', ours: true });
       // Raysid BLE
-      items.push({ name: '⚡ Hledat Raysid BLE', label: '📻 Raysid BLE', ours: true });
+      items.push({ name: '⚡ Hledat Raysid BLE', label: '● Raysid BLE', ours: true });
       // Ostatní
       const hasOthers = others.length > 0;
       let html = items.map(item => {
         const sel = lastDev === item.name ? ' selected' : '';
-        const cls = 'wiz-bt-item' + (item.ours ? ' ours' : '') + sel;
+        const isLast = lastDev === item.name;
+        const cls = 'wiz-bt-item' + (item.ours ? ' ours' : '') + sel + (isLast ? ' last-used' : '');
         const label = item.label || (item.ours ? '● ' + item.name : item.name);
         const mac = item.showMac ? '<span class="wiz-bt-mac">' + item.mac + '</span>' : '';
         // Stav zařízení — naposledy připojeno, připojuji, odpojeno

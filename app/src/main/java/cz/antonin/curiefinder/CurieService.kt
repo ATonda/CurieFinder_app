@@ -120,7 +120,7 @@ class CurieService : Service(), SerialInputOutputManager.Listener {
     // BLE scan
     private var bleScanner: BluetoothLeScanner? = null
     private var bleScanActive = false
-    private val BLE_SCAN_TIMEOUT_MS = 15000L
+    private val BLE_SCAN_TIMEOUT_MS = 20000L
     @Volatile private var isScanning = false
     // Cíl aktuálního scanu — callback ignoruje ostatní typy zařízení
     enum class ScanTarget { RAYSID, RADIACODE, RADPRO, ALL }
@@ -162,7 +162,7 @@ class CurieService : Service(), SerialInputOutputManager.Listener {
             ACTION_CONNECT_BT -> {
                 Log.d(TAG, "ACTION_CONNECT_BT: btConnecting=$btConnecting isRaysidMode=$isRaysidMode isRadProMode=$isRadProMode readingActive=$readingActive isScanning=$isScanning radProUsbPending=$radProUsbPending autoConnectDone=$autoConnectDone")
                 // Přijímáme jen první volání — spustí auto-connect sekvenci jednou za běh service
-                if (!autoConnectDone && !btConnecting && !isRaysidMode && !isNusMode && !isRadProMode && !isRadiaCodeMode && !readingActive && !radProUsbPending) {
+                if (!autoConnectDone && !btConnecting && !isScanning && !isRaysidMode && !isNusMode && !isRadProMode && !isRadiaCodeMode && !readingActive && !radProUsbPending) {
                     autoConnectDone = true
                     btConnecting = true
                     thread { autoConnect() }

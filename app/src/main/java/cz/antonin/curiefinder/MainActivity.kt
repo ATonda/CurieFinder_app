@@ -935,8 +935,9 @@ class MainActivity : AppCompatActivity() {
                         this@MainActivity, "$packageName.provider", file
                     )
                     val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
-                        type = "text/plain"
+                        type = "application/octet-stream"
                         putExtra(android.content.Intent.EXTRA_STREAM, uri)
+                        putExtra(android.content.Intent.EXTRA_SUBJECT, filename)
                         addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
                     }
                     startActivity(android.content.Intent.createChooser(intent, "Sdílet oblast ROI"))
