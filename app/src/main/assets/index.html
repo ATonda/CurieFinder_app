@@ -5030,7 +5030,7 @@
     // Callback z Androidu po úspěšném importu
     window.onCurieImported = function(filename) {
       setTimeout(() => {
-        if (filename && filename.startsWith('CF_ROI_') && filename.endsWith('.roi')) {
+        if (filename && filename.startsWith('CF_ROI_') && (filename.endsWith('.json') || filename.endsWith('.roi'))) {
           // ROI oblast - aktualizovat seznam v zalozce HEAT
           roiLoadList();
           roiStatus(T[LANG].roi_imported + filename);
@@ -5960,7 +5960,7 @@
           const parsed = roiParseHeader(AndroidSerial.readROI(f.name));
           return {
             filename: f.name,
-            name: parsed.name || f.name.replace(/^CF_ROI_/, '').replace(/\.roi$/, ''),
+            name: parsed.name || f.name.replace(/^CF_ROI_/, '').replace(/\.json$/, '').replace(/\.roi$/, ''),
             created: parsed.created || '',
             blockCount: parsed.blocks ? parsed.blocks.length : 0,
             bounds: parsed.bounds || null,
@@ -6234,7 +6234,7 @@
       cfPrompt(T[LANG].roi_new_area, '', (name) => {
         if (name === null) return;
         const safeName = (name || localTimestamp()).trim().replace(/[^a-zA-Z0-9_\-záčďéěíňóřšťůúýžÁČĎÉĚÍŇÓŘŠŤŮÚÝŽ]/g, '_');
-        const filename = 'CF_ROI_' + safeName + '.roi';
+        const filename = 'CF_ROI_' + safeName + '.json';
         const meta = { name: name || safeName, created: localTimestamp(), bounds: null, gridRes: 1, radius: 3, maxDist: 3, specMin: null, specMax: null };
         roiSave(filename, meta, []);
         _roiOpenFile = filename;
@@ -6348,7 +6348,7 @@
         const raw = IS_ANDROID && typeof AndroidSerial !== 'undefined' ? AndroidSerial.readROI(filename) : '';
         const data = roiParseHeader(raw);
         if (!data) return;
-        const areaName = (data.name || filename.replace(/\.roi$/, '')).trim();
+        const areaName = (data.name || filename.replace(/\.json$/, '').replace(/\.roi$/, '')).trim();
         const b = data.bounds;
         if (!b) { roiStatus('Chybí bounds oblasti'); return; }
 
@@ -6652,7 +6652,7 @@ window.addEventListener('load',()=>{generate();});
 </body>
 </html>`;
 
-        const safeName = filename.replace(/\.roi$/, '_mapa.html');
+        const safeName = filename.replace(/\.json$/, '_mapa.html').replace(/\.roi$/, '_mapa.html');
         if (IS_ANDROID && typeof AndroidSerial !== 'undefined' && AndroidSerial.saveCSV) {
           AndroidSerial.saveCSV(html, safeName);
           window._roiPendingShare = safeName;
@@ -6670,7 +6670,7 @@ window.addEventListener('load',()=>{generate();});
         const raw = IS_ANDROID && typeof AndroidSerial !== 'undefined' ? AndroidSerial.readROI(filename) : '';
         const data = roiParseHeader(raw);
         if (!data) return;
-        const areaName = (data.name || filename.replace(/^CF_ROI_/, '').replace(/\.roi$/, '')).trim();
+        const areaName = (data.name || filename.replace(/^CF_ROI_/, '').replace(/\.json$/, '').replace(/\.roi$/, '')).trim();
         let csv = '# CurieFinder CSV v1\n';
         csv += '# title=' + areaName + '\n';
         csv += '# created=' + localTimestamp() + '\n';
