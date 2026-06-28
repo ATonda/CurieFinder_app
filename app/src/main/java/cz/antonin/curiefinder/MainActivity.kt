@@ -35,9 +35,10 @@ class MainActivity : AppCompatActivity() {
     private var _pendingViewIntent: Intent? = null
     private var _pendingImportFilename: String? = null
     private var _pendingImportBytes: ByteArray? = null
+    private var _importMode = false  // true = app otevrena pres sdileni souboru
 
     companion object {
-        const val TAG = "CurieFinder"
+        const val TAG = "CurieMain"
         const val ACTION_USB_PERMISSION = "cz.antonin.curiefinder.USB_PERMISSION"
         const val IMPORT_CSV_REQUEST = 42
 
@@ -161,6 +162,7 @@ class MainActivity : AppCompatActivity() {
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
                 _pageFinished = true  // KLÍČOVÉ: nastavit příznak!
+
                 runOnUiThread {
                     val sbh = try {
                         val rid = resources.getIdentifier("status_bar_height", "dimen", "android")
@@ -171,15 +173,36 @@ class MainActivity : AppCompatActivity() {
                         view?.evaluateJavascript("document.documentElement.style.setProperty('--status-bar-height','${sbhDp}px'); console.log('sbh set: ${sbhDp}dp');", null)
                     }, 300)
                     Log.d(TAG, "Page finished, statusBarHeight=${sbhDp}dp px=${sbh}")
-                    if (_permissionsReady) {
-                        sendToService(CurieService.ACTION_CONNECT_BT)
-                    }
-                    // Zavolat onCurieImported pokud byl soubor ulozen pred nactenim stranky
-                    _pendingImportFilename?.let { fn ->
+                    if (_importMode) {
+                        // Otevreno pres sdileni souboru — jit rovnou do offline, preskocit wizard
+                        // Delay 1000ms aby thread stihl ulozit soubor a nastavit _pendingImportFilename
                         android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                            webView.evaluateJavascript("window.onCurieImported && window.onCurieImported('$fn')", null)
-                            _pendingImportFilename = null
-                        }, 800)
+                            Log.d(TAG, "importMode: pendingFilename=$_pendingImportFilename")
+                            webView.evaluateJavascript("window._offlineMode=true; typeof wizGoOffline==='function' && wizGoOffline();", null)
+                            // Zavolat onCurieImported
+                            _pendingImportFilename?.let { fn ->
+                                Log.d(TAG, "importMode: calling onCurieImported($fn)")
+                                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                                    webView.evaluateJavascript("window.onCurieImported && window.onCurieImported('$fn')", null)
+                                    _pendingImportFilename = null
+                                    _importMode = false
+                                }, 600)
+                            } ?: run {
+                                Log.w(TAG, "importMode: pendingFilename is null!")
+                                _importMode = false
+                            }
+                        }, 1000)
+                    } else {
+                        if (_permissionsReady) {
+                            sendToService(CurieService.ACTION_CONNECT_BT)
+                        }
+                        // Zavolat onCurieImported pokud byl soubor ulozen pred nactenim stranky
+                        _pendingImportFilename?.let { fn ->
+                            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                                webView.evaluateJavascript("window.onCurieImported && window.onCurieImported('$fn')", null)
+                                _pendingImportFilename = null
+                            }, 800)
+                        }
                     }
                 }
             }
@@ -197,7 +220,15 @@ class MainActivity : AppCompatActivity() {
             Log.e(TAG, "Failed to create directories: ${e.message}")
         }
 
-        webView.loadUrl("file:///android_asset/index.html")
+        val sysLocale = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+            resources.configuration.locales[0]
+        } else {
+            @Suppress("DEPRECATION")
+            resources.configuration.locale
+        }
+        val langCode = sysLocale.language.lowercase()
+        Log.d(TAG, "System lang: $langCode")
+        webView.loadUrl("file:///android_asset/index.html?lang=$langCode")
 
         val filter = IntentFilter().apply {
             addAction(CurieService.BROADCAST_DATA)
@@ -224,61 +255,97 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun handleViewIntent(intent: Intent?) {
+        Log.d(TAG, "handleViewIntent: action=${intent?.action} data=${intent?.data} type=${intent?.type}")
         if (intent?.action != Intent.ACTION_VIEW) return
         val uri = intent.data ?: return
-        // KRITICKY: cist URI IHNED — pristup k content URI expiruje
-        thread {
-            try {
-                val bytes = contentResolver.openInputStream(uri)?.use { it.readBytes() }
-                if (bytes == null || bytes.isEmpty()) {
-                    Log.e(TAG, "handleViewIntent: cannot read URI $uri")
-                    return@thread
-                }
-                val text = String(bytes.take(200).toByteArray(), Charsets.UTF_8)
-                val isRoi = text.contains("# CF_ROI v1")
-                val isCsv = text.contains("# CurieFinder")
-                if (!isRoi && !isCsv) {
-                    Log.w(TAG, "handleViewIntent: unknown format: ${text.take(50)}")
-                    return@thread
-                }
+        _importMode = true
 
-                var filename = "shared_${System.currentTimeMillis()}" + if (isRoi) ".json" else ".csv"
-                contentResolver.query(uri, null, null, null, null)?.use { cursor ->
-                    val nameIndex = cursor.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
-                    if (cursor.moveToFirst() && nameIndex >= 0) {
-                        filename = cursor.getString(nameIndex)
-                        if (filename.endsWith(".roi.txt")) filename = filename.dropLast(4)
-                        if (filename.endsWith(".json.txt")) filename = filename.dropLast(4)
-                        if (filename.endsWith(".csv.txt")) filename = filename.dropLast(4)
+        // Cist bytes IHNED na hlavnim vlakne — WhatsApp URI grant expiruje
+        val bytes = try {
+            contentResolver.openInputStream(uri)?.use { it.readBytes() }
+        } catch (e: Exception) {
+            Log.e(TAG, "handleViewIntent: cannot open URI: ${e.message}")
+            null
+        }
+        if (bytes == null || bytes.isEmpty()) {
+            Log.e(TAG, "handleViewIntent: empty bytes from $uri")
+            _importMode = false
+            return
+        }
+
+        val text = String(bytes.take(300).toByteArray(), Charsets.UTF_8)
+        val isRoi = text.contains("# CF_ROI v1")
+        val isCsv = text.contains("# CurieFinder")
+        if (!isRoi && !isCsv) {
+            Log.w(TAG, "handleViewIntent: unknown format: ${text.take(80)}")
+            _importMode = false
+            return
+        }
+
+        // Zjistit nazev souboru
+        var filename = "shared_${System.currentTimeMillis()}" + if (isRoi) ".json" else ".csv"
+        try {
+            contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+                val nameIndex = cursor.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+                if (cursor.moveToFirst() && nameIndex >= 0) {
+                    filename = cursor.getString(nameIndex)
+                    if (filename.endsWith(".roi.txt"))  filename = filename.dropLast(4)
+                    if (filename.endsWith(".json.txt")) filename = filename.dropLast(4)
+                    if (filename.endsWith(".csv.txt"))  filename = filename.dropLast(4)
+                    // WhatsApp muze odriznout priponu — doplnit podle obsahu
+                    filename = filename.trimEnd('.')  // Odstranit trailing tecky
+                    if (!filename.endsWith(".json") && !filename.endsWith(".roi") && !filename.endsWith(".csv")) {
+                        filename += if (isRoi) ".json" else ".csv"
                     }
                 }
+            }
+        } catch (e: Exception) { Log.w(TAG, "handleViewIntent: query failed: ${e.message}") }
 
-                // Ulozit na disk OKAMZITE
+        // Ulozit na disk v threadu (IO nema byt na hlavnim vlakne)
+        val bytesToSave = bytes
+        val fn = filename
+        thread {
+            try {
                 val rootDir = getExternalFilesDir("CurieFinder") ?: filesDir
                 val targetDir = when {
                     isRoi -> java.io.File(rootDir, DIR_ROI).also { it.mkdirs() }
                     text.contains("# CurieFinder CSV v1") -> java.io.File(rootDir, DIR_LOGS).also { it.mkdirs() }
                     else -> java.io.File(rootDir, DIR_LOGS).also { it.mkdirs() }
                 }
-                java.io.File(targetDir, filename).writeBytes(bytes)
-                Log.d(TAG, "handleViewIntent: saved $filename (${bytes.size}B) to ${targetDir.path}")
+                // Pokud filename nezacina CF_ROI_, precist nazev oblasti z obsahu
+                var finalFn = fn
+                Log.d(TAG, "handleViewIntent: isRoi=$isRoi fn=$fn startsWithCF=${fn.startsWith("CF_ROI_")}")
+                if (isRoi && !fn.startsWith("CF_ROI_")) {
+                    val textContent = String(bytesToSave, Charsets.UTF_8)
+                    val first200 = textContent.take(200).replace("\n", "|")
+                    Log.d(TAG, "handleViewIntent: content start: $first200")
+                    val nameMatch = Regex("^#\\s*name=(.+)$", RegexOption.MULTILINE).find(textContent)
+                    val areaName = nameMatch?.groupValues?.get(1)?.trim()
+                    Log.d(TAG, "handleViewIntent: areaName=$areaName")
+                    if (!areaName.isNullOrBlank()) {
+                        val safeName = areaName.replace(Regex("""[/\\:*?"<>|]"""), "_").trim()
+                        finalFn = "CF_ROI_${safeName}.json"
+                        Log.d(TAG, "handleViewIntent: rename $fn -> $finalFn")
+                    }
+                }
+                java.io.File(targetDir, finalFn).writeBytes(bytesToSave)
+                Log.d(TAG, "handleViewIntent: saved $finalFn (${bytesToSave.size}B) to ${targetDir.path}")
 
-                // Notifikovat JS — ihned pokud stranka nactena, jinak odlozit
-                val fn = filename
                 runOnUiThread {
                     if (_pageFinished) {
                         android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                            webView.evaluateJavascript("window.onCurieImported && window.onCurieImported('$fn')", null)
+                            webView.evaluateJavascript("window.onCurieImported && window.onCurieImported('$finalFn')", null)
                         }, 300)
                     } else {
-                        _pendingImportFilename = fn
+                        _pendingImportFilename = finalFn
                     }
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "handleViewIntent error: ${e.message}")
+                Log.e(TAG, "handleViewIntent save error: ${e.message}")
             }
         }
     }
+
 
     private fun processViewIntent(intent: Intent) {
         val uri = intent.data ?: return
@@ -1057,16 +1124,11 @@ class MainActivity : AppCompatActivity() {
                     if (!file.exists()) return@runOnUiThread
 
                     // Sdílet jako .json — WhatsApp a Gmail ho správně předají
-                    // Pokud soubor je .roi, zkopírujeme ho jako .json do tmp složky v CurieFinder
-                    // Pokud je .roi, zkopirovat jako .json do stejne slozky pro sdileni
-                    val shareFile = if (filename.endsWith(".roi")) {
-                        val jsonName = filename.replace(".roi", ".json")
-                        val jsonFile = java.io.File(java.io.File(root, DIR_ROI), jsonName)
-                        file.copyTo(jsonFile, overwrite = true)
-                        jsonFile
-                    } else {
-                        file
-                    }
+                    // Dočasný soubor v cache/ MIMO roi/ aby se nezobrazil v seznamu oblastí
+                    val tmpDir = java.io.File(cacheDir, "roi_share").also { it.mkdirs() }
+                    val jsonName = if (filename.endsWith(".roi")) filename.dropLast(4) + ".json" else filename
+                    val shareFile = java.io.File(tmpDir, jsonName)
+                    file.copyTo(shareFile, overwrite = true)
 
                     val uri = androidx.core.content.FileProvider.getUriForFile(
                         this@MainActivity, "$packageName.provider", shareFile
@@ -1077,7 +1139,13 @@ class MainActivity : AppCompatActivity() {
                         putExtra(android.content.Intent.EXTRA_SUBJECT, shareFile.name)
                         addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
                     }
+                    // Po dokonceni sdileni smazat tmp soubor
                     startActivity(android.content.Intent.createChooser(intent, "Sdílet oblast ROI"))
+                    // Smazat po 60s (share dialog mohl byt zavren)
+                    android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                        shareFile.delete()
+                        Log.d(TAG, "shareROI: tmp deleted $jsonName")
+                    }, 60000)
                 } catch (e: Exception) {
                     Log.e(TAG, "shareROI error: ${e.message}")
                 }

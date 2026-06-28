@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths>
     <external-files-path name="curie_logs" path="CurieFinder/"/>
+    <cache-path name="roi_share" path="roi_share/"/>
 </paths>
