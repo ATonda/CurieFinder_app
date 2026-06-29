@@ -547,10 +547,11 @@
     </header>
 
     <div class="tab-bar">
-        <button class="tab-btn active" onclick="switchTab('cps')">📊 CPS</button>
-        <button class="tab-btn" onclick="switchTab('map')">🗺️ MAPA</button>
-        <button class="tab-btn" onclick="switchTab('poi')">📍 BODY</button>
-        <button class="tab-btn" onclick="switchTab('roi')">🌡️ HEAT</button>
+        <button class="tab-btn active" onclick="switchTab('cps')">CPS</button>
+        <button class="tab-btn" id="tab-btn-map" onclick="switchTab('map')">MAPA</button>
+        <button class="tab-btn" id="tab-btn-poi" onclick="switchTab('poi')">BODY</button>
+        <button class="tab-btn" onclick="switchTab('roi')">HEAT</button>
+
     </div>
 
     <div class="tab-content active" id="tab-cps">
@@ -708,7 +709,7 @@
         <div class="map-overlay">
             <div class="info-panel" id="info-panel">
                 <div style="width:100%;border-bottom:1px solid #1a2e1a;padding-bottom:8px;margin-bottom:12px;">
-                    <div class="panel-title">🎨 BAREVNÉ SPEKTRUM CPS</div>
+                    <div class="panel-title" id="panel-title-spectrum">🎨 BAREVNÉ SPEKTRUM CPS</div>
                     <div style="display:flex;justify-content:center;gap:4px;margin-bottom:6px;">
                         <input type="color" id="sc0" value="#ffff00" oninput="saveSpectrum()" style="width:28px;height:28px;border:1px solid #2a5a2a;border-radius:3px;cursor:pointer;padding:0;background:#111a11;">
                         <input type="color" id="sc1" value="#84ff00" oninput="saveSpectrum()" style="width:28px;height:28px;border:1px solid #2a5a2a;border-radius:3px;cursor:pointer;padding:0;background:#111a11;">
@@ -728,7 +729,7 @@
                     </div>
                 </div>
                 <div style="width:100%">
-                    <div class="panel-title">📊 GRAF NAD MAPOU</div>
+                    <div class="panel-title" id="panel-title-graph">📊 GRAF NAD MAPOU</div>
                     <div class="graph-settings">
                         <div class="setting-row"><label>výška</label><input type="range" id="graph-height" min="80" max="300" step="10" oninput="updateGraphSettings()"><span id="graph-height-val" style="min-width:40px">80 px</span></div>
                         <div class="setting-row"><label>barva čáry</label><input type="color" id="graph-line-color" oninput="updateGraphSettings()" value="#00ff41"><label style="margin-left:8px">pozadí</label><input type="color" id="graph-bg-color" oninput="updateGraphSettings()" value="#0a0e0a"></div>
@@ -750,7 +751,7 @@
                 <button class="map-btn danger" id="btn-log" onclick="toggleLog()">LOG</button>
                 <button class="map-btn" id="btn-graph" onclick="toggleMapGraph()">📊 GRAF</button>
                 <button class="map-btn" id="btn-zobrazeni" onclick="toggleInfoPanel()">🎨 VZHLED</button>
-                <button class="map-btn" id="btn-track-hide" onclick="toggleCurrentTrackVisible()" title="Skrýt/zobrazit aktuální trasu">👁 TRASA</button>
+                <button class="map-btn" id="btn-track-hide" onclick="toggleCurrentTrackVisible()" title="Skrýt/zobrazit aktuální trasu" id="btn-track-lbl">👁 TRASA</button>
                 <button class="map-btn" id="btn-roi-map" onclick="roiMapToggle()" style="display:none">🗺️ ROI</button>
 
             </div>
@@ -784,6 +785,15 @@
             <div class="wiz-status" id="wiz-status"></div>
         </div>
         <div class="wiz-footer">
+            <select id="lang-select" onchange="setLang(this.value)" title="Language" style="background:#0a0e0a;color:#4a6a4a;border:1px solid #1a3a1a;font-family:'Share Tech Mono',monospace;font-size:0.6rem;padding:2px 4px;border-radius:4px;cursor:pointer;height:36px;flex:0 0 auto;">
+                <option value="cs">CS</option>
+                <option value="de">DE</option>
+                <option value="en">EN</option>
+                <option value="it">IT</option>
+                <option value="sk">SK</option>
+                <option value="pl">PL</option>
+                <option value="hu">HU</option>
+            </select>
             <button class="wiz-btn wiz-btn-secondary" id="wiz-btn-offline" onclick="wizGoOffline()">OFFLINE</button>
         </div>
     </div>
@@ -813,10 +823,12 @@
     // ============================================================
     // JAZYK
     // ============================================================
-    // Jazyk z URL parametru ?lang=de (Android predava system locale), fallback na navigator.language
+    // Jazyk: 1) localStorage, 2) URL param ?lang=de (Android), 3) navigator.language
     const _urlLang = new URLSearchParams(window.location.search).get('lang') || '';
-    const _lang = (_urlLang || navigator.language || 'en').toLowerCase();
-    const LANG = _lang.startsWith('cs') ? 'cs' : _lang.startsWith('sk') ? 'sk' : _lang.startsWith('it') ? 'it' : _lang.startsWith('pl') ? 'pl' : _lang.startsWith('hu') ? 'hu' : _lang.startsWith('de') ? 'de' : 'en';
+    const _navLang = (_urlLang || navigator.language || 'en').toLowerCase();
+    const _autoLang = _navLang.startsWith('cs') ? 'cs' : _navLang.startsWith('sk') ? 'sk' : _navLang.startsWith('it') ? 'it' : _navLang.startsWith('pl') ? 'pl' : _navLang.startsWith('hu') ? 'hu' : _navLang.startsWith('de') ? 'de' : 'en';
+    let LANG = localStorage.getItem('cf_lang') || _autoLang;
+    if (!['cs','sk','it','en','pl','hu','de'].includes(LANG)) LANG = _autoLang;
     const T = {
       cs: { searching:'HLEDÁM...',
             disconnected_msg:'Zapni zařízení CurieFinder',
@@ -886,7 +898,76 @@
             roi_no_new:'Žádné nové trasy k přidání (duplicity nebo prázdné)',
             roi_imported:'Importováno: ', roi_hint_move:'Pohybuj mapou — oblast zůstane uprostřed',
             roi_hint_edit:'✏ Editační mód — tah rohovými body, protější zůstane na místě',
-            roi_edit:'✏ EDITOVAT', roi_save_bounds:'✓ ULOŽIT', roi_cancel:'ZRUŠIT' },
+            wiz_searching_dev:'Hledám zařízení...',
+            wiz_ble_dev:'BLE zařízení',
+            wiz_searching_short:'HLEDÁM...',
+            wiz_searching_pre:'⏳ Hledám ',
+            wiz_connecting_pre:'⏳ Připojuji ',
+            wiz_connecting_suf:' — připojuji...',
+            wiz_connected_dot:'● připojeno',
+            wiz_searching_div:'<div class="wiz-bt-empty">Hledám zařízení...</div>',
+            wiz_none_div:'<div class="wiz-bt-empty">Žádné zařízení nenalezeno</div>',
+            wiz_ble_sep:'<div class="wiz-bt-sep">── hledat BLE zařízení ──</div>',
+            wiz_other_sep:'<div class="wiz-bt-sep">── ostatní spárovaná zařízení ──</div>',
+            poi_empty_div:'<div style="padding:20px;text-align:center;color:#4a6a4a;font-size:0.65rem;">Žádné body</div>',
+            map_topo:'🏔️ Turistická',
+            map_dark:'🌑 Tmavá',
+            map_light:'⬜ Světlá',
+            roi_save_current:'DO AKTUÁLNÍ',
+            roi_save_all_pre:'DO VŠECH (',
+            roi_merge:'SLOUČIT',
+            roi_rename:'PŘEJMENOVAT',
+            roi_merged_pre:'Sloučeno: +',
+            roi_merge_err:'Chyba sloučení: ',
+            roi_import_cancelled:'Import zrušen',
+            roi_track_no_pts:'Aktuální trasa nemá body v oblasti',
+            roi_add_track_q:'<b>Přidat aktuální trasu?</b>',
+            roi_track_saved:'Trasa uložena do oblasti (',
+            roi_track_saved2:'Trasa uložena do ',
+            roi_cur_track:'Aktuální trasa ',
+            roi_cur_track2:'Aktuální trasa',
+            roi_bounds_missing:'Chybí bounds oblasti',
+            roi_change_area:'✏️ ZMĚNIT OBLAST',
+            roi_deleted_pre:'Smazáno: ',
+            roi_block_del:'Blok smazán',
+            roi_bounds_saved2:'Bounds uloženy',
+            roi_bounds_saved_hint2:'Bounds uloženy — vrať se do záložky HEAT',
+            roi_csv_ready:'CSV připraveno: ',
+            roi_geo_ready:'GeoJSON připraveno: ',
+            roi_html_ready:'HTML připraveno: ',
+            roi_export_fmt:'FORMÁT EXPORTU',
+            roi_html_btn:'🌐 HTML &nbsp;<span style="font-size:0.55rem;color:#886633;">interaktivní mapa v prohlížeči</span>',
+            roi_btn_lbl:'📦 ROI &nbsp;<span style="font-size:0.55rem;color:#4a8a4a;">kompletní oblast se všemi bloky</span>',
+            roi_no_blocks_div:'<div style="font-size:0.6rem;color:#4a6a4a;padding:4px 0;">Žádné bloky tras</div>',
+            roi_conflict_msg:'&quot; již existuje.</b><br>Co udělat s importovaným souborem?',
+            roi_created_suf:'" vytvořena',
+            roi_imported_ok:'" úspěšně importován (',
+            suf_blocks:' bloků',
+            suf_pts:' bodů',
+            suf_pts_dot:' bodů · ',
+            suf_pts_par:' bodů)',
+            suf_cells:' buněk · min=',
+            suf_keys:' klíčů).',
+            suf_areas:' oblastí',
+            suf_areas_q:' oblastí?',
+            suf_selected:' vybráno',
+            file_read_err:'Chyba čtení souboru: ',
+            share_err:'Chyba sdílení: ',
+            invalid_file:'Neplatný soubor — chybí lang nebo strings.',
+            not_loaded:'nenačteno',
+            loading:'načítám...',
+            roi_edit:'✏ EDITOVAT', roi_save_bounds:'✓ ULOŽIT',
+            load_btn:'NAČÍST',
+            log_off:'📝 LOG: OFF',
+                        gps_waiting:'GPS: čekám...',
+                        tab_map:'MAPA',
+            tab_poi:'BODY',
+            btn_graph:'📊 GRAF',
+            btn_style:'🎨 VZHLED',
+            btn_track:'👁 TRASA',
+                        panel_spectrum:'🎨 BAREVNÉ SPEKTRUM CPS',
+            panel_graph_map:'📊 GRAF NAD MAPOU',
+            roi_cancel:'ZRUŠIT' },
       sk: { searching:'HĽADÁM...',
             disconnected_msg:'Zapni zariadenie CurieFinder',
             connected:'Pripojené', conn_cancel:'Pripojenie zrušené', conn_err:'Chyba: ',
@@ -952,7 +1033,74 @@
             roi_no_new:'Žiadne nové trasy na pridanie (duplicity alebo prázdne)',
             roi_imported:'Importované: ', roi_hint_move:'Pohybuj mapou — oblasť zostane uprostred',
             roi_hint_edit:'✏ Editačný mód — ťahaj rohovými bodmi, protľahlý zostane na mieste',
-            roi_edit:'✏ EDITOVAŤ', roi_save_bounds:'✓ ULOŽIŤ', roi_cancel:'ZRUŠIŤ' },
+            wiz_searching_dev:'Hľadám zariadenia...',
+            wiz_ble_dev:'BLE zariadenia',
+            wiz_searching_short:'HĽADÁM...',
+            wiz_searching_pre:'⏳ Hľadám ',
+            wiz_connecting_pre:'⏳ Pripájam ',
+            wiz_connecting_suf:' — pripájam...',
+            wiz_connected_dot:'● pripojeno',
+            wiz_searching_div:'<div class="wiz-bt-empty">Hľadám zariadenia...</div>',
+            wiz_none_div:'<div class="wiz-bt-empty">Žiadne zariadenie nenájdené</div>',
+            wiz_ble_sep:'<div class="wiz-bt-sep">── hľadať BLE zariadenia ──</div>',
+            wiz_other_sep:'<div class="wiz-bt-sep">── ostatné spárované zariadenia ──</div>',
+            poi_empty_div:'<div style="padding:20px;text-align:center;color:#4a6a4a;font-size:0.65rem;">Žiadne body</div>',
+            map_topo:'🏔️ Turistická',
+            map_dark:'🌑 Tmavá',
+            map_light:'⬜ Svetlá',
+            roi_save_current:'DO AKTUÁLNEJ',
+            roi_save_all_pre:'DO VŠETKÝCH (',
+            roi_merge:'ZLÚČIŤ',
+            roi_rename:'PREMENOVAŤ',
+            roi_merged_pre:'Zlúčené: +',
+            roi_merge_err:'Chyba zlúčenia: ',
+            roi_import_cancelled:'Import zrušený',
+            roi_track_no_pts:'Aktuálna trasa nemá body v oblasti',
+            roi_add_track_q:'<b>Pridať aktuálnu trasu?</b>',
+            roi_track_saved:'Trasa uložená do oblasti (',
+            roi_track_saved2:'Trasa uložená do ',
+            roi_cur_track:'Aktuálna trasa ',
+            roi_cur_track2:'Aktuálna trasa',
+            roi_bounds_missing:'Chýbajú bounds oblasti',
+            roi_change_area:'✏️ ZMENIŤ OBLASŤ',
+            roi_deleted_pre:'Zmazané: ',
+            roi_block_del:'Blok zmazaný',
+            roi_bounds_saved2:'Bounds uložené',
+            roi_bounds_saved_hint2:'Bounds uložené — vráť sa do záložky HEAT',
+            roi_csv_ready:'CSV pripravené: ',
+            roi_geo_ready:'GeoJSON pripravené: ',
+            roi_html_ready:'HTML pripravené: ',
+            roi_export_fmt:'FORMÁT EXPORTU',
+            roi_html_btn:'🌐 HTML &nbsp;<span style="font-size:0.55rem;color:#886633;">interaktívna mapa v prehliadači</span>',
+            roi_btn_lbl:'📦 ROI &nbsp;<span style="font-size:0.55rem;color:#4a8a4a;">kompletná oblasť so všetkými blokmi</span>',
+            roi_no_blocks_div:'<div style="font-size:0.6rem;color:#4a6a4a;padding:4px 0;">Žiadne bloky trás</div>',
+            roi_conflict_msg:'&quot; už existuje.</b><br>Čo urobiť s importovaným súborom?',
+            roi_created_suf:'" vytvorená',
+            roi_imported_ok:'" úspešne importovaný (',
+            suf_blocks:' blokov',
+            suf_pts:' bodov',
+            suf_pts_dot:' bodov · ',
+            suf_pts_par:' bodov)',
+            suf_cells:' buniek · min=',
+            suf_keys:' kľúčov).',
+            suf_areas:' oblastí',
+            suf_areas_q:' oblastí?',
+            suf_selected:' vybraných',
+            file_read_err:'Chyba čítania súboru: ',
+            share_err:'Chyba zdieľania: ',
+            invalid_file:'Neplatný súbor — chýba lang alebo strings.',
+            not_loaded:'nenačtené',
+            loading:'načítam...',
+            roi_edit:'✏ EDITOVAŤ', roi_save_bounds:'✓ ULOŽIŤ',             gps_waiting:'GPS: čakám...',
+            log_off:'📝 LOG: OFF',
+                        tab_map:'MAPA',
+            tab_poi:'BODY',
+            btn_graph:'📊 GRAF',
+            btn_style:'🎨 VZHLED',
+            btn_track:'👁 TRASA',
+                        panel_spectrum:'🎨 FAREBNÉ SPEKTRUM CPS',
+            panel_graph_map:'📊 GRAF NAD MAPOU',
+            roi_cancel:'ZRUŠIŤ' },
       it: { searching:'RICERCA...',
             disconnected_msg:'Accendi il dispositivo CurieFinder',
             connected:'Connesso', conn_cancel:'Connessione annullata', conn_err:'Errore: ',
@@ -1031,7 +1179,80 @@
             roi_no_new:'Nessuna traccia nuova da aggiungere (duplicati o vuote)',
             roi_imported:'Importato: ', roi_hint_move:"Sposta la mappa — l'area rimane al centro",
             roi_hint_edit:"✏ Modalità modifica — trascina angoli, l'opposto rimane fermo",
-            roi_edit:'✏ MODIFICA', roi_save_bounds:'✓ SALVA', roi_cancel:'ANNULLA' },
+            wiz_searching_dev:'Ricerca dispositivi...',
+            wiz_ble_dev:'Dispositivi BLE',
+            wiz_searching_short:'RICERCA...',
+            wiz_searching_pre:'⏳ Cerco ',
+            wiz_connecting_pre:'⏳ Connetto ',
+            wiz_connecting_suf:' — connetto...',
+            wiz_connected_dot:'● connesso',
+            wiz_searching_div:'<div class="wiz-bt-empty">Ricerca dispositivi...</div>',
+            wiz_none_div:'<div class="wiz-bt-empty">Nessun dispositivo trovato</div>',
+            wiz_ble_sep:'<div class="wiz-bt-sep">── cerca dispositivi BLE ──</div>',
+            wiz_other_sep:'<div class="wiz-bt-sep">── altri dispositivi accoppiati ──</div>',
+            poi_empty_div:'<div style="padding:20px;text-align:center;color:#4a6a4a;font-size:0.65rem;">Nessun punto</div>',
+            poi_add_confirm:'📍 Aggiungere punto alla posizione attuale?',
+            poi_move_where:'📌 Sposta punto dove?',
+            poi_move_map:'🎯 Centro mappa',
+            go_to_map:'🗺️ VAI ALLA MAPPA',
+            map_topo:'🏔️ Topografica',
+            map_dark:'🌑 Scura',
+            map_light:'⬜ Chiara',
+            roi_save_current:'A CORRENTE',
+            roi_save_all_pre:'A TUTTI (',
+            roi_merge:'UNISCI',
+            roi_rename:'RINOMINA',
+            roi_merged_pre:'Uniti: +',
+            roi_merge_err:'Errore unione: ',
+            roi_import_cancelled:'Import annullato',
+            roi_track_no_pts:'Traccia corrente senza punti nell\'area',
+            roi_add_track_q:'<b>Aggiungere traccia corrente?</b>',
+            roi_track_saved:'Traccia salvata nell\'area (',
+            roi_track_saved2:'Traccia salvata in ',
+            roi_cur_track:'Traccia corrente ',
+            roi_cur_track2:'Traccia corrente',
+            roi_bounds_missing:'Limiti area mancanti',
+            roi_change_area:'✏️ CAMBIA AREA',
+            roi_deleted_pre:'Eliminato: ',
+            roi_block_del:'Blocco eliminato',
+            roi_bounds_saved2:'Limiti salvati',
+            roi_bounds_saved_hint2:'Limiti salvati — torna alla scheda HEAT',
+            roi_csv_ready:'CSV pronto: ',
+            roi_geo_ready:'GeoJSON pronto: ',
+            roi_html_ready:'HTML pronto: ',
+            roi_export_fmt:'FORMATO ESPORTAZIONE',
+            roi_html_btn:'🌐 HTML &nbsp;<span style="font-size:0.55rem;color:#886633;">mappa interattiva nel browser</span>',
+            roi_btn_lbl:'📦 ROI &nbsp;<span style="font-size:0.55rem;color:#4a8a4a;">area completa con tutti i blocchi</span>',
+            roi_no_blocks_div:'<div style="font-size:0.6rem;color:#4a6a4a;padding:4px 0;">Nessun blocco traccia</div>',
+            roi_conflict_msg:'&quot; esiste già.</b><br>Cosa fare con il file importato?',
+            roi_created_suf:'" creata',
+            roi_imported_ok:'" importato con successo (',
+            suf_blocks:' blocchi',
+            suf_pts:' punti',
+            suf_pts_dot:' punti · ',
+            suf_pts_par:' punti)',
+            suf_cells:' celle · min=',
+            suf_keys:' chiavi).',
+            suf_areas:' aree',
+            suf_areas_q:' aree?',
+            suf_selected:' selezionato',
+            file_read_err:'Errore lettura file: ',
+            share_err:'Errore condivisione: ',
+            invalid_file:'File non valido — manca lang o strings.',
+            not_loaded:'non caricato',
+            loading:'caricamento...',
+            roi_edit:'✏ MODIFICA', roi_save_bounds:'✓ SALVA',
+            load_btn:'CARICA',
+                        gps_waiting:'GPS: attesa...',
+            log_off:'📝 LOG: OFF',
+                        tab_map:'MAPPA',
+            tab_poi:'PUNTI',
+            btn_graph:'📊 GRAFICO',
+            btn_style:'🎨 ASPETTO',
+            btn_track:'👁 TRACCIA',
+                        panel_spectrum:'🎨 SPETTRO COLORI CPS',
+            panel_graph_map:'📊 GRAFICO SULLA MAPPA',
+            roi_cancel:'ANNULLA' },
       de: { searching:'SUCHE...',
             disconnected_msg:'CurieFinder-Gerät einschalten',
             connected:'VERBUNDEN', conn_cancel:'Verbindung abgebrochen', conn_err:'VERBINDUNGSFEHLER: ',
@@ -1101,7 +1322,76 @@
             roi_no_new:'Keine neuen Tracks hinzuzufügen (Duplikate oder leer)',
             roi_imported:'Importiert: ', roi_hint_move:'Karte bewegen — Bereich bleibt zentriert',
             roi_hint_edit:'\u270f Bearbeitungsmodus — Ecken ziehen, gegenüberliegende bleibt fest',
-            roi_edit:'\u270f BEARBEITEN', roi_save_bounds:'\u2713 SPEICHERN', roi_cancel:'ABBRECHEN' },
+            roi_edit:'\u270f BEARBEITEN', roi_save_bounds:'\u2713 SPEICHERN',
+            wiz_searching_dev:'Geräte werden gesucht...',
+            wiz_ble_dev:'BLE-Geräte',
+            wiz_searching_short:'SUCHE...',
+            wiz_searching_pre:'⏳ Suche ',
+            wiz_connecting_pre:'⏳ Verbinde ',
+            wiz_connecting_suf:' — verbinde...',
+            wiz_connected_dot:'● verbunden',
+            wiz_searching_div:'<div class="wiz-bt-empty">Geräte werden gesucht...</div>',
+            wiz_none_div:'<div class="wiz-bt-empty">Kein Gerät gefunden</div>',
+            wiz_ble_sep:'<div class="wiz-bt-sep">── BLE-Geräte suchen ──</div>',
+            wiz_other_sep:'<div class="wiz-bt-sep">── andere gekoppelte Geräte ──</div>',
+            poi_empty_div:'<div style="padding:20px;text-align:center;color:#4a6a4a;font-size:0.65rem;">Keine Punkte</div>',
+            map_topo:'🏔️ Topografie',
+            map_dark:'🌑 Dunkel',
+            map_light:'⬜ Hell',
+            roi_save_current:'ZUR AKTUELLEN',
+            roi_save_all_pre:'ZU ALLEN (',
+            roi_merge:'ZUSAMMENFÜHREN',
+            roi_rename:'UMBENENNEN',
+            roi_merged_pre:'Zusammengeführt: +',
+            roi_merge_err:'Zusammenführungsfehler: ',
+            roi_import_cancelled:'Import abgebrochen',
+            roi_track_no_pts:'Aktueller Track hat keine Punkte im Bereich',
+            roi_add_track_q:'<b>Aktuellen Track hinzufügen?</b>',
+            roi_track_saved:'Track im Bereich gespeichert (',
+            roi_track_saved2:'Track gespeichert in ',
+            roi_cur_track:'Aktueller Track ',
+            roi_cur_track2:'Aktueller Track',
+            roi_bounds_missing:'Bereichsgrenzen fehlen',
+            roi_change_area:'✏️ BEREICH ÄNDERN',
+            roi_deleted_pre:'Gelöscht: ',
+            roi_block_del:'Block gelöscht',
+            roi_bounds_saved2:'Grenzen gespeichert',
+            roi_bounds_saved_hint2:'Grenzen gespeichert — zur HEAT-Registerkarte',
+            roi_csv_ready:'CSV bereit: ',
+            roi_geo_ready:'GeoJSON bereit: ',
+            roi_html_ready:'HTML bereit: ',
+            roi_export_fmt:'EXPORTFORMAT',
+            roi_html_btn:'🌐 HTML &nbsp;<span style="font-size:0.55rem;color:#886633;">interaktive Karte im Browser</span>',
+            roi_btn_lbl:'📦 ROI &nbsp;<span style="font-size:0.55rem;color:#4a8a4a;">vollständiger Bereich mit allen Blöcken</span>',
+            roi_no_blocks_div:'<div style="font-size:0.6rem;color:#4a6a4a;padding:4px 0;">Keine Track-Blöcke</div>',
+            roi_conflict_msg:'&quot; existiert bereits.</b><br>Was mit der importierten Datei machen?',
+            roi_created_suf:'" erstellt',
+            roi_imported_ok:'" erfolgreich importiert (',
+            suf_blocks:' Blöcke',
+            suf_pts:' Punkte',
+            suf_pts_dot:' Punkte · ',
+            suf_pts_par:' Punkte)',
+            suf_cells:' Zellen · min=',
+            suf_keys:' Schlüssel).',
+            suf_areas:' Bereiche',
+            suf_areas_q:' Bereiche?',
+            suf_selected:' ausgewählt',
+            file_read_err:'Dateilesefehler: ',
+            share_err:'Freigabefehler: ',
+            invalid_file:'Ungültige Datei — Sprache oder Strings fehlen.',
+            not_loaded:'nicht geladen',
+            loading:'wird geladen...',
+                        load_btn:'LADEN',
+                        gps_waiting:'GPS: warte...',
+            log_off:'📝 LOG: AUS',
+                        tab_map:'KARTE',
+            tab_poi:'PUNKTE',
+            btn_graph:'📊 GRAFIK',
+            btn_style:'🎨 ANSICHT',
+            btn_track:'👁 TRACK',
+                        panel_spectrum:'🎨 FARBSPEKTRUM CPS',
+            panel_graph_map:'📊 GRAFIK AUF KARTE',
+            roi_cancel:'ABBRECHEN' },
       en: { searching:'SEARCHING...',
             disconnected_msg:'Turn on CurieFinder device',
             connected:'Connected', conn_cancel:'Connection cancelled', conn_err:'Error: ',
@@ -1170,7 +1460,76 @@
             roi_no_new:'No new tracks to add (duplicates or empty)',
             roi_imported:'Imported: ', roi_hint_move:'Move map — area stays centered',
             roi_hint_edit:'✏ Edit mode — drag corners, opposite stays fixed',
-            roi_edit:'✏ EDIT', roi_save_bounds:'✓ SAVE', roi_cancel:'CANCEL' },
+            wiz_searching_dev:'Searching devices...',
+            wiz_ble_dev:'BLE devices',
+            wiz_searching_short:'SEARCHING...',
+            wiz_searching_pre:'⏳ Searching ',
+            wiz_connecting_pre:'⏳ Connecting ',
+            wiz_connecting_suf:' — connecting...',
+            wiz_connected_dot:'● connected',
+            wiz_searching_div:'<div class="wiz-bt-empty">Searching devices...</div>',
+            wiz_none_div:'<div class="wiz-bt-empty">No device found</div>',
+            wiz_ble_sep:'<div class="wiz-bt-sep">── search BLE devices ──</div>',
+            wiz_other_sep:'<div class="wiz-bt-sep">── other paired devices ──</div>',
+            poi_empty_div:'<div style="padding:20px;text-align:center;color:#4a6a4a;font-size:0.65rem;">No points</div>',
+            map_topo:'🏔️ Topo',
+            map_dark:'🌑 Dark',
+            map_light:'⬜ Light',
+            roi_save_current:'TO CURRENT',
+            roi_save_all_pre:'TO ALL (',
+            roi_merge:'MERGE',
+            roi_rename:'RENAME',
+            roi_merged_pre:'Merged: +',
+            roi_merge_err:'Merge error: ',
+            roi_import_cancelled:'Import cancelled',
+            roi_track_no_pts:'Current track has no points in area',
+            roi_add_track_q:'<b>Add current track?</b>',
+            roi_track_saved:'Track saved to area (',
+            roi_track_saved2:'Track saved to ',
+            roi_cur_track:'Current track ',
+            roi_cur_track2:'Current track',
+            roi_bounds_missing:'Area bounds missing',
+            roi_change_area:'✏️ CHANGE AREA',
+            roi_deleted_pre:'Deleted: ',
+            roi_block_del:'Block deleted',
+            roi_bounds_saved2:'Bounds saved',
+            roi_bounds_saved_hint2:'Bounds saved — go back to HEAT tab',
+            roi_csv_ready:'CSV ready: ',
+            roi_geo_ready:'GeoJSON ready: ',
+            roi_html_ready:'HTML ready: ',
+            roi_export_fmt:'EXPORT FORMAT',
+            roi_html_btn:'🌐 HTML &nbsp;<span style="font-size:0.55rem;color:#886633;">interactive map in browser</span>',
+            roi_btn_lbl:'📦 ROI &nbsp;<span style="font-size:0.55rem;color:#4a8a4a;">complete area with all blocks</span>',
+            roi_no_blocks_div:'<div style="font-size:0.6rem;color:#4a6a4a;padding:4px 0;">No track blocks</div>',
+            roi_conflict_msg:'&quot; already exists.</b><br>What to do with imported file?',
+            roi_created_suf:'" created',
+            roi_imported_ok:'" successfully imported (',
+            suf_blocks:' blocks',
+            suf_pts:' points',
+            suf_pts_dot:' points · ',
+            suf_pts_par:' points)',
+            suf_cells:' cells · min=',
+            suf_keys:' keys).',
+            suf_areas:' areas',
+            suf_areas_q:' areas?',
+            suf_selected:' selected',
+            file_read_err:'File read error: ',
+            share_err:'Share error: ',
+            invalid_file:'Invalid file — missing lang or strings.',
+            not_loaded:'not loaded',
+            loading:'loading...',
+            roi_edit:'✏ EDIT', roi_save_bounds:'✓ SAVE',
+            load_btn:'LOAD',
+                        gps_waiting:'GPS: waiting...',
+            log_off:'📝 LOG: OFF',
+                        tab_map:'MAP',
+            tab_poi:'POINTS',
+            btn_graph:'📊 GRAPH',
+            btn_style:'🎨 STYLE',
+            btn_track:'👁 TRACK',
+                        panel_spectrum:'🎨 COLOR SPECTRUM CPS',
+            panel_graph_map:'📊 GRAPH ON MAP',
+            roi_cancel:'CANCEL' },
       pl: { searching:'SZUKAM...', disconnected_msg:'Włącz urządzenie CurieFinder', conn_lost:'Połączenie przerwane',
             connected:'POŁĄCZONO', disconnected:'ROZŁĄCZONO', conn_err:'BŁĄD POŁĄCZENIA: ',
             conn_cancel:'Anulowano', searching_ble:'Szukam BLE...',
@@ -1238,7 +1597,76 @@
             roi_no_new:'Brak nowych tras do dodania (duplikaty lub puste)',
             roi_imported:'Zaimportowano: ', roi_hint_move:'Przesuń mapę — obszar pozostaje w centrum',
             roi_hint_edit:'✏ Tryb edycji — przeciągnij rogi, przeciwległy zostaje na miejscu',
-            roi_edit:'✏ EDYTUJ', roi_save_bounds:'✓ ZAPISZ', roi_cancel:'ANULUJ' },
+            wiz_searching_dev:'Szukam urządzeń...',
+            wiz_ble_dev:'Urządzenia BLE',
+            wiz_searching_short:'SZUKAM...',
+            wiz_searching_pre:'⏳ Szukam ',
+            wiz_connecting_pre:'⏳ Łączę ',
+            wiz_connecting_suf:' — łączę...',
+            wiz_connected_dot:'● połączono',
+            wiz_searching_div:'<div class="wiz-bt-empty">Szukam urządzeń...</div>',
+            wiz_none_div:'<div class="wiz-bt-empty">Nie znaleziono urządzenia</div>',
+            wiz_ble_sep:'<div class="wiz-bt-sep">── szukaj urządzeń BLE ──</div>',
+            wiz_other_sep:'<div class="wiz-bt-sep">── inne sparowane urządzenia ──</div>',
+            poi_empty_div:'<div style="padding:20px;text-align:center;color:#4a6a4a;font-size:0.65rem;">Brak punktów</div>',
+            map_topo:'🏔️ Turystyczna',
+            map_dark:'🌑 Ciemna',
+            map_light:'⬜ Jasna',
+            roi_save_current:'DO AKTUALNEJ',
+            roi_save_all_pre:'DO WSZYSTKICH (',
+            roi_merge:'POŁĄCZ',
+            roi_rename:'PRZEJMENUJ',
+            roi_merged_pre:'Połączono: +',
+            roi_merge_err:'Błąd łączenia: ',
+            roi_import_cancelled:'Import anulowany',
+            roi_track_no_pts:'Bieżąca trasa nie ma punktów w obszarze',
+            roi_add_track_q:'<b>Dodać bieżącą trasę?</b>',
+            roi_track_saved:'Trasa zapisana w obszarze (',
+            roi_track_saved2:'Trasa zapisana w ',
+            roi_cur_track:'Bieżąca trasa ',
+            roi_cur_track2:'Bieżąca trasa',
+            roi_bounds_missing:'Brak granic obszaru',
+            roi_change_area:'✏️ ZMIEŃ OBSZAR',
+            roi_deleted_pre:'Usunięto: ',
+            roi_block_del:'Blok usunięty',
+            roi_bounds_saved2:'Granice zapisane',
+            roi_bounds_saved_hint2:'Granice zapisane — wróć do karty HEAT',
+            roi_csv_ready:'CSV gotowe: ',
+            roi_geo_ready:'GeoJSON gotowe: ',
+            roi_html_ready:'HTML gotowe: ',
+            roi_export_fmt:'FORMAT EKSPORTU',
+            roi_html_btn:'🌐 HTML &nbsp;<span style="font-size:0.55rem;color:#886633;">interaktywna mapa w przeglądarce</span>',
+            roi_btn_lbl:'📦 ROI &nbsp;<span style="font-size:0.55rem;color:#4a8a4a;">pełny obszar ze wszystkimi blokami</span>',
+            roi_no_blocks_div:'<div style="font-size:0.6rem;color:#4a6a4a;padding:4px 0;">Brak bloków trasy</div>',
+            roi_conflict_msg:'&quot; już istnieje.</b><br>Co zrobić z importowanym plikiem?',
+            roi_created_suf:'" utworzono',
+            roi_imported_ok:'" pomyślnie zaimportowano (',
+            suf_blocks:' bloków',
+            suf_pts:' punktów',
+            suf_pts_dot:' punktów · ',
+            suf_pts_par:' punktów)',
+            suf_cells:' komórek · min=',
+            suf_keys:' kluczy).',
+            suf_areas:' obszarów',
+            suf_areas_q:' obszarów?',
+            suf_selected:' wybrano',
+            file_read_err:'Błąd odczytu pliku: ',
+            share_err:'Błąd udostępniania: ',
+            invalid_file:'Nieprawidłowy plik — brak języka lub strings.',
+            not_loaded:'nie załadowano',
+            loading:'wczytuję...',
+            roi_edit:'✏ EDYTUJ', roi_save_bounds:'✓ ZAPISZ',
+            load_btn:'WCZYTAJ',
+                        gps_waiting:'GPS: czekam...',
+            log_off:'📝 LOG: OFF',
+                        tab_map:'MAPA',
+            tab_poi:'PUNKTY',
+            btn_graph:'📊 WYKRES',
+            btn_style:'🎨 WYGLĄD',
+            btn_track:'👁 TRASA',
+                        panel_spectrum:'🎨 SPEKTRUM KOLORÓW CPS',
+            panel_graph_map:'📊 WYKRES NA MAPIE',
+            roi_cancel:'ANULUJ' },
       'hu': { searching:'KERESÉS...', disconnected_msg:'Kapcsolja be a CurieFinder eszközt', conn_lost:'Kapcsolat megszakadt',
             connected:'CSATLAKOZVA', disconnected:'LEVÁLASZTVA', conn_err:'CSATLAKOZÁSI HIBA: ',
             conn_cancel:'Megszakítva', searching_ble:'BLE keresése...',
@@ -1306,7 +1734,76 @@
             roi_no_new:'Nincs hozzáadható új útvonal (duplikátum vagy üres)',
             roi_imported:'Importálva: ', roi_hint_move:'Mozgassa a térképet — a terület középen marad',
             roi_hint_edit:'✏ Szerkesztési mód — húzza a sarkokat, az átellenes sarkok helyben maradnak',
-            roi_edit:'✏ SZERKESZTÉS', roi_save_bounds:'✓ MENTÉS', roi_cancel:'MÉGSE' }
+            roi_edit:'✏ SZERKESZTÉS', roi_save_bounds:'✓ MENTÉS',
+            wiz_searching_dev:'Eszközök keresése...',
+            wiz_ble_dev:'BLE eszközök',
+            wiz_searching_short:'KERESÉS...',
+            wiz_searching_pre:'⏳ Keresem ',
+            wiz_connecting_pre:'⏳ Csatlakozom ',
+            wiz_connecting_suf:' — csatlakozom...',
+            wiz_connected_dot:'● csatlakozva',
+            wiz_searching_div:'<div class="wiz-bt-empty">Eszközök keresése...</div>',
+            wiz_none_div:'<div class="wiz-bt-empty">Nem található eszköz</div>',
+            wiz_ble_sep:'<div class="wiz-bt-sep">── BLE eszközök keresése ──</div>',
+            wiz_other_sep:'<div class="wiz-bt-sep">── többi párosított eszköz ──</div>',
+            poi_empty_div:'<div style="padding:20px;text-align:center;color:#4a6a4a;font-size:0.65rem;">Nincsenek pontok</div>',
+            map_topo:'🏔️ Turistikai',
+            map_dark:'🌑 Sötét',
+            map_light:'⬜ Világos',
+            roi_save_current:'AZ AKTUÁLISBA',
+            roi_save_all_pre:'MINDEGYIKBE (',
+            roi_merge:'EGYESÍTÉS',
+            roi_rename:'ÁTNEVEZÉS',
+            roi_merged_pre:'Egyesítve: +',
+            roi_merge_err:'Egyesítési hiba: ',
+            roi_import_cancelled:'Import megszakítva',
+            roi_track_no_pts:'Az aktuális útvonalon nincsenek pontok a területen',
+            roi_add_track_q:'<b>Aktuális útvonal hozzáadása?</b>',
+            roi_track_saved:'Útvonal mentése a területen (',
+            roi_track_saved2:'Útvonal mentve: ',
+            roi_cur_track:'Aktuális útv. ',
+            roi_cur_track2:'Aktuális útv.',
+            roi_bounds_missing:'Hiányoznak a területhatárok',
+            roi_change_area:'✏️ TERÜLET VÁLTOZTATÁS',
+            roi_deleted_pre:'Törölve: ',
+            roi_block_del:'Blokk törölve',
+            roi_bounds_saved2:'Határok mentve',
+            roi_bounds_saved_hint2:'Határok mentve — menjen vissza a HEAT fülre',
+            roi_csv_ready:'CSV kész: ',
+            roi_geo_ready:'GeoJSON kész: ',
+            roi_html_ready:'HTML kész: ',
+            roi_export_fmt:'EXPORT FORMÁTUM',
+            roi_html_btn:'🌐 HTML &nbsp;<span style="font-size:0.55rem;color:#886633;">interaktív térkép böngészőben</span>',
+            roi_btn_lbl:'📦 ROI &nbsp;<span style="font-size:0.55rem;color:#4a8a4a;">teljes terület minden blokkal</span>',
+            roi_no_blocks_div:'<div style="font-size:0.6rem;color:#4a6a4a;padding:4px 0;">Nincsenek útvonaleblokkos</div>',
+            roi_conflict_msg:'&quot; már létezik.</b><br>Mit tegyen az importfileval?',
+            roi_created_suf:'" létrehozva',
+            roi_imported_ok:'" sikeresen importalva (',
+            suf_blocks:' blokk',
+            suf_pts:' pont',
+            suf_pts_dot:' pont · ',
+            suf_pts_par:' pont)',
+            suf_cells:' cella · min=',
+            suf_keys:' kulcs).',
+            suf_areas:' terület',
+            suf_areas_q:' területet?',
+            suf_selected:' kiválasztva',
+            file_read_err:'Fájlolvasási hiba: ',
+            share_err:'Megosztási hiba: ',
+            invalid_file:'Érvénytelen fájl — hiányzik a lang vagy strings.',
+            not_loaded:'nem betöltve',
+            loading:'betöltés...',
+                        load_btn:'BETÖLTÉS',
+                        gps_waiting:'GPS: varakozas...',
+            log_off:'📝 LOG: KI',
+                        tab_map:'TÉRKÉP',
+            tab_poi:'PONTOK',
+            btn_graph:'📊 GRAFIKON',
+            btn_style:'🎨 MEGJELENÉS',
+            btn_track:'👁 NYOMVONAL',
+                        panel_spectrum:'🎨 SZÍNSPEKTRUM CPS',
+            panel_graph_map:'📊 GRAFIKON TÉRKÉPEN',
+            roi_cancel:'MÉGSE' }
     };
 
     // ── Import jazyka z JSON souboru ─────────────────────────────────────────
@@ -2301,6 +2798,34 @@
       updateSoundPanelVisibility();
       const _goMapBtn = document.getElementById('btn-go-to-map');
       if (_goMapBtn) _goMapBtn.textContent = T[LANG].go_to_map || '🗺️ PŘEJÍT NA MAPU';
+      document.getElementById('avg-label').textContent       = L.avg_label;
+      const _sl = document.getElementById('searching-label');
+      if (_sl) _sl.textContent = L.wiz_searching_short || 'HLEDÁM...';
+      const _sndLbl = document.querySelector('.snd-label');
+      if (_sndLbl && soundMode === 0) _sndLbl.textContent = L.snd_off || 'ZVUK';
+      const _gps = document.getElementById('gps-status');
+      if (_gps) _gps.textContent = L.gps_waiting || 'GPS: čekám...';
+      const _log = document.getElementById('log-status');
+      if (_log) _log.textContent = L.log_off || '📝 LOG: OFF';
+      const _wizT = document.querySelector('.wiz-title');
+      if (_wizT) _wizT.textContent = L.wiz_title || 'PŘIPOJENÍ ZAŘÍZENÍ';
+      // Tab bar
+      const _tbMap = document.getElementById('tab-btn-map');
+      if (_tbMap) _tbMap.textContent = L.tab_map || 'MAPA';
+      const _tbPoi = document.getElementById('tab-btn-poi');
+      if (_tbPoi) _tbPoi.textContent = L.tab_poi || 'BODY';
+      // Map toolbar
+      const _btnGr = document.getElementById('btn-graph');
+      if (_btnGr && !_btnGr.classList.contains('active')) _btnGr.textContent = L.btn_graph || '📊 GRAF';
+      const _btnSt = document.getElementById('btn-zobrazeni');
+      if (_btnSt && !_btnSt.classList.contains('active')) _btnSt.textContent = L.btn_style || '🎨 VZHLED';
+      const _btnTr = document.getElementById('btn-track-hide');
+      if (_btnTr && !_btnTr.classList.contains('active')) _btnTr.textContent = L.btn_track || '👁 TRASA';
+      // POI sekce pocitadla
+      const _poiCnt = document.getElementById('poi-tab-count');
+      if (_poiCnt) _poiCnt.textContent = (L.tab_poi || 'BODY') + ' (0)';
+      const _trasCnt = document.getElementById('poi-trasy-count');
+      if (_trasCnt) _trasCnt.textContent = (L.tracks_section || 'TRASY') + ' (0)';
 
       // Klepnutí na status-box → průvodce
       const statusBox = document.getElementById('status-box');
@@ -3052,6 +3577,76 @@
     // ============================================================
     let cfLayers = [];  // [{file, name, icon, color, points, layer, visible, loaded, isGeo}]
 
+    // Inicializovat lang-select
+    document.addEventListener('DOMContentLoaded', () => {
+      const sel = document.getElementById('lang-select');
+      if (sel) sel.value = LANG;
+      // Inicializovat staticke tlacitka v HTML ktere nemohou pouzit T[LANG] primo
+      const _L = T[LANG] || T['en'];
+      const _poiBtnAll = document.querySelector('#tab-poi .sec-btn.green');
+      if (_poiBtnAll && _poiBtnAll.textContent === 'VŠE') _poiBtnAll.textContent = _L.show_all || 'VŠE';
+      // Sekce BODY a TRASY nadpisy
+      const _poiCount = document.getElementById('poi-tab-count');
+      if (_poiCount) _poiCount.textContent = (_L.tracks_section || 'BODY') + ' (0)';
+      const _trasCount = document.getElementById('poi-trasy-count');
+      if (_trasCount) _trasCount.textContent = (_L.tracks_section || 'TRASY') + ' (0)';
+    });
+
+    function setLang(lang) {
+      if (!['cs','sk','it','en','pl','hu','de'].includes(lang)) return;
+      localStorage.setItem('cf_lang', lang);
+      LANG = lang;
+      const L = T[lang];
+      const sel = document.getElementById('lang-select');
+      if (sel) sel.value = lang;
+      // Staticke elementy ktere DOMContentLoaded inicializoval
+      const _e = (id) => document.getElementById(id);
+      if (_e('ratio-label'))    _e('ratio-label').textContent    = L.ratio_label;
+      if (_e('graph-label'))    _e('graph-label').textContent    = L.hist_label;
+      if (_e('reset-graph-btn')) _e('reset-graph-btn').textContent = L.reset_graph;
+      if (_e('cps-unit'))       _e('cps-unit').textContent       = L.cps_unit;
+      if (_e('big-hint'))       _e('big-hint').textContent       = L.close_hint;
+      if (_e('avg-label'))      _e('avg-label').textContent      = L.avg_label;
+      if (_e('waiting-title'))  _e('waiting-title').textContent  = L.waiting_title;
+      if (_e('waiting-hint'))   _e('waiting-hint').textContent   = L.waiting_hint;
+      if (_e('btn-go-to-map'))  _e('btn-go-to-map').textContent  = L.go_to_map || '🗺️ PŘEJÍT NA MAPU';
+      const _sl = _e('searching-label');
+      if (_sl) _sl.textContent = L.wiz_searching_short || 'HLEDÁM...';
+      const _sndLbl = document.querySelector('.snd-label');
+      if (_sndLbl) {
+        const _modes = [L.snd_off, L.snd_click, L.snd_tone];
+        _sndLbl.textContent = _modes[soundMode] || L.snd_off;
+      }
+      const _gps = _e('gps-status');
+      if (_gps && _gps.textContent.startsWith('GPS:')) _gps.textContent = L.gps_waiting || 'GPS: čekám...';
+      const _log = _e('log-status');
+      if (_log && !logActive) _log.textContent = L.log_off || '📝 LOG: OFF';
+      const _wizT = document.querySelector('.wiz-title');
+      if (_wizT) _wizT.textContent = L.wiz_title || 'PŘIPOJENÍ ZAŘÍZENÍ';
+      if (!isConnected && _e('status-text')) _e('status-text').textContent = L.disconnected_msg;
+      // Tab bar
+      const _tbMap = _e('tab-btn-map');
+      if (_tbMap) _tbMap.textContent = L.tab_map || 'MAPA';
+      const _tbPoi = _e('tab-btn-poi');
+      if (_tbPoi) _tbPoi.textContent = L.tab_poi || 'BODY';
+      // Map toolbar
+      const _btnGr = _e('btn-graph');
+      if (_btnGr && !_btnGr.classList.contains('active')) _btnGr.textContent = L.btn_graph || '📊 GRAF';
+      const _btnSt = _e('btn-zobrazeni');
+      if (_btnSt && !_btnSt.classList.contains('active')) _btnSt.textContent = L.btn_style || '🎨 VZHLED';
+      const _btnTr = _e('btn-track-hide');
+      if (_btnTr && !_btnTr.classList.contains('active')) _btnTr.textContent = L.btn_track || '👁 TRASA';
+      const _ps2 = _e('panel-title-spectrum');
+      if (_ps2) _ps2.textContent = L.panel_spectrum || '🎨 BAREVNÉ SPEKTRUM CPS';
+      const _pg2 = _e('panel-title-graph');
+      if (_pg2) _pg2.textContent = L.panel_graph_map || '📊 GRAF NAD MAPOU';
+      // POI sekce pocitadla
+      const _poiCnt = _e('poi-tab-count');
+      if (_poiCnt) _poiCnt.textContent = (L.tab_poi || 'BODY') + ' (0)';
+      const _trasCnt = _e('poi-trasy-count');
+      if (_trasCnt) _trasCnt.textContent = (L.tracks_section || 'TRASY') + ' (0)';
+    }
+
     function switchTab(name) {
       // Pokud odcházíme z mapy a je aktivní ROI výběr → uložit bounds
       const prevTab = document.getElementById('tab-map')?.classList.contains('active');
@@ -3066,6 +3661,18 @@
       document.getElementById('tab-roi').classList.toggle('active', name === 'roi');
       if (name === 'map') {
         if (!leafletMap) initMap();
+        // Prelozit map toolbar tlacitka
+        const _L = T[LANG];
+        const _bg = document.getElementById('btn-graph');
+        if (_bg && !_bg.classList.contains('active')) _bg.textContent = _L.btn_graph || '📊 GRAF';
+        const _bs = document.getElementById('btn-zobrazeni');
+        if (_bs && !_bs.classList.contains('active')) _bs.textContent = _L.btn_style || '🎨 VZHLED';
+        const _bt = document.getElementById('btn-track-hide');
+        if (_bt && !_bt.classList.contains('active')) _bt.textContent = _L.btn_track || '👁 TRASA';
+        const _ps = document.getElementById('panel-title-spectrum');
+        if (_ps) _ps.textContent = _L.panel_spectrum || '🎨 BAREVNÉ SPEKTRUM CPS';
+        const _pg = document.getElementById('panel-title-graph');
+        if (_pg) _pg.textContent = _L.panel_graph_map || '📊 GRAF NAD MAPOU';
         setTimeout(() => {
           leafletMap.invalidateSize();
           updatePoiBtnPos();
@@ -3078,13 +3685,26 @@
         if (cfLayers.length === 0) cfLayersDiscover();
         else { cfLayersRenderTab(); }
         renderTrasaPanelPoi();
+        // Lokalizace tlacítek sekce BODY
+        const _L2 = T[LANG];
+        const _b1 = document.querySelector('.sec-btn[onclick="poiToggleAll()"]');
+        if (_b1) _b1.textContent = _poiToggleGetLabels()[_poiToggleState];
+        const _b2 = document.querySelector('.sec-btn[onclick="poiDeleteSelected()"]');
+        if (_b2) _b2.textContent = _L2.roi_delete || 'SMAZAT';
+        const _b3 = document.querySelector('.sec-btn[onclick="poiExportSelected()"]');
+        if (_b3) _b3.textContent = _L2.roi_share || 'SDÍLET';
+        const _b4 = document.querySelector('.sec-btn[onclick="poiImport()"]');
+        if (_b4) _b4.textContent = _L2.roi_import_btn ? _L2.roi_import_btn.replace(/📥 /,'') : 'IMPORT';
         // Lokalizace tlacítek sekce TRASY
         const _btnAll   = document.getElementById('poi-trasa-btn-all');
         const _btnDel   = document.getElementById('poi-trasa-btn-del');
         const _btnShare = document.getElementById('poi-trasa-btn-share');
-        if (_btnAll)   _btnAll.textContent   = T[LANG].show_all   || '👁 VŠE';
-        if (_btnDel)   _btnDel.textContent   = T[LANG].roi_delete  || 'SMAZAT';
-        if (_btnShare) _btnShare.textContent = T[LANG].roi_share   || 'SDÍLET';
+        if (_btnAll)   _btnAll.textContent   = _L2.show_all   || '👁 VŠE';
+        if (_btnDel)   _btnDel.textContent   = _L2.roi_delete || 'SMAZAT';
+        if (_btnShare) _btnShare.textContent = _L2.roi_share  || 'SDÍLET';
+        // Tab nazvy
+        const _tbPoi2 = document.getElementById('tab-btn-poi');
+        if (_tbPoi2) _tbPoi2.textContent = _L2.tab_poi || 'BODY';
       }
       if (name === 'roi') {
         roiLoadList();
@@ -3598,7 +4218,7 @@
         const _snapLat = lat, _snapLon = lon, _snapTs = localTimestamp();
         const _cpsSnap = Math.round(lastCps);
         const _rateSnap = lastRate > 0 ? fmtVal(lastRate) : '';
-        const _line = `${_snapTs},${_snapLat.toFixed(6)},${_snapLon.toFixed(6)},${_cpsSnap},,,${_rateSnap}\n`;
+        const _line = `${_snapTs},${_snapLat.toFixed(6)},${_snapLon.toFixed(6)},${_cpsSnap},,${_rateSnap}\n`;
         _logBuffer.push(_line);
         allPointsCount++;
         const logSpan = document.getElementById('log-status');
@@ -4100,18 +4720,18 @@
     }
 
     let _poiToggleState = 0;
-    const _POI_TOGGLE_LABELS = ['VŠE', 'VÝBĚR', 'SKRÝT'];
+    const _poiToggleGetLabels = () => [T[LANG].show_all||'VŠE', T[LANG].show_sel||'VÝBĚR', T[LANG].show_none||'SKRÝT'];
 
     function poiRenderTab() {
       const list = document.getElementById('poi-tab-list');
       const count = document.getElementById('poi-tab-count');
       if (!list) return;
-      if (count) count.textContent = `BODY (${poiPoints.length})`;
+      if (count) count.textContent = (T[LANG].tab_poi || 'BODY') + ' (' + poiPoints.length + ')';
       // Aktualizovat label VŠE/VÝBĚR/SKRÝT tlačítka
       const btnVse = document.querySelector('.sec-btn[onclick="poiToggleAll()"]');
-      if (btnVse) btnVse.textContent = _POI_TOGGLE_LABELS[_poiToggleState];
+      if (btnVse) btnVse.textContent = _poiToggleGetLabels()[_poiToggleState];
       if (!poiPoints.length) {
-        list.innerHTML = '<div style="padding:20px;text-align:center;color:#4a6a4a;font-size:0.65rem;">Žádné body</div>';
+        list.innerHTML = T[LANG].poi_empty_div || '<div style="padding:20px;text-align:center;color:#4a6a4a;font-size:0.65rem;">Žádné body</div>';
         return;
       }
       // Řadit podle jména
@@ -4168,7 +4788,7 @@
     function poiToggleAll() {
       _poiToggleState = (_poiToggleState + 1) % 3;
       const btn = document.querySelector('.sec-btn[onclick="poiToggleAll()"]');
-      if (btn) btn.textContent = _POI_TOGGLE_LABELS[_poiToggleState];
+      if (btn) btn.textContent = _poiToggleGetLabels()[_poiToggleState];
       if (_poiToggleState === 0) {
         // VŠE — zobrazit všechny
         poiPoints.forEach(p => { p.visible = true; });
@@ -4278,8 +4898,7 @@
       'Šachtice':  (rad) => `<svg width='14' height='14'><polygon points='0,7 14,0 14,14' fill='#115511' stroke='#003300' stroke-width='1'/>${rad?"<circle cx='7' cy='7' r='2.5' fill='#00ff41' style='filter:drop-shadow(0 0 3px #00ff41)'/>": ''}</svg>`,
       'Štola':     (rad) => `<svg width='14' height='14'><circle cx='7' cy='7' r='6' fill='#111111' stroke='#333' stroke-width='1'/>${rad?"<circle cx='7' cy='7' r='2.5' fill='#00ff41' style='filter:drop-shadow(0 0 3px #00ff41)'/>": ''}</svg>`,
       'Úpadnice':  (rad) => `<svg width='14' height='14'><circle cx='7' cy='7' r='6' fill='#222222' stroke='#444' stroke-width='1'/>${rad?"<circle cx='7' cy='7' r='2.5' fill='#00ff41' style='filter:drop-shadow(0 0 3px #00ff41)'/>": ''}</svg>`,
-      'Vrt':       (rad) => `<svg width='14' height='14'><circle cx='7' cy='7' r='6' fill='none' stroke='#333' stroke-width='1.5'/><circle cx='7' cy='7' r='3' fill='none' stroke='#333' stroke-width='1.5'/>${rad?"<circle cx='7' cy='7' r='1.5' fill='#00ff41' style='filter:drop-shadow(0 0 3px #00ff41)'/>": ''}</svg>`,
-    };
+      'Vrt':       (rad) => `<svg width='14' height='14'><circle cx='7' cy='7' r='6' fill='none' stroke='#333' stroke-width='1.5'/><circle cx='7' cy='7' r='3' fill='none' stroke='#333' stroke-width='1.5'/>${rad?"<circle cx='7' cy='7' r='1.5' fill='#00ff41' style='filter:drop-shadow(0 0 3px #00ff41)'/>": ''}</svg>` };
     const DD_DEFAULT_ICON = (rad) => `<svg width='12' height='12'><circle cx='6' cy='6' r='5' fill='#556655' stroke='#334433' stroke-width='1'/>${rad?"<circle cx='6' cy='6' r='2' fill='#00ff41' style='filter:drop-shadow(0 0 3px #00ff41)'/>": ''}</svg>`;
 
     function ddGetIcon(druh, isRad) {
@@ -4505,13 +5124,13 @@
           <div style="display:flex;align-items:center;gap:6px;">
             <input type="checkbox" ${lyr.visible?'checked':''} onchange="cfLayerToggleVisible(${i},this.checked)" style="accent-color:#00ff41;width:16px;height:16px;">
             <span style="font-size:0.65rem;color:#00ff41;flex:1;">${lyr.icon} ${lyr.name}</span>
-            <span class="dd-status" id="cfl-status-${i}">${lyr.loaded ? lyr.points.length + ' bodů' : 'nenačteno'}</span>
+            <span class="dd-status" id="cfl-status-${i}">${lyr.loaded ? lyr.points.length + T[LANG].suf_pts : T[LANG].not_loaded}</span>
           </div>
           <div style="display:flex;gap:4px;">
-            <button class="dd-btn ${lyr.filter==='all'?'active':''}" onclick="cfLayerSetFilter(${i},'all')">VŠE</button>
+            <button class="dd-btn ${lyr.filter==='all'?'active':''}" onclick="cfLayerSetFilter(${i},'all')">${T[LANG].show_all||'VŠE'}</button>
             <button class="dd-btn ${lyr.filter==='rad'?'active':''}" onclick="cfLayerSetFilter(${i},'rad')">☢ URAN</button>
             <button class="dd-btn ${lyr.showNames?'active':''}" onclick="cfLayerToggleNames(${i})">ABC</button>
-            <button class="dd-btn" onclick="cfLayerLoad(${i})">${lyr.loaded?'↺':'NAČÍST'}</button>
+            <button class="dd-btn" onclick="cfLayerLoad(${i})">${lyr.loaded?'↺':(T[LANG].load_btn||'NAČÍST')}</button>
             <button class="dd-btn" onclick="cfLayerExport(${i})" style="border-color:#00aaff;color:#00aaff;background:#0a0e0a;">SDÍLET</button>
           </div>
         </div>`).join('');
@@ -4855,10 +5474,10 @@
       if (hdrSpan) hdrSpan.textContent = `📁 TRASY (${currentFiles.length}) · zobrazeno: ${showCount}`;
       const labels = { all:T[LANG].show_all, none:T[LANG].show_none, selection:T[LANG].show_sel };
       const btnVse = document.getElementById('btn-vse-show');
-      if (btnVse) btnVse.textContent = labels[showMode];
+      if (btnVse) btnVse.textContent = { all:T[LANG].show_all, none:T[LANG].show_none, selection:T[LANG].show_sel }[showMode];
       // Aktualizovat tlacitko VŠE v poi panelu
       const btnAll2 = document.getElementById('poi-trasa-btn-all');
-      if (btnAll2) btnAll2.textContent = T[LANG].roi_show || labels[showMode];
+      if (btnAll2) btnAll2.textContent = T[LANG].roi_show || { all:T[LANG].show_all, none:T[LANG].show_none, selection:T[LANG].show_sel }[showMode];
       applyZobrazitDebounced();
     }
 
@@ -5315,7 +5934,7 @@
       if (trackPoints.length === 0) { cfInfo(T[LANG].no_ram_data); return; }
       const created = localTimestamp();
       const header = '# CurieFinder CSV v1\n# title=RAM export\n# created=' + created + '\n\ntimestamp,lat,lon,cps,poi,label,icon,rate';
-      const lines = trackPoints.map(p => `${p.ts},${p.lat.toFixed(6)},${p.lon.toFixed(6)},${Math.round(p.cps)},,,`);
+      const lines = trackPoints.map(p => `${p.ts},${p.lat.toFixed(6)},${p.lon.toFixed(6)},${Math.round(p.cps)},,`);
       const csv   = [header, ...lines].join('\n');
       const name  = localFilename();
       if (IS_ANDROID && typeof AndroidSerial !== 'undefined') {
@@ -6962,7 +7581,7 @@ window.addEventListener('load',()=>{generate();});
         csv += 'timestamp,lat,lon,cps,poi,label,icon,rate\n';
         for (const blk of (data.blocks || [])) {
           for (const p of blk.data) {
-            csv += (p.ts || '') + ',' + p.lat.toFixed(7) + ',' + p.lon.toFixed(7) + ',' + p.cps.toFixed(2) + ',,,,\n';
+            csv += (p.ts || '') + ',' + p.lat.toFixed(7) + ',' + p.lon.toFixed(7) + ',' + p.cps.toFixed(2) + ',,\n';
           }
         }
         const safeName = filename.replace(/^CF_ROI_/, 'CF_').replace(/\.roi$/, '_export.csv');
@@ -7248,7 +7867,7 @@ window.addEventListener('load',()=>{generate();});
         return '<div class="' + cls + '" data-dev="' + item.name.replace(/&/g,'&amp;').replace(/"/g,'&quot;') + '"><span>' + label + '</span>' + mac + state + '</div>';
       }).join('');
       if (hasOthers) {
-        html += '<div class="wiz-bt-sep">── ostatní spárovaná zařízení ──</div>';
+        html += T[LANG].wiz_other_sep || '<div class="wiz-bt-sep">── ostatní spárovaná zařízení ──</div>';
         others.forEach(d => {
           const sel = lastDev === d.name ? ' selected' : '';
           const showMac = d.mac && nameCounts[d.name] > 1;
