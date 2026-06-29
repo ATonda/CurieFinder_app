@@ -652,9 +652,9 @@
             </div>
             <div id="roi-bulk-bar" style="display:none;gap:6px;padding:4px 8px;background:#060e06;border-bottom:1px solid #1a2e1a;align-items:center;">
                 <span id="roi-bulk-count" style="font-size:0.6rem;color:#ffb300;flex:1;"></span>
-                <button class="sec-btn blue"  onclick="roiBulkShare()">SDÍLET</button>
-                <button class="sec-btn red"   onclick="roiBulkDelete()">SMAZAT</button>
-                <button class="sec-btn"       onclick="_roiSelected.clear();roiRenderList(_roiList)">ZRUŠIT</button>
+                <button class="sec-btn blue"  id="roi-bulk-share-btn" onclick="roiBulkShare()">SDÍLET</button>
+                <button class="sec-btn red"   id="roi-bulk-del-btn"   onclick="roiBulkDelete()">SMAZAT</button>
+                <button class="sec-btn"       id="roi-bulk-cancel-btn" onclick="_roiSelected.clear();roiRenderList(_roiList)">ZRUŠIT</button>
             </div>
             <div class="roi-list" id="roi-list"></div>
             <div class="roi-status" id="roi-status"></div>
@@ -749,9 +749,9 @@
 
             <div class="map-toolbar">
                 <button class="map-btn danger" id="btn-log" onclick="toggleLog()">LOG</button>
-                <button class="map-btn" id="btn-graph" onclick="toggleMapGraph()">📊 GRAF</button>
-                <button class="map-btn" id="btn-zobrazeni" onclick="toggleInfoPanel()">🎨 VZHLED</button>
-                <button class="map-btn" id="btn-track-hide" onclick="toggleCurrentTrackVisible()" title="Skrýt/zobrazit aktuální trasu" id="btn-track-lbl">👁 TRASA</button>
+                <button class="map-btn" id="btn-graph" onclick="toggleMapGraph()">GRAF</button>
+                <button class="map-btn" id="btn-zobrazeni" onclick="toggleInfoPanel()">VZHLED</button>
+                <button class="map-btn" id="btn-track-hide" onclick="toggleCurrentTrackVisible()" title="Skrýt/zobrazit aktuální trasu" id="btn-track-lbl">TRASA</button>
                 <button class="map-btn" id="btn-roi-map" onclick="roiMapToggle()" style="display:none">🗺️ ROI</button>
 
             </div>
@@ -848,9 +848,9 @@
             log_crash:'⚠️ Předchozí log nebyl řádně ukončen!\nSoubor: ',
             skip:'PŘESKOČIT',
             edit_note:'✏️ Poznámka',
-            show_all:'👁 VŠE',
-            show_sel:'👁 VÝBĚR',
-            show_none:'👁 SKRÝT',
+            show_all:'VŠE',
+            show_sel:'VÝBĚR',
+            show_none:'SKRÝT',
             selected:'vybráno',
             date_fmt: (d,m,h,mi) => `${d}.${m} ${h}:${mi}`,
             compass_n:'S', compass_s:'J', compass_e:'V', compass_w:'Z',
@@ -962,11 +962,15 @@
                         gps_waiting:'GPS: čekám...',
                         tab_map:'MAPA',
             tab_poi:'BODY',
-            btn_graph:'📊 GRAF',
-            btn_style:'🎨 VZHLED',
-            btn_track:'👁 TRASA',
+            btn_graph:'GRAF',
+            btn_style:'VZHLED',
+            btn_track:'TRASA',
                         panel_spectrum:'🎨 BAREVNÉ SPEKTRUM CPS',
             panel_graph_map:'📊 GRAF NAD MAPOU',
+                        roi_select_edit:'✏️ ZMĚNIT OBLAST',
+            layers_title:'VRSTVY',
+            log_pause:'PAUZA',
+            poi_tab:'BODY',
             roi_cancel:'ZRUŠIT' },
       sk: { searching:'HĽADÁM...',
             disconnected_msg:'Zapni zariadenie CurieFinder',
@@ -985,7 +989,7 @@
             no_ram_data:'Žiadne dáta v pamäti.',
             log_crash:'⚠️ Predchádzajúci log nebol ukončený!\nSúbor: ',
             skip:'PRESKOČIŤ', edit_note:'✏️ Poznámka',
-            show_all:'👁 VŠE', show_sel:'👁 VÝBER', show_none:'👁 SKRYŤ',
+            show_all:'VŠE', show_sel:'VÝBER', show_none:'SKRYŤ',
             selected:'vybrané',
             date_fmt: (d,m,h,mi) => `${d}.${m} ${h}:${mi}`,
             compass_n:'S', compass_s:'J', compass_e:'V', compass_w:'Z',
@@ -1095,11 +1099,18 @@
             log_off:'📝 LOG: OFF',
                         tab_map:'MAPA',
             tab_poi:'BODY',
-            btn_graph:'📊 GRAF',
-            btn_style:'🎨 VZHLED',
-            btn_track:'👁 TRASA',
+            btn_graph:'GRAF',
+            btn_style:'VZHLED',
+            btn_track:'TRASA',
                         panel_spectrum:'🎨 FAREBNÉ SPEKTRUM CPS',
             panel_graph_map:'📊 GRAF NAD MAPOU',
+                        load_btn:'NAČÍTAŤ',
+            roi_select_new:'🗺️ VYBRAŤ OBLASŤ',
+            roi_select_edit:'✏️ ZMENIŤ OBLASŤ',
+            roi_show:'ZOBRAZIŤ',
+            layers_title:'VRSTVY',
+            log_pause:'PAUZA',
+            poi_tab:'BODY',
             roi_cancel:'ZRUŠIŤ' },
       it: { searching:'RICERCA...',
             disconnected_msg:'Accendi il dispositivo CurieFinder',
@@ -1119,9 +1130,9 @@
             log_crash:'⚠️ Log precedente non chiuso!\nFile: ',
             skip:'SALTA',
             edit_note:'✏️ Nota',
-            show_all:'👁 TUTTI',
-            show_sel:'👁 SELEZIONE',
-            show_none:'👁 NASCONDI',
+            show_all:'TUTTI',
+            show_sel:'SELEZ.',
+            show_none:'NASCONDI',
             selected:'selezionati',
             no_tracks:'Nessun percorso salvato',
             note_start:'Nota per il log (opzionale):',
@@ -1131,7 +1142,7 @@
             no_ram_data:'Nessun dato in memoria.',
             log_crash:'⚠️ Log precedente non chiuso!\nFile: ',
             skip:'SALTA', edit_note:'✏️ Nota',
-            show_all:'👁 TUTTI', show_sel:'👁 SELEZIONE', show_none:'👁 NASCONDI',
+            show_all:'TUTTI', show_sel:'SELEZ.', show_none:'NASCONDI',
             selected:'selezionati',
             date_fmt: (d,m,h,mi) => `${d}/${m} ${h}:${mi}`,
             compass_n:'N', compass_s:'S', compass_e:'E', compass_w:'O',
@@ -1166,7 +1177,7 @@
             roi_blocks:'BLOCCHI TRACCE', roi_no_blocks:'Nessun blocco traccia',
             roi_name_lbl:'Nome area', roi_grid_lbl:'Risoluzione griglia (m)', roi_radius_lbl:'Raggio IDW (m)', roi_maxdist_lbl:'Dist. max (m)',
             roi_bounds_lbl:'Limiti area:', roi_bounds_none:'Limiti non impostati',
-            roi_select_map:'🗺️ SELEZIONA SU MAPPA', roi_add_tracks:'📂 AGGIUNGI TRACCE', roi_generate:'⚡ GENERA',
+            roi_select_map:'🗺️ SELEZIONA SU MAPPA', roi_add_tracks:'+ TRACCE', roi_generate:'⚡ GENERA',
             roi_import:'📥 IMPORTA', roi_share:'📤 CONDIVIDI', roi_delete:'🗑 ELIMINA',
             roi_delete_confirm:(n) => `Eliminare area "${n}"?`,
             roi_delete_block:(n) => `Eliminare blocco "${n}"?`,
@@ -1247,11 +1258,15 @@
             log_off:'📝 LOG: OFF',
                         tab_map:'MAPPA',
             tab_poi:'PUNTI',
-            btn_graph:'📊 GRAFICO',
-            btn_style:'🎨 ASPETTO',
-            btn_track:'👁 TRACCIA',
+            btn_graph:'GRAFICO',
+            btn_style:'ASPETTO',
+            btn_track:'TRACCIA',
                         panel_spectrum:'🎨 SPETTRO COLORI CPS',
             panel_graph_map:'📊 GRAFICO SULLA MAPPA',
+                        roi_select_edit:'✏️ MODIFICA AREA',
+            layers_title:'LIVELLI',
+            log_pause:'PAUSA',
+            poi_tab:'PUNTI',
             roi_cancel:'ANNULLA' },
       de: { searching:'SUCHE...',
             disconnected_msg:'CurieFinder-Gerät einschalten',
@@ -1271,9 +1286,9 @@
             log_crash:'\u26a0\ufe0f Vorheriges Log wurde nicht geschlossen!\nDatei: ',
             skip:'ÜBERSPRINGEN',
             edit_note:'\u270f\ufe0f Notiz',
-            show_all:'\ud83d\udc41 ALLE',
-            show_sel:'\ud83d\udc41 AUSWAHL',
-            show_none:'\ud83d\udc41 AUSBLENDEN',
+            show_all:'ALLE',
+            show_sel:'AUSWAHL',
+            show_none:'AUSBLENDEN',
             selected:'ausgewählt',
             date_fmt: (d,m,h,mi) => `${d}.${m} ${h}:${mi}`,
             compass_n:'N', compass_s:'S', compass_e:'O', compass_w:'W',
@@ -1299,17 +1314,17 @@
             poi_select_first:'Zuerst Punkte auswählen (gelbe Checkbox).',
             poi_delete_all:'Alle POI-Punkte löschen?',
             ram_restore:(n,m) => `\u26a0\ufe0f RAM-Track-Sicherung gefunden (${n} Punkte, ${m} Min alt).\nIn Speicher wiederherstellen?`,
-            btn_yes:'JA', btn_no:'NEIN', btn_ok:'OK', btn_add:'HINZUFÜGEN', btn_cancel:'ABBRECHEN',
+            btn_yes:'JA', btn_no:'NEIN', btn_ok:'OK', btn_add:'HINZUF.', btn_cancel:'ABBR.',
             btn_select:'AUSWÄHLEN', btn_skip:'ÜBERSPRINGEN',
             hist_usv_label:'µSv/h VERLAUF', hist_cps_label:'CPS VERLAUF',
             poi_add_confirm:'📍 Punkt an aktueller Position hinzufügen?',
             poi_move_where:'📌 Punkt wohin verschieben?', poi_move_gps:'📍 GPS-Position', poi_move_map:'🎯 Kartenmitte',
-            roi_select_new:'🗺️ BEREICH WÄHLEN', roi_select_edit:'\u270f\ufe0f BEREICH BEARBEITEN', roi_show:'ANZEIGEN',
-            roi_new_area:'Name des neuen Bereichs', roi_new_btn:'\u2795 NEUER BEREICH', roi_import_btn:'📥 IMPORT', roi_no_areas:'Keine Bereiche. Tippe \u2795 NEUER BEREICH.',
+            roi_select_new:'🗺️ BEREICH WÄHLEN', roi_select_edit:'BEREICH ÄNDERN', roi_show:'ANZEIGEN',
+            roi_new_area:'Name des neuen Bereichs', roi_new_btn:'+ NEUER BEREICH', roi_import_btn:'📥 IMPORT', roi_no_areas:'Keine Bereiche. Tippe \u2795 NEUER BEREICH.',
             roi_blocks:'TRACK-BLÖCKE', roi_no_blocks:'Keine Track-Blöcke',
             roi_name_lbl:'Bereichsname', roi_grid_lbl:'Gitterauflösung (m)', roi_radius_lbl:'IDW-Radius (m)', roi_maxdist_lbl:'Max. Abstand (m)',
             roi_bounds_lbl:'Bereichsgrenzen:', roi_bounds_none:'Grenzen nicht gesetzt',
-            roi_select_map:'🗺️ AUF KARTE WÄHLEN', roi_add_tracks:'📂 TRACKS HINZUFÜGEN', roi_generate:'\u26a1 GENERIEREN',
+            roi_select_map:'🗺️ AUF KARTE WÄHLEN', roi_add_tracks:'+ TRACKS', roi_generate:'GENERIEREN',
             roi_import:'📥 IMPORT', roi_share:'📤 TEILEN', roi_delete:'🗑 LÖSCHEN',
             roi_delete_confirm:(n) => `Bereich "${n}" löschen?`,
             roi_delete_block:(n) => `Block "${n}" löschen?`,
@@ -1340,7 +1355,7 @@
             map_light:'⬜ Hell',
             roi_save_current:'ZUR AKTUELLEN',
             roi_save_all_pre:'ZU ALLEN (',
-            roi_merge:'ZUSAMMENFÜHREN',
+            roi_merge:'ZUSAMMENF.',
             roi_rename:'UMBENENNEN',
             roi_merged_pre:'Zusammengeführt: +',
             roi_merge_err:'Zusammenführungsfehler: ',
@@ -1379,18 +1394,22 @@
             file_read_err:'Dateilesefehler: ',
             share_err:'Freigabefehler: ',
             invalid_file:'Ungültige Datei — Sprache oder Strings fehlen.',
-            not_loaded:'nicht geladen',
+            not_loaded:'n. geladen',
             loading:'wird geladen...',
                         load_btn:'LADEN',
                         gps_waiting:'GPS: warte...',
             log_off:'📝 LOG: AUS',
                         tab_map:'KARTE',
             tab_poi:'PUNKTE',
-            btn_graph:'📊 GRAFIK',
-            btn_style:'🎨 ANSICHT',
-            btn_track:'👁 TRACK',
+            btn_graph:'GRAFIK',
+            btn_style:'ANSICHT',
+            btn_track:'TRACK',
                         panel_spectrum:'🎨 FARBSPEKTRUM CPS',
             panel_graph_map:'📊 GRAFIK AUF KARTE',
+                        roi_select_edit:'✏️ BEREICH BEARBEITEN',
+            layers_title:'EBENEN',
+            log_pause:'PAUSE',
+            poi_tab:'PUNKTE',
             roi_cancel:'ABBRECHEN' },
       en: { searching:'SEARCHING...',
             disconnected_msg:'Turn on CurieFinder device',
@@ -1410,9 +1429,9 @@
             log_crash:'⚠️ Previous log was not closed!\nFile: ',
             skip:'SKIP',
             edit_note:'✏️ Note',
-            show_all:'👁 ALL',
-            show_sel:'👁 SELECTION',
-            show_none:'👁 HIDE',
+            show_all:'ALL',
+            show_sel:'SELECT',
+            show_none:'HIDE',
             selected:'selected',
             date_fmt: (d,m,h,mi) => `${m}/${d} ${h}:${mi}`,
             compass_n:'N', compass_s:'S', compass_e:'E', compass_w:'W',
@@ -1524,11 +1543,17 @@
             log_off:'📝 LOG: OFF',
                         tab_map:'MAP',
             tab_poi:'POINTS',
-            btn_graph:'📊 GRAPH',
-            btn_style:'🎨 STYLE',
-            btn_track:'👁 TRACK',
+            btn_graph:'GRAPH',
+            btn_style:'STYLE',
+            btn_track:'TRACK',
                         panel_spectrum:'🎨 COLOR SPECTRUM CPS',
             panel_graph_map:'📊 GRAPH ON MAP',
+                        roi_select_new:'🗺️ SELECT AREA',
+            roi_select_edit:'✏️ EDIT AREA',
+            roi_show:'SHOW',
+            layers_title:'LAYERS',
+            log_pause:'PAUSE',
+            poi_tab:'POINTS',
             roi_cancel:'CANCEL' },
       pl: { searching:'SZUKAM...', disconnected_msg:'Włącz urządzenie CurieFinder', conn_lost:'Połączenie przerwane',
             connected:'POŁĄCZONO', disconnected:'ROZŁĄCZONO', conn_err:'BŁĄD POŁĄCZENIA: ',
@@ -1547,9 +1572,9 @@
             log_crash:'⚠️ Poprzedni log nie został zamknięty!\nPlik: ',
             skip:'POMIŃ',
             edit_note:'✏️ Notatka',
-            show_all:'👁 WSZYSTKIE',
-            show_sel:'👁 WYBRANE',
-            show_none:'👁 UKRYJ',
+            show_all:'VŠECHNY',
+            show_sel:'WYBRANE',
+            show_none:'UKRYJ',
             selected:'wybrane',
             date_fmt: (d,m,h,mi) => `${d}.${m} ${h}:${mi}`,
             compass_n:'N', compass_s:'S', compass_e:'E', compass_w:'Z',
@@ -1653,7 +1678,7 @@
             file_read_err:'Błąd odczytu pliku: ',
             share_err:'Błąd udostępniania: ',
             invalid_file:'Nieprawidłowy plik — brak języka lub strings.',
-            not_loaded:'nie załadowano',
+            not_loaded:'nie načteno',
             loading:'wczytuję...',
             roi_edit:'✏ EDYTUJ', roi_save_bounds:'✓ ZAPISZ',
             load_btn:'WCZYTAJ',
@@ -1661,11 +1686,17 @@
             log_off:'📝 LOG: OFF',
                         tab_map:'MAPA',
             tab_poi:'PUNKTY',
-            btn_graph:'📊 WYKRES',
-            btn_style:'🎨 WYGLĄD',
-            btn_track:'👁 TRASA',
+            btn_graph:'WYKRES',
+            btn_style:'WYGLĄD',
+            btn_track:'TRASA',
                         panel_spectrum:'🎨 SPEKTRUM KOLORÓW CPS',
             panel_graph_map:'📊 WYKRES NA MAPIE',
+                        roi_select_new:'🗺️ WYBIERZ OBSZAR',
+            roi_select_edit:'✏️ ZMIEŃ OBSZAR',
+            roi_show:'POKAŻ',
+            layers_title:'WARSTWY',
+            log_pause:'PAUZA',
+            poi_tab:'PUNKTY',
             roi_cancel:'ANULUJ' },
       'hu': { searching:'KERESÉS...', disconnected_msg:'Kapcsolja be a CurieFinder eszközt', conn_lost:'Kapcsolat megszakadt',
             connected:'CSATLAKOZVA', disconnected:'LEVÁLASZTVA', conn_err:'CSATLAKOZÁSI HIBA: ',
@@ -1675,7 +1706,7 @@
             background:'HÁTTÉR', cps_unit:'IMPULZUS MÁSODPERCENKÉNT', samples:'minta',
             close_hint:'2× ÉRINTÉS A BEZÁRÁSHOZ', avg_short:'ÁTLAG', waiting_title:'LEVÁLASZTVA',
             waiting_hint:'Kapcsolja be a CurieFinder eszközt',
-            no_tracks:'Nincsenek mentett nyomvonalak', tracks_section:'ÚTVONALAK',
+            no_tracks:'Nincsenek mentett nyomvonalak', tracks_section:'TRACKS',
             note_start:'Napló megjegyzése (opcionális):',
             note_edit:'Naplómegjegyzés szerkesztése:',
             log_stop_confirm:'Leállítja a rögzítést?',
@@ -1684,9 +1715,9 @@
             log_crash:'⚠️ Az előző napló nem lett lezárva!\nFájl: ',
             skip:'KIHAGYÁS',
             edit_note:'✏️ Megjegyzés',
-            show_all:'👁 ÖSSZES',
-            show_sel:'👁 KIVÁLASZTOTT',
-            show_none:'👁 ELREJTÉS',
+            show_all:'ÖSSZES',
+            show_sel:'KIVÁLASZT',
+            show_none:'ELREJTÉS',
             selected:'kiválasztva',
             date_fmt: (d,m,h,mi) => `${m}.${d} ${h}:${mi}`,
             compass_n:'É', compass_s:'D', compass_e:'K', compass_w:'Ny',
@@ -1721,7 +1752,7 @@
             roi_blocks:'ÚTVONAL BLOKKOK', roi_no_blocks:'Nincsenek útvonal blokkok',
             roi_name_lbl:'Terület neve', roi_grid_lbl:'Rács felbontás (m)', roi_radius_lbl:'IDW sugár (m)', roi_maxdist_lbl:'Max táv. (m)',
             roi_bounds_lbl:'Terület határok:', roi_bounds_none:'Határok nincsenek beállítva',
-            roi_select_map:'🗺️ KIJELÖLÉS TÉRKÉPEN', roi_add_tracks:'📂 ÚTVONALAK HOZZÁADÁSA', roi_generate:'⚡ GENERÁLÁS',
+            roi_select_map:'KIJELÖLÉS', roi_add_tracks:'+ TRACKS', roi_generate:'⚡ GENERÁLÁS',
             roi_import:'📥 IMPORT', roi_share:'📤 MEGOSZTÁS', roi_delete:'🗑 TÖRLÉS',
             roi_delete_confirm:(n) => `Törli a(z) "${n}" területet?`,
             roi_delete_block:(n) => `Törli a(z) "${n}" blokkot?`,
@@ -1764,7 +1795,7 @@
             roi_cur_track:'Aktuális útv. ',
             roi_cur_track2:'Aktuális útv.',
             roi_bounds_missing:'Hiányoznak a területhatárok',
-            roi_change_area:'✏️ TERÜLET VÁLTOZTATÁS',
+            roi_change_area:'TERÜLET VÁLT.',
             roi_deleted_pre:'Törölve: ',
             roi_block_del:'Blokk törölve',
             roi_bounds_saved2:'Határok mentve',
@@ -1791,18 +1822,24 @@
             file_read_err:'Fájlolvasási hiba: ',
             share_err:'Megosztási hiba: ',
             invalid_file:'Érvénytelen fájl — hiányzik a lang vagy strings.',
-            not_loaded:'nem betöltve',
+            not_loaded:'n. betöltve',
             loading:'betöltés...',
                         load_btn:'BETÖLTÉS',
                         gps_waiting:'GPS: varakozas...',
             log_off:'📝 LOG: KI',
                         tab_map:'TÉRKÉP',
             tab_poi:'PONTOK',
-            btn_graph:'📊 GRAFIKON',
-            btn_style:'🎨 MEGJELENÉS',
-            btn_track:'👁 NYOMVONAL',
-                        panel_spectrum:'🎨 SZÍNSPEKTRUM CPS',
-            panel_graph_map:'📊 GRAFIKON TÉRKÉPEN',
+            btn_graph:'GRAFIKON',
+            btn_style:'STÍLUS',
+            btn_track:'TRACK',
+                        panel_spectrum:'SZÍNSPEKTRUM CPS',
+            panel_graph_map:'GRAFIKON TÉRKÉPEN',
+                        roi_select_new:'TERÜLET KIJEL.',
+            roi_select_edit:'TERÜLET MODOS.',
+            roi_show:'MUTAT',
+            layers_title:'RÉTEGEK',
+            log_pause:'SZÜNET',
+            poi_tab:'PONTOK',
             roi_cancel:'MÉGSE' }
     };
 
@@ -3258,7 +3295,7 @@
       const rate = rateRaw !== null && !isNaN(rateRaw) ? rateRaw : null;
 
       if (rssi !== null) updateBtStatus(isConnected, rssi);
-      console.log('parseLine: cps=' + cps + ' rate=' + rate + ' deviceHasRate=' + deviceHasRate);
+
       if (cps === null || isNaN(cps) || !isFinite(cps) || cps < 0) return;
 
       lastCps = cps;
@@ -3645,6 +3682,13 @@
       if (_poiCnt) _poiCnt.textContent = (L.tab_poi || 'BODY') + ' (0)';
       const _trasCnt = _e('poi-trasy-count');
       if (_trasCnt) _trasCnt.textContent = (L.tracks_section || 'TRASY') + ' (0)';
+      // HEAT bulk-bar
+      const _rbs2 = _e('roi-bulk-share-btn');
+      const _rbd2 = _e('roi-bulk-del-btn');
+      const _rbc2 = _e('roi-bulk-cancel-btn');
+      if (_rbs2) _rbs2.textContent = L.roi_share  || 'SDÍLET';
+      if (_rbd2) _rbd2.textContent = L.roi_delete || 'SMAZAT';
+      if (_rbc2) _rbc2.textContent = L.roi_cancel || 'ZRUŠIT';
     }
 
     function switchTab(name) {
@@ -3709,10 +3753,18 @@
       if (name === 'roi') {
         roiLoadList();
         // Lokalizace toolbar tlacítek
+        const _Lr = T[LANG];
         const btnNew = document.getElementById('roi-btn-new');
         const btnImp = document.getElementById('roi-btn-import');
-        if (btnNew) btnNew.textContent = T[LANG].roi_new_btn || '➕ NOVÁ OBLAST';
-        if (btnImp) btnImp.textContent = T[LANG].roi_import_btn || '📥 IMPORT';
+        if (btnNew) btnNew.textContent = _Lr.roi_new_btn || '➕ NOVÁ OBLAST';
+        if (btnImp) btnImp.textContent = _Lr.roi_import_btn || '📥 IMPORT';
+        // Bulk bar
+        const _rbs = document.getElementById('roi-bulk-share-btn');
+        const _rbd = document.getElementById('roi-bulk-del-btn');
+        const _rbc = document.getElementById('roi-bulk-cancel-btn');
+        if (_rbs) _rbs.textContent = _Lr.roi_share   || 'SDÍLET';
+        if (_rbd) _rbd.textContent = _Lr.roi_delete  || 'SMAZAT';
+        if (_rbc) _rbc.textContent = _Lr.roi_cancel  || 'ZRUŠIT';
       }
       // Zavřít BT dialog při přepnutí záložky
       const overlay = document.getElementById('cf-dialog-overlay');
@@ -5118,7 +5170,7 @@
       const container = document.getElementById('cf-layers-container');
       if (!container) return;
       if (!cfLayers.length) { container.innerHTML = ''; return; }
-      const header = `<div style="padding:4px 10px;border-top:1px solid #1a3a1a;border-bottom:1px solid #1a2e1a;background:#060e06;font-size:0.55rem;color:#4a8a4a;letter-spacing:1px;">VRSTVY</div>`;
+      const header = `<div style="padding:4px 10px;border-top:1px solid #1a3a1a;border-bottom:1px solid #1a2e1a;background:#060e06;font-size:0.55rem;color:#4a8a4a;letter-spacing:1px;">${T[LANG].layers_title||'VRSTVY'}</div>`;
       const items = cfLayers.map((lyr, i) => `
         <div class="dd-toolbar" style="flex-direction:column;align-items:stretch;gap:4px;padding:6px 10px;">
           <div style="display:flex;align-items:center;gap:6px;">
@@ -5975,7 +6027,7 @@
         if (recDot) recDot.classList.remove('active');
       } else if (!isConnected || lastLat === null) {
         logSpan.className = 'log-pauza';
-        logSpan.innerHTML = '📝 LOG: PAUZA';
+        logSpan.innerHTML = '📝 LOG: ' + (T[LANG].log_pause || 'PAUZA');
         if (recDot) recDot.classList.remove('active');
       } else {
         logSpan.className = 'log-rec';
@@ -6971,7 +7023,7 @@
       if (!bar) return;
       bar.style.display = _roiSelected.size > 0 ? 'flex' : 'none';
       const countEl = document.getElementById('roi-bulk-count');
-      if (countEl) countEl.textContent = _roiSelected.size + ' vybráno';
+      if (countEl) countEl.textContent = _roiSelected.size + (T[LANG].suf_selected || ' vybráno');
     }
 
     function roiBulkDelete() {
@@ -7794,9 +7846,8 @@ window.addEventListener('load',()=>{generate();});
     const WIZ_RADPRO_NAMES = ['HMSoft', 'HM-10', 'BT05', 'MLT-BT05', 'JDY-08', 'JDY-09'];
 
     function wizOpen() {
-      console.log('wizOpen called');
       const overlay = document.getElementById('wiz-overlay');
-      if (!overlay) { console.log('wizOpen: no overlay'); return; }
+      if (!overlay) return;
       _wizScanResults = {};
       const statusEl = document.getElementById('wiz-status');
       statusEl.textContent = ''; statusEl.className = 'wiz-status';
@@ -7805,7 +7856,6 @@ window.addEventListener('load',()=>{generate();});
       else { bar.classList.remove('visible'); }
       try { wizBuildList(); } catch(e) { console.error('wizBuildList error:', e); }
       overlay.classList.add('visible');
-      console.log('wizOpen: overlay visible');
     }
 
     function wizBuildList() {
