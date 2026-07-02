@@ -40,11 +40,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-            <!--
-                USB_DEVICE_ATTACHED: Android zobrazí CurieFinder jako výchozí appku
-                pro FNIRSI GC-01 a umožní zaškrtnout "Vždy otevřít tuto aplikaci".
-                Bez tohoto filtru se hlásí všechny USB appky a souhlas se nezapamatuje.
-            -->
+            <!-- USB_DEVICE_ATTACHED -->
             <intent-filter>
                 <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" />
             </intent-filter>
@@ -61,12 +57,40 @@
                     android:pathPattern=".*\.roi" />
             </intent-filter>
 
-            <!-- Otevrit .json ROI soubor sdileny pres WhatsApp/Gmail/email -->
+            <!-- Otevrit/prijmout JSON (heat oblasti) — VIEW z file manageru -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
-                <data android:scheme="content"
-                    android:mimeType="application/json" />
+                <data android:scheme="content" android:mimeType="application/json" />
+            </intent-filter>
+
+            <!-- Otevrit/prijmout CSV (trasy, body, vrstvy) -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="content" android:mimeType="text/csv" />
+            </intent-filter>
+
+            <!-- Prijmout soubor sdileny pres WhatsApp/email (ACTION_SEND) — jakykoliv MIME -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="application/json" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/csv" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="application/octet-stream" />
             </intent-filter>
 
         </activity>

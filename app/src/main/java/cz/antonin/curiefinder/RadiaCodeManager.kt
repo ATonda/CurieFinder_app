@@ -71,6 +71,7 @@ class RadiaCodeManager(
     private val initQueue = ArrayDeque<Pair<String, ByteArray>>()
     private var initInProgress = false
 
+    private var connectedAddress: String = ""
     private var dataRunnable: Runnable? = null
     private var rssiRunnable: Runnable? = null
     private var connTimeoutRunnable: Runnable? = null
@@ -88,6 +89,7 @@ class RadiaCodeManager(
     fun connect(device: BluetoothDevice) {
         Log.d(TAG, "connect → ${device.name} ${device.address}")
         disconnect()
+        connectedAddress = device.address
         connTimeoutRunnable = Runnable {
             Log.e(TAG, "connection timeout")
             disconnect()
@@ -120,6 +122,7 @@ class RadiaCodeManager(
         gatt = null
         txChar = null
         rxChar = null
+        connectedAddress = ""
     }
 
     fun isConnected() = isReady.get()
@@ -222,6 +225,7 @@ class RadiaCodeManager(
             characteristic: BluetoothGattCharacteristic,
             value: ByteArray
         ) {
+            if (gatt.device.address != connectedAddress) return
             if (characteristic.uuid == RX_UUID) dataQueue.add(value.copyOf())
         }
 
@@ -231,6 +235,7 @@ class RadiaCodeManager(
             gatt: BluetoothGatt,
             characteristic: BluetoothGattCharacteristic
         ) {
+            if (gatt.device.address != connectedAddress) return
             if (characteristic.uuid == RX_UUID)
                 dataQueue.add(characteristic.value?.copyOf() ?: return)
         }

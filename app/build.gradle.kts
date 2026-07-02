@@ -5,18 +5,14 @@ plugins {
 
 android {
     namespace = "cz.antonin.curiefinder"
-    compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
-    }
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "cz.antonin.curiefinder"
         minSdk = 26
         targetSdk = 36
-        versionCode = 354
-        versionName = "3.54_beta"
+        versionCode = 355
+        versionName = "3.55 beta"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

@@ -85,6 +85,9 @@ class CurieService : Service(), SerialInputOutputManager.Listener {
         fun isRadProHintName(name: String?): Boolean =
             name != null && RADPRO_HINT_NAMES.any { name.startsWith(it, ignoreCase = true) }
 
+        fun isKC761Name(name: String?): Boolean =
+            name != null && name.startsWith("KC761", ignoreCase = true)
+
         // RadPro USB VIDs (decimal)
         val RADPRO_USB_VIDS = setOf(0x0483, 0x4348, 0x1A86, 0x10C4)  // STM32, WCH, CH340, CP210x
     }
@@ -115,15 +118,17 @@ class CurieService : Service(), SerialInputOutputManager.Listener {
     @Volatile private var isRadProMode = false
     private var radiaCodeManager: RadiaCodeManager? = null
     @Volatile private var isRadiaCodeMode = false
+    private var kc761Manager: KC761BleManager? = null
+    @Volatile private var isKC761Mode = false
     @Volatile private var btConnecting = false
 
     // BLE scan
     private var bleScanner: BluetoothLeScanner? = null
     private var bleScanActive = false
-    private val BLE_SCAN_TIMEOUT_MS = 20000L
+    private val BLE_SCAN_TIMEOUT_MS = 15000L
     @Volatile private var isScanning = false
     // Cíl aktuálního scanu — callback ignoruje ostatní typy zařízení
-    enum class ScanTarget { RAYSID, RADIACODE, RADPRO, ALL }
+    enum class ScanTarget { RAYSID, RADIACODE, RADPRO, KC761, ALL }
     @Volatile private var bleScanTarget = ScanTarget.ALL
 
     // ── USB permission receiver (pro RadProManager callback) ──────────────────
@@ -162,7 +167,7 @@ class CurieService : Service(), SerialInputOutputManager.Listener {
             ACTION_CONNECT_BT -> {
                 Log.d(TAG, "ACTION_CONNECT_BT: btConnecting=$btConnecting isRaysidMode=$isRaysidMode isRadProMode=$isRadProMode readingActive=$readingActive isScanning=$isScanning radProUsbPending=$radProUsbPending autoConnectDone=$autoConnectDone")
                 // Přijímáme jen první volání — spustí auto-connect sekvenci jednou za běh service
-                if (!autoConnectDone && !btConnecting && !isScanning && !isRaysidMode && !isNusMode && !isRadProMode && !isRadiaCodeMode && !readingActive && !radProUsbPending) {
+                if (!autoConnectDone && !btConnecting && !isRaysidMode && !isNusMode && !isRadProMode && !isRadiaCodeMode && !isKC761Mode && !readingActive && !radProUsbPending) {
                     autoConnectDone = true
                     btConnecting = true
                     thread { autoConnect() }
@@ -262,6 +267,9 @@ class CurieService : Service(), SerialInputOutputManager.Listener {
         radiaCodeManager?.disconnect()
         radiaCodeManager = null
         isRadiaCodeMode = false
+        kc761Manager?.disconnect()
+        kc761Manager = null
+        isKC761Mode = false
         try { usbIoManager?.stop() } catch (_: Exception) {}
         usbIoManager = null
         try { usbPort?.close() } catch (_: Exception) {}
@@ -371,6 +379,12 @@ class CurieService : Service(), SerialInputOutputManager.Listener {
             Log.d(TAG, "BLE scan result: name=$name addr=${device.address} rssi=${result.rssi}")
             if (result.rssi <= -99) return
 
+            // KC761 detekce: primárně podle jména, fallback podle service UUID 0x181A
+            val isKC761BySvc = run {
+                val target181A = android.os.ParcelUuid.fromString("0000181a-0000-1000-8000-00805f9b34fb")
+                result.scanRecord?.serviceUuids?.contains(target181A) == true
+            }
+
             val target = bleScanTarget
             when {
                 isRaysidName(name) && (target == ScanTarget.RAYSID || target == ScanTarget.ALL) -> {
@@ -387,6 +401,12 @@ class CurieService : Service(), SerialInputOutputManager.Listener {
                     Log.d(TAG, "RadPro hint found: $name ${device.address}")
                     stopBleScan()
                     connectRadPro(device, name ?: "RadPro")
+                }
+                (isKC761Name(name) || isKC761BySvc) && (target == ScanTarget.KC761 || target == ScanTarget.ALL) -> {
+                    val devName = name ?: "KC761"
+                    Log.d(TAG, "KC761 found: $devName ${device.address} (bySvc=$isKC761BySvc)")
+                    stopBleScan()
+                    connectKC761(device, devName)
                 }
             }
         }
@@ -408,7 +428,6 @@ class CurieService : Service(), SerialInputOutputManager.Listener {
                 broadcast(BROADCAST_DATA) { putExtra(EXTRA_DATA, line) }
             },
             onConnect    = {
-                saveRealDeviceName(name)
                 broadcast(BROADCAST_CONNECTED) { putExtra(EXTRA_TYPE, "BLE"); putExtra(EXTRA_DEVICE_NAME, name) }
                 updateNotification("$name připojen")
                 android.os.Handler(android.os.Looper.getMainLooper()).post { startGps() }
@@ -433,7 +452,6 @@ class CurieService : Service(), SerialInputOutputManager.Listener {
                 broadcast(BROADCAST_DATA) { putExtra(EXTRA_DATA, line) }
             },
             onConnect    = {
-                saveRealDeviceName(name)
                 broadcast(BROADCAST_CONNECTED) { putExtra(EXTRA_TYPE, "BLE"); putExtra(EXTRA_DEVICE_NAME, name) }
                 updateNotification("$name připojen")
                 android.os.Handler(android.os.Looper.getMainLooper()).post { startGps() }
@@ -542,7 +560,6 @@ class CurieService : Service(), SerialInputOutputManager.Listener {
             },
             onConnect    = { transport ->
                 isRadProMode = true
-                saveRealDeviceName(name)
                 broadcast(BROADCAST_CONNECTED) { putExtra(EXTRA_TYPE, transport); putExtra(EXTRA_DEVICE_NAME, name) }
                 updateNotification("$name připojen ($transport)")
                 android.os.Handler(android.os.Looper.getMainLooper()).post { startGps() }
@@ -632,7 +649,6 @@ class CurieService : Service(), SerialInputOutputManager.Listener {
             onConnect = {
                 isNusMode = true
                 Log.d(TAG, "NUS connected: $name")
-                saveRealDeviceName(name)
                 broadcast(BROADCAST_CONNECTED) { putExtra(EXTRA_TYPE, "NUS"); putExtra(EXTRA_DEVICE_NAME, name) }
                 updateNotification("NUS: $name")
             },
@@ -674,6 +690,9 @@ class CurieService : Service(), SerialInputOutputManager.Listener {
         try { radiaCodeManager?.disconnect() } catch (_: Exception) {}
         radiaCodeManager = null
         isRadiaCodeMode = false
+        try { kc761Manager?.disconnect() } catch (_: Exception) {}
+        kc761Manager = null
+        isKC761Mode = false
         try { btSocket?.close() } catch (_: Exception) {}
         btSocket = null
     }
@@ -684,15 +703,6 @@ class CurieService : Service(), SerialInputOutputManager.Listener {
      * 2. Selže → tiše projdi všechna spárovaná (SPP) + BLE scan paralelně
      * 3. Vše selže → zobraz wizard
      */
-
-    /** Uloží skutečné jméno zařízení do prefs — přepíše "⚡ Hledat..." pokud tam bylo */
-    private fun saveRealDeviceName(name: String) {
-        if (name.isEmpty()) return
-        val prefs = getSharedPreferences("curie_prefs", Context.MODE_PRIVATE)
-        prefs.edit().putString(PREF_BT_NAME, name).apply()
-        Log.d(TAG, "saveRealDeviceName: $name")
-    }
-
     private fun autoConnect() {
         try {
             val prefs = getSharedPreferences("curie_prefs", Context.MODE_PRIVATE)
@@ -720,7 +730,7 @@ class CurieService : Service(), SerialInputOutputManager.Listener {
     }
 
     private fun isConnectedAny(): Boolean =
-        isRaysidMode || isNusMode || isRadProMode || isRadiaCodeMode || readingActive
+        isRaysidMode || isNusMode || isRadProMode || isRadiaCodeMode || isKC761Mode || readingActive
 
     /**
      * Vrátí true pokud uživatel mezitím vybral JINÉ zařízení než currentName.
@@ -740,10 +750,33 @@ class CurieService : Service(), SerialInputOutputManager.Listener {
     private fun connectSavedDevice(savedName: String): Boolean {
         Log.d(TAG, "connectSavedDevice: $savedName")
 
+        // Pokud je uloženo jako BLE:jméno:mac (starý formát z WIZ scanu),
+        // extrahovat jméno a zkontrolovat zda nejde o naše zařízení se vlastním managerem
+        val effectiveName = if (savedName.startsWith("BLE:")) {
+            val withoutPrefix = savedName.removePrefix("BLE:")
+            // BLE:jméno:MAC — MAC je posledních 17 znaků (xx:xx:xx:xx:xx:xx)
+            val mac = if (withoutPrefix.length > 17 && withoutPrefix[withoutPrefix.length - 18] == ':')
+                withoutPrefix.takeLast(17) else ""
+            if (mac.isNotEmpty()) withoutPrefix.dropLast(18) else withoutPrefix
+        } else savedName
+
         if (savedName.startsWith("BLE:")) {
+            // Přesměrovat naše zařízení do správného manageru i když jsou uložena se starým BLE: prefixem
+            if (isRaysidName(effectiveName)) {
+                Log.d(TAG, "connectSavedDevice: BLE: prefix → Raysid redirect")
+                return connectSavedDevice(effectiveName)
+            }
+            if (isRadiaCodeName(effectiveName)) {
+                Log.d(TAG, "connectSavedDevice: BLE: prefix → RadiaCode redirect")
+                return connectSavedDevice(effectiveName)
+            }
+            if (isKC761Name(effectiveName)) {
+                Log.d(TAG, "connectSavedDevice: BLE: prefix → KC761 redirect")
+                return connectSavedDevice(effectiveName)
+            }
+            // Ostatní BLE zařízení → NusBleManager
             Log.d(TAG, "connectSavedDevice: BLE NUS → $savedName")
             connectNusBle(savedName)
-            // NUS connect je async — čekáme na výsledek
             val deadline = System.currentTimeMillis() + 12000L
             while (System.currentTimeMillis() < deadline) {
                 if (isNusMode) return true
@@ -790,6 +823,19 @@ class CurieService : Service(), SerialInputOutputManager.Listener {
                 Thread.sleep(300)
             }
             Log.d(TAG, "connectSavedDevice: RadPro timeout")
+            stopBleScan()
+            return false
+        }
+
+        if (isKC761Name(savedName) || savedName == "⚡ Hledat KC761 BLE") {
+            Log.d(TAG, "connectSavedDevice: KC761 BLE scan")
+            startBleScanKC761()
+            val deadline = System.currentTimeMillis() + BLE_SCAN_TIMEOUT_MS + 1000L
+            while (System.currentTimeMillis() < deadline) {
+                if (isKC761Mode) return true
+                Thread.sleep(300)
+            }
+            Log.d(TAG, "connectSavedDevice: KC761 timeout")
             stopBleScan()
             return false
         }
@@ -962,7 +1008,6 @@ class CurieService : Service(), SerialInputOutputManager.Listener {
 
     @SuppressLint("MissingPermission")
     private fun startBleScanRadiaCode() {
-        if (isScanning || isRadiaCodeMode) return
         bleScanTarget = ScanTarget.RADIACODE
         val adapter = android.bluetooth.BluetoothAdapter.getDefaultAdapter() ?: run {
             broadcast(BROADCAST_ERROR) { putExtra(EXTRA_MSG, "BT nepodporovan") }; return
@@ -980,6 +1025,57 @@ class CurieService : Service(), SerialInputOutputManager.Listener {
         android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
             if (bleScanActive) { stopBleScan(); Log.d(TAG, "BLE scan RadiaCode timeout") }
         }, BLE_SCAN_TIMEOUT_MS)
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun startBleScanKC761() {
+        if (isScanning || isKC761Mode) return
+        bleScanTarget = ScanTarget.KC761
+        val adapter = android.bluetooth.BluetoothAdapter.getDefaultAdapter() ?: run {
+            broadcast(BROADCAST_ERROR) { putExtra(EXTRA_MSG, "BT nepodporovan") }; return
+        }
+        if (!adapter.isEnabled) { broadcast(BROADCAST_ERROR) { putExtra(EXTRA_MSG, "BT vypnuto") }; return }
+        bleScanner = adapter.bluetoothLeScanner ?: run {
+            broadcast(BROADCAST_ERROR) { putExtra(EXTRA_MSG, "BLE scanner nedostupny") }; return
+        }
+        isScanning = true
+        bleScanActive = true
+        updateNotification("Hledám KC761 BLE...")
+        Log.d(TAG, "BLE scan KC761 started")
+        val settings = ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build()
+        bleScanner?.startScan(null, settings, bleScanCallback)
+        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+            if (bleScanActive) {
+                stopBleScan()
+                Log.d(TAG, "BLE scan KC761 timeout")
+                broadcast(BROADCAST_ERROR) { putExtra(EXTRA_MSG, "KC761 nenalezeno (timeout)") }
+            }
+        }, BLE_SCAN_TIMEOUT_MS)
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun connectKC761(device: android.bluetooth.BluetoothDevice, name: String) {
+        Log.d(TAG, "connectKC761: $name ${device.address}")
+        isKC761Mode = true
+        kc761Manager = KC761BleManager(
+            context      = this,
+            onLine       = { line ->
+                broadcast(BROADCAST_DATA) { putExtra(EXTRA_DATA, line) }
+            },
+            onConnect    = {
+                broadcast(BROADCAST_CONNECTED) { putExtra(EXTRA_TYPE, "BLE"); putExtra(EXTRA_DEVICE_NAME, name) }
+                updateNotification("$name připojen")
+                android.os.Handler(android.os.Looper.getMainLooper()).post { startGps() }
+            },
+            onDisconnect = { reason ->
+                isKC761Mode = false
+                autoConnectDone = false
+                kc761Manager = null
+                broadcast(BROADCAST_ERROR) { putExtra(EXTRA_MSG, reason) }
+                updateNotification("Odpojeno")
+            }
+        )
+        kc761Manager!!.connect(device)
     }
 
     private fun showWizard() {
@@ -1092,6 +1188,15 @@ class CurieService : Service(), SerialInputOutputManager.Listener {
             radiaCodeManager?.disconnect()
             radiaCodeManager = null
             isRadiaCodeMode = false
+            broadcast(BROADCAST_ERROR) { putExtra(EXTRA_MSG, "Odpojeno") }
+            updateNotification("Odpojeno")
+            return
+        }
+        if (isKC761Mode) {
+            stopBleScan()
+            kc761Manager?.disconnect()
+            kc761Manager = null
+            isKC761Mode = false
             broadcast(BROADCAST_ERROR) { putExtra(EXTRA_MSG, "Odpojeno") }
             updateNotification("Odpojeno")
             return
