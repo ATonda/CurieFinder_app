@@ -308,22 +308,12 @@
         .graph-settings .setting-row input[type=range] { flex:1; accent-color:#00ff41; height:3px; }
         .graph-settings .setting-row input[type=color] { width:32px; height:22px; border:1px solid #1a2e1a; border-radius:3px; cursor:pointer; background:#111a11; }
 
-        .trasa-panel { display:none; flex-shrink:0; background:rgba(10,14,10,0.97); border-top:1px solid #1a2e1a; padding:0; flex-direction:column; max-height:280px; }
-        .trasa-panel.visible { display:flex; }
-        .trasa-header { font-size:0.55rem; color:#00ff41; letter-spacing:1px; padding:6px 10px; border-bottom:1px solid #1a2e1a; flex-shrink:0; text-transform:uppercase; display:flex; justify-content:space-between; align-items:center; }
-        .trasa-list { flex:1; overflow-y:auto; padding:4px 8px; }
         .trasa-item { display:flex; align-items:center; gap:6px; padding:5px 0; border-bottom:1px solid #0a140a; overflow:hidden; }
         .trasa-item .cb-show { accent-color:#00ff41; width:16px; height:16px; flex-shrink:0; cursor:pointer; }
         .trasa-item .cb-sel  { accent-color:#ffb300; width:16px; height:16px; flex-shrink:0; cursor:pointer; }
-        .trasa-item label { font-size:0.75rem; color:#00ff41; cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex:0 0 auto; max-width:22ch; }
+        .trasa-item .trasa-lbl { font-size:0.75rem; color:#00ff41; cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex:0 0 auto; max-width:22ch; user-select:none; -webkit-user-select:none; }
         .trasa-note { font-size:0.65rem; color:#88aa88; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-left:2px; }
         .trasa-size { font-size:0.6rem; color:#4a6a4a; flex-shrink:0; min-width:48px; text-align:right; }
-        .trasa-actions { display:flex; gap:4px; padding:6px 8px; border-top:1px solid #1a2e1a; flex-shrink:0; }
-        .trasa-btn { flex:1; font-family:'Share Tech Mono',monospace; font-size:0.6rem; padding:6px 0; cursor:pointer; text-transform:uppercase; border-radius:4px; border:1px solid #2a5a2a; background:#003d0f; color:#2a8a2a; text-align:center; min-height:36px; }
-        .trasa-btn.sel  { border-color:#ffb300; color:#ffb300; background:rgba(255,179,0,0.08); }
-        .trasa-btn.share { border-color:#00aaff; color:#00aaff; background:rgba(0,170,255,0.08); }
-        .trasa-btn.danger { border-color:#ff3333; color:#ff3333; background:rgba(255,51,51,0.08); }
-        .trasa-btn.ram { border-color:#aa00ff; color:#aa00ff; background:rgba(170,0,255,0.08); }
         .trasa-empty { font-size:0.65rem; color:#4a6a4a; text-align:center; padding:15px 10px; }
 
         /* ── ROI ZÁLOŽKA HEATMAP ──────────────────────────── */
@@ -381,10 +371,16 @@
         .poi-tab-panel { display:flex; flex-direction:column; height:100%; overflow:hidden; }
         .poi-tab-header { flex-shrink:0; isolation:isolate; z-index:200; display:flex; justify-content:space-between; align-items:center; padding:6px 12px; border-bottom:1px solid #1a2e1a; font-size:0.6rem; color:#00ff41; }
         .poi-section { display:flex; flex-direction:column; overflow:hidden; }
-        .poi-section-poi  { flex-shrink:0; height:220px; }
-        .poi-section-trasy { flex:1; min-height:0; display:flex; flex-direction:column; }
+        .poi-acc { flex:0 0 auto; min-height:0; border-bottom:1px solid #1a2e1a; }
+        .poi-acc.poi-acc-open { flex:0 0 auto; min-height:0; max-height:75vh; display:flex; flex-direction:column; }
+        #poi-sec-layers.poi-acc-open { max-height:35vh; }
+        .poi-acc-header { cursor:pointer; user-select:none; -webkit-user-select:none; flex-shrink:0; }
+        .poi-acc-arrow { display:inline-block; font-size:0.55rem; transition:transform 0.15s; color:#4a8a4a; }
+        .poi-acc.poi-acc-open .poi-acc-arrow { transform:rotate(90deg); }
+        .poi-acc-body { display:none; flex:1; min-height:0; flex-direction:column; overflow:hidden; }
+        .poi-acc.poi-acc-open .poi-acc-body { display:flex; }
         .trasa-panel-poi { flex:1; min-height:0; overflow-y:auto; }
-        .poi-section-header { flex-shrink:0; display:flex; justify-content:space-between; align-items:center; padding:5px 10px; background:#060e06; font-size:0.65rem; color:#00ff41; border-bottom:1px solid #1a2e1a; font-weight:bold; letter-spacing:1px; }
+        .poi-section-header { flex-shrink:0; display:flex; justify-content:space-between; align-items:center; padding:5px 10px; background:#060e06; font-size:0.65rem; color:#00ff41; border-bottom:1px solid #1a2e1a; font-weight:bold; }
         .sec-actions { display:flex; gap:3px; align-items:center; padding:4px 8px; border-top:1px solid #1a2e1a; flex-shrink:0; background:#060e06; }
         .sec-btn { font-family:'Share Tech Mono',monospace; font-size:0.6rem; padding:5px 8px; cursor:pointer; border-radius:4px; border:1px solid #2a5a2a; background:#0a0e0a; color:#4a6a4a; white-space:nowrap; }
         .sec-btn.green  { border-color:#00ff41; color:#00ff41; }
@@ -612,34 +608,46 @@
 
     <div class="tab-content" id="tab-poi">
         <div class="poi-tab-panel">
-            <!-- Sekce BODY + VRSTVY sloučené -->
-            <div class="poi-section poi-section-poi">
-                <div class="poi-section-header">
-                    <span id="poi-tab-count">BODY (0)</span>
-                    <span style="display:flex;gap:3px;align-items:center;">
+            <!-- Sekce BODY -->
+            <div class="poi-section poi-acc" id="poi-sec-body">
+                <div class="poi-section-header poi-acc-header" onclick="poiAccToggle('body')">
+                    <span><span class="poi-acc-arrow" id="poi-acc-arrow-body">▶</span> <span id="poi-tab-count">BODY (0)</span></span>
+                    <span style="display:flex;gap:3px;align-items:center;" onclick="event.stopPropagation()">
                         <button class="sec-btn green" onclick="poiToggleAll()">VŠE</button>
                         <button class="sec-btn red"   onclick="poiDeleteSelected()">SMAZAT</button>
                         <button class="sec-btn blue"  onclick="poiExportSelected()">SDÍLET</button>
                         <button class="sec-btn green" onclick="poiImport()">IMPORT</button>
                     </span>
                 </div>
-                <div class="poi-tab-list" id="poi-tab-list" style="flex:1;overflow-y:auto;"></div>
-                <div id="cf-layers-container"></div>
+                <div class="poi-acc-body" id="poi-acc-body-body">
+                    <div class="poi-tab-list" id="poi-tab-list" style="flex:1;overflow-y:auto;"></div>
+                </div>
+            </div>
+            <!-- Sekce VRSTVY -->
+            <div class="poi-section poi-acc" id="poi-sec-layers">
+                <div class="poi-section-header poi-acc-header" onclick="poiAccToggle('layers')">
+                    <span><span class="poi-acc-arrow" id="poi-acc-arrow-layers">▶</span> VRSTVY</span>
+                </div>
+                <div class="poi-acc-body" id="poi-acc-body-layers">
+                    <div id="cf-layers-container" style="flex:1;overflow-y:auto;"></div>
+                </div>
             </div>
             <!-- Sekce TRASY -->
-            <div class="poi-section poi-section-trasy">
-                <div class="poi-section-header">
-                    <span id="poi-trasy-count">TRASY (0)</span>
-                    <span style="display:flex;gap:3px;align-items:center;">
-                        <button class="sec-btn" id="poi-trasa-sort-date" onclick="setTrasaSort('date')" style="font-size:0.5rem;padding:1px 4px;cursor:pointer;">📅</button>
-                        <button class="sec-btn" id="poi-trasa-sort-name" onclick="setTrasaSort('name')" style="font-size:0.5rem;padding:1px 4px;cursor:pointer;">AZ</button>
-                        <button class="sec-btn green" id="poi-trasa-btn-all"    onclick="toggleAllShow()">👁 VŠE</button>
+            <div class="poi-section poi-acc" id="poi-sec-trasy">
+                <div class="poi-section-header poi-acc-header" onclick="poiAccToggle('trasy')">
+                    <span><span class="poi-acc-arrow" id="poi-acc-arrow-trasy">▶</span> <span id="poi-trasy-count">TRASY (0)</span></span>
+                    <span style="display:flex;gap:3px;align-items:center;" onclick="event.stopPropagation()">
+                        <button class="sec-btn" id="poi-trasa-sort-btn" onclick="cycleTrasaSort()" style="font-size:0.5rem;padding:1px 5px;cursor:pointer;min-width:28px;">📅</button>
+                        <button class="sec-btn green" id="poi-trasa-btn-all"    onclick="toggleAllShow()">VŠE</button>
                         <button class="sec-btn red"   id="poi-trasa-btn-del"    onclick="smazatTrasy()">SMAZAT</button>
                         <button class="sec-btn blue"  id="poi-trasa-btn-share"  onclick="sdiletTrasy()">SDÍLET</button>
-                        <button class="sec-btn green" onclick="importCSV()">📥</button>
+                        <button class="sec-btn" id="poi-trasa-btn-ram" onclick="ulozitRAM()" style="border-color:#aa00ff;color:#aa00ff;">RAM</button>
+                        <button class="sec-btn green" onclick="importCSV()">IMPORT</button>
                     </span>
                 </div>
-                <div class="trasa-panel-poi" id="trasa-panel-poi"></div>
+                <div class="poi-acc-body" id="poi-acc-body-trasy">
+                    <div class="trasa-panel-poi" id="trasa-panel-poi" style="flex:1;overflow-y:auto;"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -652,9 +660,9 @@
             </div>
             <div id="roi-bulk-bar" style="display:none;gap:6px;padding:4px 8px;background:#060e06;border-bottom:1px solid #1a2e1a;align-items:center;">
                 <span id="roi-bulk-count" style="font-size:0.6rem;color:#ffb300;flex:1;"></span>
-                <button class="sec-btn blue"  id="roi-bulk-share-btn" onclick="roiBulkShare()">SDÍLET</button>
-                <button class="sec-btn red"   id="roi-bulk-del-btn"   onclick="roiBulkDelete()">SMAZAT</button>
-                <button class="sec-btn"       id="roi-bulk-cancel-btn" onclick="_roiSelected.clear();roiRenderList(_roiList)">ZRUŠIT</button>
+                <button class="sec-btn blue"  onclick="roiBulkShare()">SDÍLET</button>
+                <button class="sec-btn red"   onclick="roiBulkDelete()">SMAZAT</button>
+                <button class="sec-btn"       onclick="_roiSelected.clear();roiRenderList(_roiList)">ZRUŠIT</button>
             </div>
             <div class="roi-list" id="roi-list"></div>
             <div class="roi-status" id="roi-status"></div>
@@ -749,9 +757,9 @@
 
             <div class="map-toolbar">
                 <button class="map-btn danger" id="btn-log" onclick="toggleLog()">LOG</button>
-                <button class="map-btn" id="btn-graph" onclick="toggleMapGraph()">GRAF</button>
-                <button class="map-btn" id="btn-zobrazeni" onclick="toggleInfoPanel()">VZHLED</button>
-                <button class="map-btn" id="btn-track-hide" onclick="toggleCurrentTrackVisible()" title="Skrýt/zobrazit aktuální trasu" id="btn-track-lbl">TRASA</button>
+                <button class="map-btn" id="btn-graph" onclick="toggleMapGraph()">📊 GRAF</button>
+                <button class="map-btn" id="btn-zobrazeni" onclick="toggleInfoPanel()">🎨 VZHLED</button>
+                <button class="map-btn" id="btn-track-hide" onclick="toggleCurrentTrackVisible()" title="Skrýt/zobrazit aktuální trasu" id="btn-track-lbl">👁 TRASA</button>
                 <button class="map-btn" id="btn-roi-map" onclick="roiMapToggle()" style="display:none">🗺️ ROI</button>
 
             </div>
@@ -962,15 +970,11 @@
                         gps_waiting:'GPS: čekám...',
                         tab_map:'MAPA',
             tab_poi:'BODY',
-            btn_graph:'GRAF',
-            btn_style:'VZHLED',
-            btn_track:'TRASA',
+            btn_graph:'📊 GRAF',
+            btn_style:'🎨 VZHLED',
+            btn_track:'👁 TRASA',
                         panel_spectrum:'🎨 BAREVNÉ SPEKTRUM CPS',
             panel_graph_map:'📊 GRAF NAD MAPOU',
-                        roi_select_edit:'✏️ ZMĚNIT OBLAST',
-            layers_title:'VRSTVY',
-            log_pause:'PAUZA',
-            poi_tab:'BODY',
             roi_cancel:'ZRUŠIT' },
       sk: { searching:'HĽADÁM...',
             disconnected_msg:'Zapni zariadenie CurieFinder',
@@ -1099,18 +1103,11 @@
             log_off:'📝 LOG: OFF',
                         tab_map:'MAPA',
             tab_poi:'BODY',
-            btn_graph:'GRAF',
-            btn_style:'VZHLED',
-            btn_track:'TRASA',
+            btn_graph:'📊 GRAF',
+            btn_style:'🎨 VZHLED',
+            btn_track:'👁 TRASA',
                         panel_spectrum:'🎨 FAREBNÉ SPEKTRUM CPS',
             panel_graph_map:'📊 GRAF NAD MAPOU',
-                        load_btn:'NAČÍTAŤ',
-            roi_select_new:'🗺️ VYBRAŤ OBLASŤ',
-            roi_select_edit:'✏️ ZMENIŤ OBLASŤ',
-            roi_show:'ZOBRAZIŤ',
-            layers_title:'VRSTVY',
-            log_pause:'PAUZA',
-            poi_tab:'BODY',
             roi_cancel:'ZRUŠIŤ' },
       it: { searching:'RICERCA...',
             disconnected_msg:'Accendi il dispositivo CurieFinder',
@@ -1131,7 +1128,7 @@
             skip:'SALTA',
             edit_note:'✏️ Nota',
             show_all:'TUTTI',
-            show_sel:'SELEZ.',
+            show_sel:'SELEZIONE',
             show_none:'NASCONDI',
             selected:'selezionati',
             no_tracks:'Nessun percorso salvato',
@@ -1142,7 +1139,7 @@
             no_ram_data:'Nessun dato in memoria.',
             log_crash:'⚠️ Log precedente non chiuso!\nFile: ',
             skip:'SALTA', edit_note:'✏️ Nota',
-            show_all:'TUTTI', show_sel:'SELEZ.', show_none:'NASCONDI',
+            show_all:'TUTTI', show_sel:'SELEZIONE', show_none:'NASCONDI',
             selected:'selezionati',
             date_fmt: (d,m,h,mi) => `${d}/${m} ${h}:${mi}`,
             compass_n:'N', compass_s:'S', compass_e:'E', compass_w:'O',
@@ -1177,7 +1174,7 @@
             roi_blocks:'BLOCCHI TRACCE', roi_no_blocks:'Nessun blocco traccia',
             roi_name_lbl:'Nome area', roi_grid_lbl:'Risoluzione griglia (m)', roi_radius_lbl:'Raggio IDW (m)', roi_maxdist_lbl:'Dist. max (m)',
             roi_bounds_lbl:'Limiti area:', roi_bounds_none:'Limiti non impostati',
-            roi_select_map:'🗺️ SELEZIONA SU MAPPA', roi_add_tracks:'+ TRACCE', roi_generate:'⚡ GENERA',
+            roi_select_map:'🗺️ SELEZIONA SU MAPPA', roi_add_tracks:'📂 AGGIUNGI TRACCE', roi_generate:'⚡ GENERA',
             roi_import:'📥 IMPORTA', roi_share:'📤 CONDIVIDI', roi_delete:'🗑 ELIMINA',
             roi_delete_confirm:(n) => `Eliminare area "${n}"?`,
             roi_delete_block:(n) => `Eliminare blocco "${n}"?`,
@@ -1258,15 +1255,11 @@
             log_off:'📝 LOG: OFF',
                         tab_map:'MAPPA',
             tab_poi:'PUNTI',
-            btn_graph:'GRAFICO',
-            btn_style:'ASPETTO',
-            btn_track:'TRACCIA',
+            btn_graph:'📊 GRAFICO',
+            btn_style:'🎨 ASPETTO',
+            btn_track:'👁 TRACCIA',
                         panel_spectrum:'🎨 SPETTRO COLORI CPS',
             panel_graph_map:'📊 GRAFICO SULLA MAPPA',
-                        roi_select_edit:'✏️ MODIFICA AREA',
-            layers_title:'LIVELLI',
-            log_pause:'PAUSA',
-            poi_tab:'PUNTI',
             roi_cancel:'ANNULLA' },
       de: { searching:'SUCHE...',
             disconnected_msg:'CurieFinder-Gerät einschalten',
@@ -1314,17 +1307,17 @@
             poi_select_first:'Zuerst Punkte auswählen (gelbe Checkbox).',
             poi_delete_all:'Alle POI-Punkte löschen?',
             ram_restore:(n,m) => `\u26a0\ufe0f RAM-Track-Sicherung gefunden (${n} Punkte, ${m} Min alt).\nIn Speicher wiederherstellen?`,
-            btn_yes:'JA', btn_no:'NEIN', btn_ok:'OK', btn_add:'HINZUF.', btn_cancel:'ABBR.',
+            btn_yes:'JA', btn_no:'NEIN', btn_ok:'OK', btn_add:'HINZUFÜGEN', btn_cancel:'ABBRECHEN',
             btn_select:'AUSWÄHLEN', btn_skip:'ÜBERSPRINGEN',
             hist_usv_label:'µSv/h VERLAUF', hist_cps_label:'CPS VERLAUF',
             poi_add_confirm:'📍 Punkt an aktueller Position hinzufügen?',
             poi_move_where:'📌 Punkt wohin verschieben?', poi_move_gps:'📍 GPS-Position', poi_move_map:'🎯 Kartenmitte',
-            roi_select_new:'🗺️ BEREICH WÄHLEN', roi_select_edit:'BEREICH ÄNDERN', roi_show:'ANZEIGEN',
-            roi_new_area:'Name des neuen Bereichs', roi_new_btn:'+ NEUER BEREICH', roi_import_btn:'📥 IMPORT', roi_no_areas:'Keine Bereiche. Tippe \u2795 NEUER BEREICH.',
+            roi_select_new:'🗺️ BEREICH WÄHLEN', roi_select_edit:'\u270f\ufe0f BEREICH BEARBEITEN', roi_show:'ANZEIGEN',
+            roi_new_area:'Name des neuen Bereichs', roi_new_btn:'\u2795 NEUER BEREICH', roi_import_btn:'📥 IMPORT', roi_no_areas:'Keine Bereiche. Tippe \u2795 NEUER BEREICH.',
             roi_blocks:'TRACK-BLÖCKE', roi_no_blocks:'Keine Track-Blöcke',
             roi_name_lbl:'Bereichsname', roi_grid_lbl:'Gitterauflösung (m)', roi_radius_lbl:'IDW-Radius (m)', roi_maxdist_lbl:'Max. Abstand (m)',
             roi_bounds_lbl:'Bereichsgrenzen:', roi_bounds_none:'Grenzen nicht gesetzt',
-            roi_select_map:'🗺️ AUF KARTE WÄHLEN', roi_add_tracks:'+ TRACKS', roi_generate:'GENERIEREN',
+            roi_select_map:'🗺️ AUF KARTE WÄHLEN', roi_add_tracks:'📂 TRACKS HINZUFÜGEN', roi_generate:'\u26a1 GENERIEREN',
             roi_import:'📥 IMPORT', roi_share:'📤 TEILEN', roi_delete:'🗑 LÖSCHEN',
             roi_delete_confirm:(n) => `Bereich "${n}" löschen?`,
             roi_delete_block:(n) => `Block "${n}" löschen?`,
@@ -1355,7 +1348,7 @@
             map_light:'⬜ Hell',
             roi_save_current:'ZUR AKTUELLEN',
             roi_save_all_pre:'ZU ALLEN (',
-            roi_merge:'ZUSAMMENF.',
+            roi_merge:'ZUSAMMENFÜHREN',
             roi_rename:'UMBENENNEN',
             roi_merged_pre:'Zusammengeführt: +',
             roi_merge_err:'Zusammenführungsfehler: ',
@@ -1394,22 +1387,18 @@
             file_read_err:'Dateilesefehler: ',
             share_err:'Freigabefehler: ',
             invalid_file:'Ungültige Datei — Sprache oder Strings fehlen.',
-            not_loaded:'n. geladen',
+            not_loaded:'nicht geladen',
             loading:'wird geladen...',
                         load_btn:'LADEN',
                         gps_waiting:'GPS: warte...',
             log_off:'📝 LOG: AUS',
                         tab_map:'KARTE',
             tab_poi:'PUNKTE',
-            btn_graph:'GRAFIK',
-            btn_style:'ANSICHT',
-            btn_track:'TRACK',
+            btn_graph:'📊 GRAFIK',
+            btn_style:'🎨 ANSICHT',
+            btn_track:'👁 TRACK',
                         panel_spectrum:'🎨 FARBSPEKTRUM CPS',
             panel_graph_map:'📊 GRAFIK AUF KARTE',
-                        roi_select_edit:'✏️ BEREICH BEARBEITEN',
-            layers_title:'EBENEN',
-            log_pause:'PAUSE',
-            poi_tab:'PUNKTE',
             roi_cancel:'ABBRECHEN' },
       en: { searching:'SEARCHING...',
             disconnected_msg:'Turn on CurieFinder device',
@@ -1430,7 +1419,7 @@
             skip:'SKIP',
             edit_note:'✏️ Note',
             show_all:'ALL',
-            show_sel:'SELECT',
+            show_sel:'SELECTION',
             show_none:'HIDE',
             selected:'selected',
             date_fmt: (d,m,h,mi) => `${m}/${d} ${h}:${mi}`,
@@ -1543,17 +1532,11 @@
             log_off:'📝 LOG: OFF',
                         tab_map:'MAP',
             tab_poi:'POINTS',
-            btn_graph:'GRAPH',
-            btn_style:'STYLE',
-            btn_track:'TRACK',
+            btn_graph:'📊 GRAPH',
+            btn_style:'🎨 STYLE',
+            btn_track:'👁 TRACK',
                         panel_spectrum:'🎨 COLOR SPECTRUM CPS',
             panel_graph_map:'📊 GRAPH ON MAP',
-                        roi_select_new:'🗺️ SELECT AREA',
-            roi_select_edit:'✏️ EDIT AREA',
-            roi_show:'SHOW',
-            layers_title:'LAYERS',
-            log_pause:'PAUSE',
-            poi_tab:'POINTS',
             roi_cancel:'CANCEL' },
       pl: { searching:'SZUKAM...', disconnected_msg:'Włącz urządzenie CurieFinder', conn_lost:'Połączenie przerwane',
             connected:'POŁĄCZONO', disconnected:'ROZŁĄCZONO', conn_err:'BŁĄD POŁĄCZENIA: ',
@@ -1572,7 +1555,7 @@
             log_crash:'⚠️ Poprzedni log nie został zamknięty!\nPlik: ',
             skip:'POMIŃ',
             edit_note:'✏️ Notatka',
-            show_all:'VŠECHNY',
+            show_all:'WSZYSTKIE',
             show_sel:'WYBRANE',
             show_none:'UKRYJ',
             selected:'wybrane',
@@ -1678,7 +1661,7 @@
             file_read_err:'Błąd odczytu pliku: ',
             share_err:'Błąd udostępniania: ',
             invalid_file:'Nieprawidłowy plik — brak języka lub strings.',
-            not_loaded:'nie načteno',
+            not_loaded:'nie załadowano',
             loading:'wczytuję...',
             roi_edit:'✏ EDYTUJ', roi_save_bounds:'✓ ZAPISZ',
             load_btn:'WCZYTAJ',
@@ -1686,17 +1669,11 @@
             log_off:'📝 LOG: OFF',
                         tab_map:'MAPA',
             tab_poi:'PUNKTY',
-            btn_graph:'WYKRES',
-            btn_style:'WYGLĄD',
-            btn_track:'TRASA',
+            btn_graph:'📊 WYKRES',
+            btn_style:'🎨 WYGLĄD',
+            btn_track:'👁 TRASA',
                         panel_spectrum:'🎨 SPEKTRUM KOLORÓW CPS',
             panel_graph_map:'📊 WYKRES NA MAPIE',
-                        roi_select_new:'🗺️ WYBIERZ OBSZAR',
-            roi_select_edit:'✏️ ZMIEŃ OBSZAR',
-            roi_show:'POKAŻ',
-            layers_title:'WARSTWY',
-            log_pause:'PAUZA',
-            poi_tab:'PUNKTY',
             roi_cancel:'ANULUJ' },
       'hu': { searching:'KERESÉS...', disconnected_msg:'Kapcsolja be a CurieFinder eszközt', conn_lost:'Kapcsolat megszakadt',
             connected:'CSATLAKOZVA', disconnected:'LEVÁLASZTVA', conn_err:'CSATLAKOZÁSI HIBA: ',
@@ -1706,7 +1683,7 @@
             background:'HÁTTÉR', cps_unit:'IMPULZUS MÁSODPERCENKÉNT', samples:'minta',
             close_hint:'2× ÉRINTÉS A BEZÁRÁSHOZ', avg_short:'ÁTLAG', waiting_title:'LEVÁLASZTVA',
             waiting_hint:'Kapcsolja be a CurieFinder eszközt',
-            no_tracks:'Nincsenek mentett nyomvonalak', tracks_section:'TRACKS',
+            no_tracks:'Nincsenek mentett nyomvonalak', tracks_section:'ÚTVONALAK',
             note_start:'Napló megjegyzése (opcionális):',
             note_edit:'Naplómegjegyzés szerkesztése:',
             log_stop_confirm:'Leállítja a rögzítést?',
@@ -1716,7 +1693,7 @@
             skip:'KIHAGYÁS',
             edit_note:'✏️ Megjegyzés',
             show_all:'ÖSSZES',
-            show_sel:'KIVÁLASZT',
+            show_sel:'KIVÁLASZTOTT',
             show_none:'ELREJTÉS',
             selected:'kiválasztva',
             date_fmt: (d,m,h,mi) => `${m}.${d} ${h}:${mi}`,
@@ -1752,7 +1729,7 @@
             roi_blocks:'ÚTVONAL BLOKKOK', roi_no_blocks:'Nincsenek útvonal blokkok',
             roi_name_lbl:'Terület neve', roi_grid_lbl:'Rács felbontás (m)', roi_radius_lbl:'IDW sugár (m)', roi_maxdist_lbl:'Max táv. (m)',
             roi_bounds_lbl:'Terület határok:', roi_bounds_none:'Határok nincsenek beállítva',
-            roi_select_map:'KIJELÖLÉS', roi_add_tracks:'+ TRACKS', roi_generate:'⚡ GENERÁLÁS',
+            roi_select_map:'🗺️ KIJELÖLÉS TÉRKÉPEN', roi_add_tracks:'📂 ÚTVONALAK HOZZÁADÁSA', roi_generate:'⚡ GENERÁLÁS',
             roi_import:'📥 IMPORT', roi_share:'📤 MEGOSZTÁS', roi_delete:'🗑 TÖRLÉS',
             roi_delete_confirm:(n) => `Törli a(z) "${n}" területet?`,
             roi_delete_block:(n) => `Törli a(z) "${n}" blokkot?`,
@@ -1795,7 +1772,7 @@
             roi_cur_track:'Aktuális útv. ',
             roi_cur_track2:'Aktuális útv.',
             roi_bounds_missing:'Hiányoznak a területhatárok',
-            roi_change_area:'TERÜLET VÁLT.',
+            roi_change_area:'✏️ TERÜLET VÁLTOZTATÁS',
             roi_deleted_pre:'Törölve: ',
             roi_block_del:'Blokk törölve',
             roi_bounds_saved2:'Határok mentve',
@@ -1822,24 +1799,18 @@
             file_read_err:'Fájlolvasási hiba: ',
             share_err:'Megosztási hiba: ',
             invalid_file:'Érvénytelen fájl — hiányzik a lang vagy strings.',
-            not_loaded:'n. betöltve',
+            not_loaded:'nem betöltve',
             loading:'betöltés...',
                         load_btn:'BETÖLTÉS',
                         gps_waiting:'GPS: varakozas...',
             log_off:'📝 LOG: KI',
                         tab_map:'TÉRKÉP',
             tab_poi:'PONTOK',
-            btn_graph:'GRAFIKON',
-            btn_style:'STÍLUS',
-            btn_track:'TRACK',
-                        panel_spectrum:'SZÍNSPEKTRUM CPS',
-            panel_graph_map:'GRAFIKON TÉRKÉPEN',
-                        roi_select_new:'TERÜLET KIJEL.',
-            roi_select_edit:'TERÜLET MODOS.',
-            roi_show:'MUTAT',
-            layers_title:'RÉTEGEK',
-            log_pause:'SZÜNET',
-            poi_tab:'PONTOK',
+            btn_graph:'📊 GRAFIKON',
+            btn_style:'🎨 MEGJELENÉS',
+            btn_track:'👁 NYOMVONAL',
+                        panel_spectrum:'🎨 SZÍNSPEKTRUM CPS',
+            panel_graph_map:'📊 GRAFIKON TÉRKÉPEN',
             roi_cancel:'MÉGSE' }
     };
 
@@ -1878,6 +1849,7 @@
     const RE_CPS    = /CPS=([\d.]+)/;
     const RE_BG     = /BG=([\d.]+)/;
     const RE_VBAT   = /VBAT=([\d.]+)/;
+    const RE_BATP   = /BATP=(\d+)/;   // KC761 — baterie v procentech
     const RE_RSSI   = /RSSI=(-?[\d.]+)/;
     const RE_RATE     = /(?<!_)RATE=([\d.]+)/;   // negativní lookbehind — nematcuje RATE_USV=
     const RE_RATE_USV = /RATE_USV=([\d.]+)/;
@@ -2056,7 +2028,9 @@
         _savedBtDevice.startsWith('⚡ Hledat') ||
         _savedBtDevice.startsWith('Raysid') ||
         _savedBtDevice.startsWith('RadPro') ||
-        _savedBtDevice.startsWith('RadiaCode')
+        _savedBtDevice.startsWith('RadiaCode') ||
+        _savedBtDevice.startsWith('KC761') ||
+        _savedBtDevice.startsWith('RC-')
       )) ? 25000 : 12000;
       _reconnectTimer = setInterval(() => {
         if (isConnected) { stopReconnectLoop(); return; }
@@ -2171,7 +2145,6 @@
     let lastLat          = null, lastLon = null, lastGpsAcc = null;
     let savedTracksLayer = null;
     let displayMode      = lsGet('display_mode', 'line');
-    let trasaPanelOpen   = false;
     let infoPanelOpen    = false;
     let savedSelection   = [];
     // Pri startu VZDY prazdny vyber — trasy se nezobrazuji dokud uzivatel neklkne VŠE
@@ -2181,8 +2154,9 @@
     let currentFiles     = [];
     let _trasaSort = lsGet('trasa_sort', 'date'); // date | name | note
     let _poiSort   = lsGet('poi_sort',   'date'); // date | name
-    let _noteCache  = {}; // cache poznámek: filename -> note (aby se nečetly CSV znovu při každém renderTrasaPanel)
+    let _noteCache  = {}; // cache poznámek: filename -> note
     const _selChecked = new Set(); // persistentní stav cb-sel (výběr pro akce) přes re-rendery
+    const _poiSelChecked = new Set(); // persistentní stav poi-sel (výběr bodů pro akce) přes re-rendery
     const _trackCache = {}; // cache parsovaných bodů: filename -> points[]
     let showMode         = 'selection'; // 'all' | 'none' | 'selection'
     let _applyDebounce   = null;
@@ -3012,6 +2986,24 @@
 
 
 
+    function playDisconnectSound() {
+      try {
+        const ctx = getAudioCtx();
+        // Klesající tón — signál odpojení
+        [880, 660, 440].forEach((freq, i) => {
+          const osc  = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.value = freq;
+          gain.gain.setValueAtTime(1.0, ctx.currentTime + i * 0.12);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.12 + 0.1);
+          osc.connect(gain); gain.connect(ctx.destination);
+          osc.start(ctx.currentTime + i * 0.12);
+          osc.stop(ctx.currentTime + i * 0.12 + 0.12);
+        });
+      } catch(e) {}
+    }
+
     window.onCurieError = function(msg) {
       updateBtStatus(false);
       if (msg && (msg.includes('ulozeni') || msg.includes('CSV') || msg.includes('save'))) {
@@ -3037,6 +3029,10 @@
       if (clickScheduler) { clearInterval(clickScheduler); clickScheduler = null; }
       stopTone();
       if (audioCtx && audioCtx.state !== 'closed') audioCtx.suspend();
+      // Zvuk odpojení — jen při skutečném výpadku zařízení (ne save chyby)
+      if (!msg || (!msg.includes('ulozeni') && !msg.includes('CSV') && !msg.includes('save'))) {
+        setTimeout(() => { playDisconnectSound(); }, 100);
+      }
       // USB odpojení → průvodce; BT výpadek → tiché reconnectování
       const isUsbDisconnect = msg && (msg.includes('USB') || msg.includes('Timeout') || msg.includes('timeout'));
       if (!_offlineMode && IS_ANDROID && isUsbDisconnect) {
@@ -3105,10 +3101,15 @@
       if (batInner) batInner.className = vbatMv < 3300 ? 'bat-inner varovani' : 'bat-inner';
     }
 
-    // ============================================================
-    // BIG MODE
-    // ============================================================
-    let bigMode=false, tapCount=0, tapTimer=null;
+    function updateBatPct(pct) {
+      pct = Math.max(0, Math.min(100, pct));
+      document.getElementById('bat-volt').innerHTML = pct.toFixed(0) + '<span style="font-size:0.4rem;">%</span>';
+      const bar = document.getElementById('bat-bar');
+      bar.style.width      = pct.toFixed(0) + '%';
+      bar.style.background = pct > 60 ? '#00ff41' : pct > 30 ? '#ffb300' : '#ff3333';
+      const batInner = document.getElementById('bat-inner');
+      if (batInner) batInner.className = pct < 15 ? 'bat-inner varovani' : 'bat-inner';
+    }
     function handleTap() {
       tapCount++;
       if (tapCount === 1) { tapTimer = setTimeout(() => { tapCount = 0; }, 350); }
@@ -3275,6 +3276,7 @@
       const mCps    = line.match(RE_CPS);
       const mBg     = line.match(RE_BG);
       const mVbat   = line.match(RE_VBAT);
+      const mBatp   = line.match(RE_BATP);
       const mRssi   = line.match(RE_RSSI);
       const mRate    = line.match(RE_RATE);
       const mRateUsv = line.match(RE_RATE_USV);
@@ -3283,6 +3285,7 @@
       const cps  = mCps  ? parseFloat(mCps[1])  : null;
       const bg   = mBg   ? parseFloat(mBg[1])   : null;
       const vbat = mVbat ? parseFloat(mVbat[1]) : null;
+      const batp = mBatp ? parseInt(mBatp[1], 10) : null;
       const rssi = mRssi ? parseFloat(mRssi[1]) : null;
       const temp = mTemp ? parseFloat(mTemp[1]) : null;
       // DEVICE= přítomno → RadPro protokol → RATE= je µSv/h
@@ -3317,6 +3320,7 @@
       detectPacketInterval(now);
       // VBAT zpracovat před throttlingem — jinak se zahodí při rychlém příchodu
       if (vbat !== null) updateBat(vbat);
+      if (batp !== null) updateBatPct(batp);
       // NUS (BLE ESP32 bridge) — pakety mohou přijít v batchích, throttling je zahazuje → vypnout
       if (_connType !== 'NUS' && now - lastUpdate < Math.round(_packetInterval * 0.75)) return;
       lastUpdate = now;
@@ -3372,6 +3376,7 @@
 
       // VBAT zpracovat vždy — bez ohledu na throttling
       if (vbat !== null) updateBat(vbat);
+      if (batp !== null) updateBatPct(batp);
       updateRatio(cps, bgValue);
       document.getElementById('graph-time').textContent = (history.length * _packetInterval / 1000).toFixed(1) + ' s';
       // NUS — omezit překreslování grafu na max 1× za 200ms
@@ -3682,13 +3687,6 @@
       if (_poiCnt) _poiCnt.textContent = (L.tab_poi || 'BODY') + ' (0)';
       const _trasCnt = _e('poi-trasy-count');
       if (_trasCnt) _trasCnt.textContent = (L.tracks_section || 'TRASY') + ' (0)';
-      // HEAT bulk-bar
-      const _rbs2 = _e('roi-bulk-share-btn');
-      const _rbd2 = _e('roi-bulk-del-btn');
-      const _rbc2 = _e('roi-bulk-cancel-btn');
-      if (_rbs2) _rbs2.textContent = L.roi_share  || 'SDÍLET';
-      if (_rbd2) _rbd2.textContent = L.roi_delete || 'SMAZAT';
-      if (_rbc2) _rbc2.textContent = L.roi_cancel || 'ZRUŠIT';
     }
 
     function switchTab(name) {
@@ -3725,6 +3723,7 @@
       }
       if (name === 'poi') {
         if (!leafletMap && poiPoints.length === 0) poiLoadFromFile();
+        poiAccInit();
         poiRenderTab();
         if (cfLayers.length === 0) cfLayersDiscover();
         else { cfLayersRenderTab(); }
@@ -3734,37 +3733,31 @@
         const _b1 = document.querySelector('.sec-btn[onclick="poiToggleAll()"]');
         if (_b1) _b1.textContent = _poiToggleGetLabels()[_poiToggleState];
         const _b2 = document.querySelector('.sec-btn[onclick="poiDeleteSelected()"]');
-        if (_b2) _b2.textContent = _L2.roi_delete || 'SMAZAT';
+        if (_b2) _b2.textContent = (_L2.roi_delete || 'SMAZAT').replace(/^[^\w\s]+\s*/,'');
         const _b3 = document.querySelector('.sec-btn[onclick="poiExportSelected()"]');
-        if (_b3) _b3.textContent = _L2.roi_share || 'SDÍLET';
+        if (_b3) _b3.textContent = (_L2.roi_share || 'SDÍLET').replace(/^[^\w\s]+\s*/,'');
         const _b4 = document.querySelector('.sec-btn[onclick="poiImport()"]');
-        if (_b4) _b4.textContent = _L2.roi_import_btn ? _L2.roi_import_btn.replace(/📥 /,'') : 'IMPORT';
+        if (_b4) _b4.textContent = (_L2.roi_import_btn || 'IMPORT').replace(/^[^\w\s]+\s*/,'');
         // Lokalizace tlacítek sekce TRASY
-        const _btnAll   = document.getElementById('poi-trasa-btn-all');
         const _btnDel   = document.getElementById('poi-trasa-btn-del');
         const _btnShare = document.getElementById('poi-trasa-btn-share');
-        if (_btnAll)   _btnAll.textContent   = _L2.show_all   || '👁 VŠE';
-        if (_btnDel)   _btnDel.textContent   = _L2.roi_delete || 'SMAZAT';
-        if (_btnShare) _btnShare.textContent = _L2.roi_share  || 'SDÍLET';
+        if (_btnDel)   _btnDel.textContent   = (_L2.roi_delete || 'SMAZAT').replace(/^[^\w\s]+\s*/,'');
+        if (_btnShare) _btnShare.textContent = (_L2.roi_share  || 'SDÍLET').replace(/^[^\w\s]+\s*/,'');
         // Tab nazvy
         const _tbPoi2 = document.getElementById('tab-btn-poi');
         if (_tbPoi2) _tbPoi2.textContent = _L2.tab_poi || 'BODY';
       }
       if (name === 'roi') {
         roiLoadList();
+        // Auto-rozbalit detail oblasti, jejíž heatmapa je právě aktivní na mapě
+        if (_roiHeatVisible && _roiHeatFile && _roiOpenFile !== _roiHeatFile) {
+          roiToggleOpen(_roiHeatFile);
+        }
         // Lokalizace toolbar tlacítek
-        const _Lr = T[LANG];
         const btnNew = document.getElementById('roi-btn-new');
         const btnImp = document.getElementById('roi-btn-import');
-        if (btnNew) btnNew.textContent = _Lr.roi_new_btn || '➕ NOVÁ OBLAST';
-        if (btnImp) btnImp.textContent = _Lr.roi_import_btn || '📥 IMPORT';
-        // Bulk bar
-        const _rbs = document.getElementById('roi-bulk-share-btn');
-        const _rbd = document.getElementById('roi-bulk-del-btn');
-        const _rbc = document.getElementById('roi-bulk-cancel-btn');
-        if (_rbs) _rbs.textContent = _Lr.roi_share   || 'SDÍLET';
-        if (_rbd) _rbd.textContent = _Lr.roi_delete  || 'SMAZAT';
-        if (_rbc) _rbc.textContent = _Lr.roi_cancel  || 'ZRUŠIT';
+        if (btnNew) btnNew.textContent = T[LANG].roi_new_btn || '➕ NOVÁ OBLAST';
+        if (btnImp) btnImp.textContent = T[LANG].roi_import_btn || '📥 IMPORT';
       }
       // Zavřít BT dialog při přepnutí záložky
       const overlay = document.getElementById('cf-dialog-overlay');
@@ -4037,7 +4030,6 @@
 
       // Klepnutí do mapy zavře otevřený panel
       leafletMap.on('click', () => {
-        if (trasaPanelOpen) toggleSavedTracks();
         if (infoPanelOpen) toggleInfoPanel();
       });
 
@@ -4150,7 +4142,7 @@
       document.getElementById('tab-map').addEventListener('touchstart', (e) => {
         _mlMoved = false;
         _mlTimer = setTimeout(() => {
-          if (!_mlMoved && !trasaPanelOpen && !infoPanelOpen) toggleMapFullscreen();
+          if (!_mlMoved && !infoPanelOpen) toggleMapFullscreen();
         }, 700);
       }, { passive: true });
       document.getElementById('tab-map').addEventListener('touchmove',  () => { _mlMoved = true; if (_mlTimer) { clearTimeout(_mlTimer); _mlTimer = null; } }, { passive: true });
@@ -4754,7 +4746,7 @@
       if (typeof AndroidSerial === 'undefined' || !AndroidSerial.readCSV) return;
       try {
         const csv = AndroidSerial.readCSV(POI_FILE);
-        if (!csv) return;
+        if (!csv) return;  // Soubor neexistuje — ponechat stávající poiPoints beze změny
         poiPoints = [];
         const lines = csv.replace(/\r/g, '').split('\n');
         let header = false;
@@ -4771,47 +4763,171 @@
       } catch(e) { console.warn('poiLoad:', e); }
     }
 
-    let _poiToggleState = 0;
-    const _poiToggleGetLabels = () => [T[LANG].show_all||'VŠE', T[LANG].show_sel||'VÝBĚR', T[LANG].show_none||'SKRÝT'];
+    // ── ACCORDION sekcí BODY/VRSTVY/TRASY ────────────────────────────────
+    const POI_ACC_KEYS = ['body', 'layers', 'trasy'];
+
+    function poiAccGetOpen() {
+      return lsGet('poi_acc_open', 'body');
+    }
+
+    function poiAccSetOpen(key) {
+      lsSet('poi_acc_open', key);
+    }
+
+    function poiAccInit() {
+      const openKey = poiAccGetOpen();
+      POI_ACC_KEYS.forEach(key => {
+        const sec = document.getElementById('poi-sec-' + key);
+        if (sec) sec.classList.toggle('poi-acc-open', key === openKey);
+      });
+    }
+
+    function poiAccToggle(key) {
+      const sec = document.getElementById('poi-sec-' + key);
+      if (!sec) return;
+      const wasOpen = sec.classList.contains('poi-acc-open');
+      // Klik na již otevřenou sekci ji nezavře — vždy musí být jedna otevřená
+      if (wasOpen) return;
+      POI_ACC_KEYS.forEach(k => {
+        const s = document.getElementById('poi-sec-' + k);
+        if (s) s.classList.toggle('poi-acc-open', k === key);
+      });
+      poiAccSetOpen(key);
+      // Auto-rozbalit detail aktivní ROI oblasti při otevření HEAT (řeší se v switchTab pro záložku roi)
+    }
+
+    let _poiToggleState = 0; // 0=all, 1=none, 2=selection
+    const _poiToggleGetLabels = () => [T[LANG].show_all||'VŠE', T[LANG].show_none||'SKRÝT', T[LANG].show_sel||'VÝBĚR'];
 
     function poiRenderTab() {
       const list = document.getElementById('poi-tab-list');
       const count = document.getElementById('poi-tab-count');
       if (!list) return;
-      if (count) count.textContent = (T[LANG].tab_poi || 'BODY') + ' (' + poiPoints.length + ')';
-      // Aktualizovat label VŠE/VÝBĚR/SKRÝT tlačítka
+      const visibleCount = poiPoints.filter(p => p.visible !== false).length;
+      if (count) count.textContent = (T[LANG].tab_poi || 'BODY') + ' (' + poiPoints.length + ' / ' + visibleCount + ')';
+      // Aktualizovat label VŠE/SKRÝT/VÝBĚR tlačítka
       const btnVse = document.querySelector('.sec-btn[onclick="poiToggleAll()"]');
       if (btnVse) btnVse.textContent = _poiToggleGetLabels()[_poiToggleState];
       if (!poiPoints.length) {
         list.innerHTML = T[LANG].poi_empty_div || '<div style="padding:20px;text-align:center;color:#4a6a4a;font-size:0.65rem;">Žádné body</div>';
         return;
       }
-      // Řadit podle jména
+      // Řadit podle jména — ignorovat ℹ️ prefix importovaných položek
+      const sortKey = s => (s || '').replace(/^ℹ️\s*/, '');
       const idxArr = poiPoints.map((pt, i) => i);
-      idxArr.sort((a, b) => (poiPoints[a].name||'').localeCompare(poiPoints[b].name||'', 'cs'));
-      list.innerHTML = idxArr.map((i) => { const pt = poiPoints[i]; return `
-        <div class='trasa-item'>
-          <input type='checkbox' class='cb-show poi-cb' data-idx='${i}' ${pt.visible!==false?'checked':''} onchange='poiTabToggle(${i},this.checked)'>
-          <div style='font-size:0.7rem;width:16px;text-align:center;flex-shrink:0;'>${pt.icon}</div>
-          <label style='cursor:pointer;' onclick='poiGoTo(${i})'>${pt.name}</label>
-          <span class='trasa-note'>${pt.desc||''}</span>
-          <input type='checkbox' class='poi-sel' data-idx='${i}'>
-        </div>`; }).join('');
-    }
+      idxArr.sort((a, b) => sortKey(poiPoints[a].name).localeCompare(sortKey(poiPoints[b].name), 'cs'));
+      list.innerHTML = idxArr.map((i) => {
+        const pt = poiPoints[i];
+        const selChecked = pt.ts && _poiSelChecked.has(pt.ts);
+        return '<div class="trasa-item" data-idx="' + i + '">' +
+          '<input type="checkbox" class="cb-show poi-cb" data-idx="' + i + '" ' + (pt.visible!==false?'checked':'') + '>' +
+          '<div style="font-size:0.7rem;width:16px;text-align:center;flex-shrink:0;">' + pt.icon + '</div>' +
+          '<span class="trasa-lbl" data-idx="' + i + '">' + (pt.name||'') + '</span>' +
+          '<span class="trasa-note">' + (pt.desc||'') + '</span>' +
+          '<input type="checkbox" class="poi-sel" data-idx="' + i + '" ' + (selChecked?'checked':'') + '>' +
+          '</div>';
+      }).join('');
 
-    function poiTabToggle(idx, visible) {
-      poiPoints[idx].visible = visible;
-      poiRefreshLayer();
+      // Event listenery
+      list.querySelectorAll('.trasa-item').forEach(item => {
+        const cbShow = item.querySelector('.cb-show');
+        const cbSel  = item.querySelector('.poi-sel');
+        const lbl    = item.querySelector('.trasa-lbl');
+        const note   = item.querySelector('.trasa-note');
+        if (!cbShow || !lbl) return;
+        const idx = parseInt(cbShow.dataset.idx);
+
+        // Checkbox výběru pro akce (žlutý) — perzistentní podle timestampu bodu
+        if (cbSel) cbSel.addEventListener('change', function() {
+          const pt = poiPoints[idx];
+          if (!pt || !pt.ts) return;
+          if (this.checked) _poiSelChecked.add(pt.ts);
+          else _poiSelChecked.delete(pt.ts);
+        });
+
+        // Checkbox viditelnosti — pouze přímý klik
+        cbShow.addEventListener('change', function() {
+          if (poiPoints[idx]) {
+            poiPoints[idx].visible = this.checked;
+            poiSaveToFile();
+            poiRefreshLayer();
+            // Aktualizovat počítadlo
+            const visNow = poiPoints.filter(p => p.visible !== false).length;
+            if (count) count.textContent = (T[LANG].tab_poi || 'BODY') + ' (' + poiPoints.length + ' / ' + visNow + ')';
+            // Auto-přepnutí tlačítka na VÝBĚR + uložit ruční výběr
+            _poiToggleState = 2;
+            if (btnVse) btnVse.textContent = _poiToggleGetLabels()[2];
+            const manualSel = poiPoints.map((p, i) => p.visible !== false ? i : -1).filter(i => i >= 0);
+            lsSet('poi_selection_manual', JSON.stringify(manualSel));
+          }
+        });
+
+        // Klik na jméno = zobrazit (pokud skrytý) + přejít na mapu + setView
+        const aktivuj = () => {
+          if (poiPoints[idx] && poiPoints[idx].visible === false) {
+            poiPoints[idx].visible = true;
+            cbShow.checked = true;
+            poiSaveToFile();
+            poiRefreshLayer();
+            _poiToggleState = 2;
+            if (btnVse) btnVse.textContent = _poiToggleGetLabels()[2];
+            const visNow = poiPoints.filter(p => p.visible !== false).length;
+            if (count) count.textContent = (T[LANG].tab_poi || 'BODY') + ' (' + poiPoints.length + ' / ' + visNow + ')';
+            const manualSel = poiPoints.map((p, i) => p.visible !== false ? i : -1).filter(i => i >= 0);
+            lsSet('poi_selection_manual', JSON.stringify(manualSel));
+          }
+          _followPaused = true;
+          switchTab('map');
+          setTimeout(() => {
+            if (leafletMap && poiPoints[idx]) leafletMap.setView([poiPoints[idx].lat, poiPoints[idx].lon], 17);
+            setTimeout(() => { _followPaused = false; }, 4000);
+          }, 350);
+        };
+
+        // Long press = editace
+        let _lpTimer = null, _lpMoved = false, _lpFired = false;
+        let _lpStartX = 0, _lpStartY = 0;
+        const lpStart = (e) => {
+          if (e.target && e.target.type === 'checkbox') return;
+          _lpMoved = false; _lpFired = false;
+          _lpStartX = e.touches ? e.touches[0].clientX : e.clientX;
+          _lpStartY = e.touches ? e.touches[0].clientY : e.clientY;
+          _lpTimer = setTimeout(() => { _lpTimer = null; _lpFired = true; if (!_lpMoved) poiEdit(idx); }, 700);
+        };
+        const lpMove = (e) => {
+          const cx = e.touches ? e.touches[0].clientX : e.clientX;
+          const cy = e.touches ? e.touches[0].clientY : e.clientY;
+          if (Math.abs(cx - _lpStartX) > 8 || Math.abs(cy - _lpStartY) > 8) {
+            _lpMoved = true; if (_lpTimer) { clearTimeout(_lpTimer); _lpTimer = null; }
+          }
+        };
+        const lpEnd = () => { if (_lpTimer) { clearTimeout(_lpTimer); _lpTimer = null; } };
+
+        item.addEventListener('contextmenu', (e) => e.preventDefault());
+        lbl.addEventListener('click', () => { if (!_lpFired && !_lpMoved) aktivuj(); });
+        if (note) note.addEventListener('click', () => { if (!_lpFired && !_lpMoved) aktivuj(); });
+        item.addEventListener('touchstart', lpStart, { passive: false });
+        item.addEventListener('touchmove',  lpMove,  { passive: true });
+        item.addEventListener('touchend',   lpEnd);
+        item.addEventListener('mousedown',  lpStart);
+        item.addEventListener('mousemove',  lpMove);
+        item.addEventListener('mouseup',    lpEnd);
+      });
     }
 
     function poiGetSelected() {
-      return Array.from(document.querySelectorAll('.poi-sel:checked')).map(cb => parseInt(cb.dataset.idx));
+      // Perzistentní výběr podle ts (přežije re-render i Android share intent)
+      const result = [];
+      poiPoints.forEach((pt, i) => { if (pt.ts && _poiSelChecked.has(pt.ts)) result.push(i); });
+      return result;
     }
 
     function poiDeleteSelected() {
       const sel = poiGetSelected();
       if (!sel.length) { cfInfo(T[LANG].poi_select_first); return; }
       cfConfirm(T[LANG].poi_delete_sel(sel.length), () => {
+        // Vyčistit perzistentní výběr smazaných bodů
+        sel.forEach(i => { const pt = poiPoints[i]; if (pt && pt.ts) _poiSelChecked.delete(pt.ts); });
         // Mazat od nejvyššího indexu aby se nepřesouvaly indexy
         sel.sort((a,b) => b-a).forEach(i => poiPoints.splice(i, 1));
         poiSaveToFile();
@@ -4833,36 +4949,37 @@
         AndroidSerial.saveCSV(csv, fname);
         setTimeout(() => {
           if (AndroidSerial.shareCSV) AndroidSerial.shareCSV(JSON.stringify([fname]));
+          _poiSelChecked.clear();
+          poiRenderTab();
         }, 500);
       }
     }
 
     function poiToggleAll() {
-      _poiToggleState = (_poiToggleState + 1) % 3;
-      const btn = document.querySelector('.sec-btn[onclick="poiToggleAll()"]');
-      if (btn) btn.textContent = _poiToggleGetLabels()[_poiToggleState];
       if (_poiToggleState === 0) {
-        // VŠE — zobrazit všechny
-        poiPoints.forEach(p => { p.visible = true; });
-        poiSaveToFile(); poiRefreshLayer();
-      } else if (_poiToggleState === 1) {
-        // VÝBĚR — zobrazit jen zaškrtnuté (nechat jak jsou)
-        poiRefreshLayer();
-      } else {
-        // SKRÝT — skrýt všechny
+        // VŠE → SKRÝT
+        _poiToggleState = 1;
         poiPoints.forEach(p => { p.visible = false; });
         poiSaveToFile(); poiRefreshLayer();
+      } else if (_poiToggleState === 1) {
+        // SKRÝT → VÝBĚR (obnovit poslední ruční výběr)
+        _poiToggleState = 2;
+        let manual = [];
+        try { manual = JSON.parse(lsGet('poi_selection_manual', '[]')); } catch(e) { manual = []; }
+        poiPoints.forEach((p, i) => { p.visible = manual.includes(i); });
+        poiSaveToFile(); poiRefreshLayer();
+      } else {
+        // VÝBĚR → VŠE
+        _poiToggleState = 0;
+        poiPoints.forEach(p => { p.visible = true; });
+        poiSaveToFile(); poiRefreshLayer();
       }
-    }
-
-    function poiGoTo(idx) {
-      const pt = poiPoints[idx]; if (!pt) return;
-      _followPaused = true;
-      switchTab('map');
-      setTimeout(() => {
-        if (leafletMap) leafletMap.setView([pt.lat, pt.lon], 17);
-        setTimeout(() => { _followPaused = false; }, 4000);
-      }, 400);
+      const btn = document.querySelector('.sec-btn[onclick="poiToggleAll()"]');
+      if (btn) btn.textContent = _poiToggleGetLabels()[_poiToggleState];
+      // Aktualizovat počítadlo
+      const visibleCount = poiPoints.filter(p => p.visible !== false).length;
+      const count = document.getElementById('poi-tab-count');
+      if (count) count.textContent = (T[LANG].tab_poi || 'BODY') + ' (' + poiPoints.length + ' / ' + visibleCount + ')';
     }
 
     window.poiShareOne = function(idx) {
@@ -4918,7 +5035,11 @@
 
     function poiImport() {
       poiMenuClose();
-      document.getElementById('import-file-input').click();
+      if (IS_ANDROID && typeof AndroidSerial !== 'undefined' && AndroidSerial.importCSV) {
+        AndroidSerial.importCSV();
+      } else {
+        document.getElementById('import-file-input').click();
+      }
     }
 
     function poiDeleteAll() {
@@ -4969,7 +5090,7 @@
         const heatFiles = all.filter(f => f.startsWith('CF_heat_')).sort().reverse();
         const layerFiles = all.filter(f =>
           (f.startsWith('CF_LAYER_') && !f.startsWith('CF_heat_') &&
-           (f.endsWith('.csv') || f.endsWith('.geojson'))) ||
+           (f.endsWith('.csv') || f.endsWith('.geojson') || f.endsWith('.json'))) ||
           f === 'dulni_dila_filtr.csv'
         );
         // Načíst uložený stav vrstev
@@ -4979,11 +5100,12 @@
           if (!cfLayers.find(l => l.file === file)) {
             const savedVisible = _layerState[file]?.visible !== undefined ? _layerState[file].visible : true;
             const savedFilter  = _layerState[file]?.filter  || 'all';
+            const savedGamaFilter = _layerState[file]?.gamaFilter || 'all';
             cfLayers.push({
-              file, name: file.replace(/^CF_LAYER_/,'').replace(/\.(csv|geojson)$/i,'').replace(/_/g,' '),
+              file, name: file.replace(/^CF_LAYER_/,'').replace(/\.(csv|geojson|json)$/i,'').replace(/_/g,' '),
               icon: '📍', color: '#00aaff', points: [], layer: null,
               visible: savedVisible, loaded: false, isGeo: file.endsWith('.geojson'),
-              showNames: false, filter: savedFilter
+              showNames: false, filter: savedFilter, gamaFilter: savedGamaFilter
             });
           }
         });
@@ -5000,7 +5122,7 @@
     // Uložit stav vrstev do localStorage
     function cfLayersSaveState() {
       const state = {};
-      cfLayers.forEach(lyr => { state[lyr.file] = { visible: lyr.visible, filter: lyr.filter }; });
+      cfLayers.forEach(lyr => { state[lyr.file] = { visible: lyr.visible, filter: lyr.filter, gamaFilter: lyr.gamaFilter }; });
       lsSet('layers_state', JSON.stringify(state));
     }
 
@@ -5024,30 +5146,59 @@
       const dataLines = lines.filter(l => l && !l.startsWith('#'));
       const CHUNK = 1000;
       let i = 0;
+      let isGama = false;
 
       function processChunk() {
         const end = Math.min(i + CHUNK, dataLines.length);
         for (; i < end; i++) {
           const line = dataLines[i];
-          if (!header) { header = cfSplitLine(line); continue; }
+          if (!header) {
+            header = cfSplitLine(line);
+            isGama = header.includes('doporucuji');
+            lyr.layerType = isGama ? 'gama' : 'dulni';
+            continue;
+          }
           const cols = cfSplitLine(line);
           const get = key => { const idx = header.indexOf(key); return idx >= 0 ? cols[idx] || '' : ''; };
           const lon = parseFloat(get('X')), lat = parseFloat(get('Y'));
           if (isNaN(lat) || isNaN(lon)) continue;
           if (lat < 47 || lat > 52 || lon < 12 || lon > 19) continue;
-          const surovina = get('surovina') || get('desc') || '';
-          lyr.points.push({
-            lat, lon,
-            name:    get('name') || get('nazev_dila') || '',
-            druh:    get('type') || get('druh_dila') || '',
-            desc:    get('desc') || get('surovina') || '',
-            profil:  get('profil_dila') || '',
-            rozmery: get('rozmery_usti') || '',
-            hloubka: get('hloubka_delka_dila') || '',
-            ukonceni:get('ukonceni_provozu') || '',
-            surovina,
-            rad: surovina.toLowerCase().includes('radioaktivní') || surovina.toLowerCase().includes('uran')
-          });
+
+          if (isGama) {
+            const urovenRaw = get('doporucuji');
+            const uroven = urovenRaw !== '' ? parseInt(urovenRaw, 10) : null;
+            lyr.points.push({
+              lat, lon,
+              uroven: (uroven >= 1 && uroven <= 4) ? uroven : null,
+              metoda:              get('metoda'),
+              relativni_anomalie:  get('relativni_anomalie'),
+              anomalie:            get('anomalie'),
+              anomalie_uSv:        get('anomalie_uSv'),
+              pozadi_ur_h:         get('pozadi_ur_h'),
+              pozadi_uSV:          get('pozadi_uSV'),
+              typpomer_th_u:       get('typpomer_th_u'),
+              anom_v_hloubce:      get('anom_v_hloubce'),
+              mocnost_pokryvu:     get('mocnost_pokryvu'),
+              propustnost_pokryvu: get('propustnost_pokryvu'),
+              plocha_anomalie:     get('plocha_anomalie'),
+              azimut_anomalie:     get('azimut_anomalie'),
+              tvar_anomalie:       get('tvar_anomalie')
+            });
+          } else {
+            const surovina = get('surovina') || get('desc') || '';
+            lyr.points.push({
+              lat, lon,
+              name:    get('name') || get('nazev_dila') || '',
+              druh:    get('type') || get('druh_dila') || '',
+              desc:    get('desc') || get('surovina') || '',
+              profil:  get('profil_dila') || '',
+              rozmery: get('rozmery_usti') || '',
+              hloubka: get('hloubka_delka_dila') || '',
+              ukonceni:get('ukonceni_provozu') || '',
+              surovina,
+              rad: surovina.toLowerCase().includes('radioaktivní') || surovina.toLowerCase().includes('uran')
+            });
+          }
         }
         // Update progress
         const statusEl = document.getElementById('cfl-status-' + cfLayers.indexOf(lyr));
@@ -5122,6 +5273,20 @@
     }
 
     // Kreslit bodovou vrstvu
+    // Barvy úrovní gama anomálie: 1=bílá, 2=žlutá, 3=oranžová, 4=červená, bez hodnoty=šedá
+    const GAMA_LEVEL_COLOR = { 1: '#ffffff', 2: '#ffeb3b', 3: '#ff9800', 4: '#ff3333' };
+    const GAMA_LEVEL_TEXT  = { 1: '#222222', 2: '#222222', 3: '#222222', 4: '#ffffff' };
+
+    function gamaGetIcon(uroven) {
+      const bg = uroven ? GAMA_LEVEL_COLOR[uroven] : '#888888';
+      const tx = uroven ? GAMA_LEVEL_TEXT[uroven]  : '#dddddd';
+      const num = uroven ? uroven : '';
+      const big = uroven === 1 || uroven === 4; // 1 a 4 výrazně větší
+      const size = big ? 18 : 13;
+      const fontSize = big ? 11 : 8;
+      return { html: `<div style='width:${size}px;height:${size}px;border-radius:50%;background:${bg};border:1.5px solid #333;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:${fontSize}px;color:${tx};font-family:Share Tech Mono,monospace;box-shadow:0 0 3px rgba(0,0,0,0.6);'>${num}</div>`, size };
+    }
+
     function cfLayerDraw(idx) {
       const lyr = cfLayers[idx];
       if (!lyr || !leafletMap) return;
@@ -5132,7 +5297,16 @@
       const zoom   = leafletMap.getZoom();
       const maxPts = zoom >= 15 ? 2000 : zoom >= 13 ? 800 : zoom >= 11 ? 300 : 100;
 
-      let pts = lyr.filter === 'rad' ? lyr.points.filter(p => p.rad) : lyr.points;
+      const isGama = lyr.layerType === 'gama';
+      let pts;
+      if (isGama) {
+        const gf = lyr.gamaFilter || 'all';
+        if (gf === 'none') pts = [];
+        else if (gf === '1-4') pts = lyr.points.filter(p => p.uroven);
+        else pts = lyr.points;
+      } else {
+        pts = (lyr.filter === 'rad') ? lyr.points.filter(p => p.rad) : lyr.points;
+      }
       pts = pts.filter(p => bounds.contains([p.lat, p.lon]));
       if (pts.length > maxPts) {
         const step = Math.ceil(pts.length / maxPts);
@@ -5140,25 +5314,48 @@
       }
 
       lyr.layer = L.layerGroup();
-      pts.forEach(p => {
-        const svg = ddGetIcon(p.druh, p.rad);
-        const size = p.druh === 'Pinka' ? 10 : 14;
-        let html = `<div style='position:relative;'>${svg}`;
-        if (lyr.showNames && p.name) html += `<span style='position:absolute;left:${size+2}px;top:-2px;font-size:0.6rem;color:#111;white-space:nowrap;background:rgba(255,255,255,0.88);padding:1px 4px;border-radius:2px;font-weight:bold;'>${p.name}</span>`;
-        html += '</div>';
-        const icon = L.divIcon({ className:'', html, iconSize:[size,size], iconAnchor:[size/2,size/2] });
-        const popup = `<b>${p.druh}: ${p.name}</b>`
-          + (p.surovina ? `<br>Surovina: ${p.surovina}` : '')
-          + (p.profil   ? `<br>Profil: ${p.profil}` : '')
-          + (p.rozmery  ? `<br>Rozměry: ${p.rozmery}` : '')
-          + (p.hloubka  ? `<br>Hloubka/délka: ${p.hloubka}` : '')
-          + (p.ukonceni ? `<br>Ukončení: ${p.ukonceni}` : '');
-        L.marker([p.lat, p.lon], { icon, interactive: true }).bindPopup(popup, { autoPan: false, maxWidth: Math.min(280, window.innerWidth - 32) }).addTo(lyr.layer);
-      });
+
+      if (isGama) {
+        pts.forEach(p => {
+          const { html, size } = gamaGetIcon(p.uroven);
+          const icon = L.divIcon({ className:'', html, iconSize:[size,size], iconAnchor:[size/2,size/2] });
+          const popup = `<b>Gama anomálie</b>`
+            + (p.uroven ? `<br>Doporučuji: ${p.uroven}` : '')
+            + (p.metoda ? `<br>Metoda: ${p.metoda}` : '')
+            + (p.relativni_anomalie ? `<br>Relativní anomálie: ${p.relativni_anomalie}` : '')
+            + (p.anomalie ? `<br>Anomálie: ${p.anomalie}` : '')
+            + (p.anomalie_uSv ? `<br>Anomálie (µSv): ${p.anomalie_uSv}` : '')
+            + (p.pozadi_ur_h ? `<br>Pozadí: ${p.pozadi_ur_h} uR/h` : '')
+            + (p.pozadi_uSV ? `<br>Pozadí (µSv): ${p.pozadi_uSV}` : '')
+            + (p.tvar_anomalie ? `<br>Tvar: ${p.tvar_anomalie}` : '')
+            + (p.mocnost_pokryvu ? `<br>Mocnost pokryvu: ${p.mocnost_pokryvu}` : '')
+            + (p.propustnost_pokryvu ? `<br>Propustnost pokryvu: ${p.propustnost_pokryvu}` : '')
+            + (p.plocha_anomalie ? `<br>Plocha anomálie: ${p.plocha_anomalie}` : '')
+            + (p.azimut_anomalie ? `<br>Azimut: ${p.azimut_anomalie}` : '');
+          L.marker([p.lat, p.lon], { icon, interactive: true }).bindPopup(popup, { autoPan: false, maxWidth: Math.min(280, window.innerWidth - 32) }).addTo(lyr.layer);
+        });
+      } else {
+        pts.forEach(p => {
+          const svg = ddGetIcon(p.druh, p.rad);
+          const size = p.druh === 'Pinka' ? 10 : 14;
+          let html = `<div style='position:relative;'>${svg}`;
+          if (lyr.showNames && p.name) html += `<span style='position:absolute;left:${size+2}px;top:-2px;font-size:0.6rem;color:#111;white-space:nowrap;background:rgba(255,255,255,0.88);padding:1px 4px;border-radius:2px;font-weight:bold;'>${p.name}</span>`;
+          html += '</div>';
+          const icon = L.divIcon({ className:'', html, iconSize:[size,size], iconAnchor:[size/2,size/2] });
+          const popup = `<b>${p.druh}: ${p.name}</b>`
+            + (p.surovina ? `<br>Surovina: ${p.surovina}` : '')
+            + (p.profil   ? `<br>Profil: ${p.profil}` : '')
+            + (p.rozmery  ? `<br>Rozměry: ${p.rozmery}` : '')
+            + (p.hloubka  ? `<br>Hloubka/délka: ${p.hloubka}` : '')
+            + (p.ukonceni ? `<br>Ukončení: ${p.ukonceni}` : '');
+          L.marker([p.lat, p.lon], { icon, interactive: true }).bindPopup(popup, { autoPan: false, maxWidth: Math.min(280, window.innerWidth - 32) }).addTo(lyr.layer);
+        });
+      }
+
       lyr.layer.addTo(leafletMap);
 
       const statusEl = document.getElementById('cfl-status-' + idx);
-      if (statusEl) statusEl.textContent = `${pts.length}/${lyr.filter==='rad'?lyr.points.filter(p=>p.rad).length:lyr.points.length}`;
+      if (statusEl) statusEl.textContent = `${pts.length}/${isGama ? lyr.points.length : (lyr.filter==='rad'?lyr.points.filter(p=>p.rad).length:lyr.points.length)}`;
     }
 
     function cfLayersDrawAll() {
@@ -5170,8 +5367,10 @@
       const container = document.getElementById('cf-layers-container');
       if (!container) return;
       if (!cfLayers.length) { container.innerHTML = ''; return; }
-      const header = `<div style="padding:4px 10px;border-top:1px solid #1a3a1a;border-bottom:1px solid #1a2e1a;background:#060e06;font-size:0.55rem;color:#4a8a4a;letter-spacing:1px;">${T[LANG].layers_title||'VRSTVY'}</div>`;
-      const items = cfLayers.map((lyr, i) => `
+      const gamaLabels = { all: 'VŠE', '1-4': '1-4', none: 'SKRÝT' };
+      const items = cfLayers.map((lyr, i) => {
+        const isGama = lyr.layerType === 'gama';
+        return `
         <div class="dd-toolbar" style="flex-direction:column;align-items:stretch;gap:4px;padding:6px 10px;">
           <div style="display:flex;align-items:center;gap:6px;">
             <input type="checkbox" ${lyr.visible?'checked':''} onchange="cfLayerToggleVisible(${i},this.checked)" style="accent-color:#00ff41;width:16px;height:16px;">
@@ -5179,14 +5378,28 @@
             <span class="dd-status" id="cfl-status-${i}">${lyr.loaded ? lyr.points.length + T[LANG].suf_pts : T[LANG].not_loaded}</span>
           </div>
           <div style="display:flex;gap:4px;">
-            <button class="dd-btn ${lyr.filter==='all'?'active':''}" onclick="cfLayerSetFilter(${i},'all')">${T[LANG].show_all||'VŠE'}</button>
-            <button class="dd-btn ${lyr.filter==='rad'?'active':''}" onclick="cfLayerSetFilter(${i},'rad')">☢ URAN</button>
-            <button class="dd-btn ${lyr.showNames?'active':''}" onclick="cfLayerToggleNames(${i})">ABC</button>
+            ${isGama
+              ? `<button class="dd-btn active" onclick="cfLayerCycleGamaFilter(${i})">${gamaLabels[lyr.gamaFilter || 'all']}</button>`
+              : `<button class="dd-btn ${lyr.filter==='all'?'active':''}" onclick="cfLayerSetFilter(${i},'all')">${T[LANG].show_all||'VŠE'}</button>
+                 <button class="dd-btn ${lyr.filter==='rad'?'active':''}" onclick="cfLayerSetFilter(${i},'rad')">☢ URAN</button>
+                 <button class="dd-btn ${lyr.showNames?'active':''}" onclick="cfLayerToggleNames(${i})">ABC</button>`}
             <button class="dd-btn" onclick="cfLayerLoad(${i})">${lyr.loaded?'↺':(T[LANG].load_btn||'NAČÍST')}</button>
             <button class="dd-btn" onclick="cfLayerExport(${i})" style="border-color:#00aaff;color:#00aaff;background:#0a0e0a;">SDÍLET</button>
           </div>
-        </div>`).join('');
-      container.innerHTML = header + items;
+        </div>`;
+      }).join('');
+      container.innerHTML = items;
+    }
+
+    // Cyklus filtru gama vrstvy: VŠE → 1-4 (skrýt šedé bez hodnoty) → SKRÝT → VŠE
+    function cfLayerCycleGamaFilter(idx) {
+      const lyr = cfLayers[idx]; if (!lyr) return;
+      const order = ['all', '1-4', 'none'];
+      const cur = order.indexOf(lyr.gamaFilter || 'all');
+      lyr.gamaFilter = order[(cur + 1) % order.length];
+      cfLayersSaveState();
+      cfLayerDraw(idx);
+      cfLayersRenderTab();
     }
 
     function cfLayerExport(idx) {
@@ -5235,11 +5448,6 @@
 
 
     function toggleInfoPanel() {
-      if (trasaPanelOpen) {
-        document.getElementById('trasa-panel').classList.remove('visible');
-        document.getElementById('btn-trasa').classList.remove('active');
-        trasaPanelOpen = false;
-      }
       infoPanelOpen = !infoPanelOpen;
       const panel = document.getElementById('info-panel');
       const btn   = document.getElementById('btn-zobrazeni');
@@ -5303,10 +5511,15 @@
       } catch(e) { return ''; }
     }
 
+    function cycleTrasaSort() {
+      const next = _trasaSort === 'date' ? 'name' : 'date';
+      setTrasaSort(next);
+    }
+
     function setTrasaSort(by) {
       _trasaSort = by;
       lsSet('trasa_sort', by);
-      renderTrasaPanel();
+      renderTrasaPanelPoi();
     }
 
     function setPoiSort(by) {
@@ -5317,13 +5530,14 @@
 
     function sortFiles(files, sortBy, notes) {
       const arr = [...files];
+      const sk = s => (s || '').replace(/^ℹ️\s*/, '');
       if (sortBy === 'name') {
-        arr.sort((a, b) => a.replace(/^CF_/,'').localeCompare(b.replace(/^CF_/,''), 'cs'));
+        arr.sort((a, b) => sk(a.replace(/^CF_/,'')).localeCompare(sk(b.replace(/^CF_/,'')), 'cs'));
       } else if (sortBy === 'note') {
         arr.sort((a, b) => {
-          const na = notes[a] || '', nb = notes[b] || '';
+          const na = sk(notes[a] || ''), nb = sk(notes[b] || '');
           if (!na && !nb) return 0;
-          if (!na) return 1;  // prázdná poznámka na konec
+          if (!na) return 1;
           if (!nb) return -1;
           return na.localeCompare(nb, 'cs');
         });
@@ -5334,143 +5548,7 @@
       return arr;
     }
 
-    function renderTrasaPanel() {
-      const panel = document.getElementById('trasa-panel');
-      if (!panel) return;
-      const { files, sizes } = getFilesList();
-      currentFiles = files;
 
-      const selCount  = getSelectedCheckboxes().length;
-      const showCount = files.filter(f => savedSelection.includes(f)).length;
-
-      // Načíst poznámky pro sort — použít cache, číst jen nové soubory
-      const _noteMap = {};
-      files.forEach(f => {
-        if (_noteCache[f] !== undefined) {
-          _noteMap[f] = _noteCache[f];
-        } else {
-          _noteMap[f] = getFileNote(f);
-          _noteCache[f] = _noteMap[f];
-        }
-      });
-      // Vyčistit cache pro smazané soubory
-      Object.keys(_noteCache).forEach(k => { if (!files.includes(k)) delete _noteCache[k]; });
-      const sortedFiles = sortFiles(files, _trasaSort, _noteMap);
-      currentFiles = sortedFiles;
-
-      const items = sortedFiles.map((f,i) => {
-        const shown    = savedSelection.includes(f);
-        const name     = fmtDate(f);
-        const note     = _noteMap[f];
-        const noteHtml = note ? `<span class="trasa-note">${note}</span>` : '<span class="trasa-note"></span>';
-        return `<div class="trasa-item">
-          <input type="checkbox" class="cb-show" data-file="${f}" id="ts_${i}" ${shown?'checked':''} title="' + T[LANG].show_on_map + '">
-          <label for="ts_${i}" title="${f}" data-file="${f}">${name}</label>
-          ${noteHtml}
-          <span class="trasa-size">${fmtSize(sizes[f])}</span>
-          <input type="checkbox" class="cb-sel" data-file="${f}" id="tc_${i}" title="Vybrat pro akce">
-        </div>`;
-      }).join('');
-
-      panel.innerHTML = files.length === 0
-        ? '<div class="trasa-empty">' + T[LANG].no_tracks + '</div>'
-        : `<div class="trasa-header">
-            <span>📁 TRASY (${files.length}) · zobrazeno: ${showCount}</span>
-            <span style="display:flex;gap:3px;align-items:center">
-              <button onclick="setTrasaSort('date')" style="font-size:0.5rem;padding:1px 4px;cursor:pointer;background:${_trasaSort==='date'?'#003d0f':'#0a0e0a'};border:1px solid ${_trasaSort==='date'?'#00ff41':'#2a5a2a'};color:${_trasaSort==='date'?'#00ff41':'#4a8a4a'};border-radius:2px">📅</button>
-              <button onclick="setTrasaSort('name')" style="font-size:0.5rem;padding:1px 4px;cursor:pointer;background:${_trasaSort==='name'?'#003d0f':'#0a0e0a'};border:1px solid ${_trasaSort==='name'?'#00ff41':'#2a5a2a'};color:${_trasaSort==='name'?'#00ff41':'#4a8a4a'};border-radius:2px">AZ</button>
-              <button onclick="setTrasaSort('note')" style="font-size:0.5rem;padding:1px 4px;cursor:pointer;background:${_trasaSort==='note'?'#003d0f':'#0a0e0a'};border:1px solid ${_trasaSort==='note'?'#00ff41':'#2a5a2a'};color:${_trasaSort==='note'?'#00ff41':'#4a8a4a'};border-radius:2px">✏️</button>
-            </span>
-           </div>
-           <div class="trasa-list" id="trasa-list">${items}</div>
-           <div class="trasa-actions">
-             <button class="trasa-btn" id="btn-vse-show" onclick="toggleAllShow()">👁 VŠE</button>
-             <button class="trasa-btn danger" onclick="smazatTrasy()">🗑 SMAZAT</button>
-             <button class="trasa-btn share" onclick="sdiletTrasy()">📤 SDÍLET</button>
-             <button class="trasa-btn ram" onclick="ulozitRAM()">💾 RAM</button>
-             <button class="trasa-btn share" onclick="importCSV()" style="border-color:#00ff41;color:#00ff41">📥 IMPORT</button>
-           </div>`;
-
-      // Event listenery — checkbox i label dělají totéž (zobrazit trasu + fitBounds)
-      // Long press = editace poznámky, pouze pokud uživatel nestroluje
-      panel.querySelectorAll('.cb-sel').forEach(cb => {
-        cb.addEventListener('change', onSelCheckboxChange);
-        // Obnovit stav z _selChecked po re-renderu
-        if (cb.dataset.file && _selChecked.has(cb.dataset.file)) cb.checked = true;
-      });
-
-      panel.querySelectorAll('.trasa-item').forEach(item => {
-        const cb  = item.querySelector('.cb-show');
-        const lbl = item.querySelector('label[data-file]');
-        const note = item.querySelector('.trasa-note');
-        if (!cb || !lbl) return;
-        const f = cb.dataset.file;
-
-        // Helper: zobrazit trasu + fitBounds
-        const aktivuj = () => {
-          if (!cb.checked) {
-            cb.checked = true;
-            onShowCheckboxChange({ target: cb });
-          }
-          // fitBounds
-          if (!leafletMap || !IS_ANDROID || typeof AndroidSerial === 'undefined') return;
-          try {
-            const csv = AndroidSerial.readCSV(f);
-            if (!csv) return;
-            const lines = csv.replace(/\r/g,'').split('\n');
-            let latI=-1, lonI=-1, hSeen=false;
-            const ll = [];
-            for (const line of lines) {
-              if (!line || line.startsWith('#')) continue;
-              if (!hSeen) { const h=line.toLowerCase().split(','); latI=h.indexOf('lat'); lonI=h.indexOf('lon'); hSeen=true; continue; }
-              const c=line.split(','); const lat=+c[latI], lon=+c[lonI];
-              if (lat && lon) ll.push([lat,lon]);
-            }
-            if (ll.length > 0) { const b=L.latLngBounds(ll); if (b.isValid()) leafletMap.fitBounds(b,{padding:[40,40],maxZoom:20}); }
-          } catch(e) { console.warn('fitBounds:', e); }
-        };
-
-        // Zakázat systémový context menu při long press
-        item.addEventListener('contextmenu', (e) => e.preventDefault());
-        // Long press — editace poznámky, jen pokud nestrolujeme
-        let _lpTimer = null, _lpMoved = false, _lpFired = false;
-        let _lpStartX = 0, _lpStartY = 0;
-
-        const lpStart = (e) => {
-          if (e.target && e.target.type === 'checkbox') return;
-          _lpMoved = false; _lpFired = false;
-          _lpStartX = e.touches ? e.touches[0].clientX : e.clientX;
-          _lpStartY = e.touches ? e.touches[0].clientY : e.clientY;
-          _lpTimer = setTimeout(() => { _lpTimer = null; _lpFired = true; if (!_lpMoved) editLogNote(f); }, 700);
-        };
-        const lpMove = (e) => {
-          const cx = e.touches ? e.touches[0].clientX : e.clientX;
-          const cy = e.touches ? e.touches[0].clientY : e.clientY;
-          if (Math.abs(cx - _lpStartX) > 8 || Math.abs(cy - _lpStartY) > 8) {
-            _lpMoved = true; if (_lpTimer) { clearTimeout(_lpTimer); _lpTimer = null; }
-          }
-        };
-        const lpEnd = (e) => {
-          if (e.target && e.target.type === 'checkbox') return;
-          if (_lpTimer) { clearTimeout(_lpTimer); _lpTimer = null; }
-        };
-
-        // Klik na label nebo poznámku = aktivovat trasu (ne na checkbox)
-        lbl.addEventListener('click', (e) => { if (!_lpFired && !_lpMoved) aktivuj(); });
-        if (note) note.addEventListener('click', (e) => { if (!_lpFired && !_lpMoved) aktivuj(); });
-
-        // Checkbox bez akce fitBounds (jen zaškrtnout/odškrtnout)
-        cb.addEventListener('change', onShowCheckboxChange);
-
-        // Long press na celý řádek
-        item.addEventListener('touchstart', lpStart, { passive: false });
-        item.addEventListener('touchmove',  lpMove,  { passive: true });
-        item.addEventListener('touchend',   (e) => lpEnd(e));
-        item.addEventListener('mousedown',  lpStart);
-        item.addEventListener('mousemove',  lpMove);
-        item.addEventListener('mouseup',    (e) => lpEnd(e));
-      });
-    }
 
     function onShowCheckboxChange(e) {
       const f = e.target.dataset.file;
@@ -5483,94 +5561,53 @@
       showMode = 'selection';
       lsSet('saved_selection', JSON.stringify(savedSelection));
       lsSet('saved_selection_manual', JSON.stringify(savedSelection));
-      const showCount = currentFiles.filter(x => savedSelection.includes(x)).length;
-      const panel = document.querySelector('#trasa-panel .trasa-header span:first-child');
-      if (panel) panel.textContent = `📁 TRASY (${currentFiles.length}) · zobrazeno: ${showCount}`;
+      // Aktualizovat počítadlo
+      const shownCount = currentFiles.filter(x => savedSelection.includes(x)).length;
+      const countEl = document.getElementById('poi-trasy-count');
+      if (countEl) countEl.textContent = (T[LANG].tracks_section || 'TRASY') + ' (' + currentFiles.length + ' / ' + shownCount + ')';
       // Aktualizovat label tlačítka
-      const btnVse = document.getElementById('btn-vse-show');
-      if (btnVse) btnVse.textContent = '👁 VÝBĚR';
+      const btnAll2 = document.getElementById('poi-trasa-btn-all');
+      if (btnAll2) btnAll2.textContent = T[LANG].show_sel || 'VÝBĚR';
       applyZobrazitDebounced();
-    }
-
-    function onSelCheckboxChange() {
-      // Uložit stav do _selChecked pro přežití re-renderu
-      document.querySelectorAll('.cb-sel').forEach(cb => {
-        if (cb.dataset.file) {
-          if (cb.checked) _selChecked.add(cb.dataset.file);
-          else _selChecked.delete(cb.dataset.file);
-        }
-      });
-      const count = getSelectedCheckboxes().length;
-      const hdr = document.getElementById('trasa-sel-count');
-      if (hdr) hdr.textContent = count > 0 ? count + ' ' + T[LANG].selected : '';
     }
 
     function toggleAllShow() {
-      if (showMode === 'selection') {
-        showMode = 'all';
-        savedSelection = [...currentFiles];
-      } else if (showMode === 'all') {
+      if (showMode === 'all') {
         showMode = 'none';
         savedSelection = [];
-      } else {
+      } else if (showMode === 'none') {
         showMode = 'selection';
         try { savedSelection = JSON.parse(lsGet('saved_selection_manual', '[]')); } catch(e) { savedSelection = []; }
+      } else {
+        showMode = 'all';
+        savedSelection = [...currentFiles];
       }
       lsSet('saved_selection', JSON.stringify(savedSelection));
-      // Aktualizovat checkboxy v obou panelech
-      document.querySelectorAll('#trasa-panel .cb-show, #trasa-panel-poi .cb-show').forEach(cb => {
+      // Aktualizovat checkboxy v poi panelu
+      document.querySelectorAll('#trasa-panel-poi .cb-show').forEach(cb => {
         cb.checked = savedSelection.includes(cb.dataset.file);
       });
-      const showCount = currentFiles.filter(f => savedSelection.includes(f)).length;
-      const hdrSpan = document.querySelector('#trasa-panel .trasa-header span:first-child');
-      if (hdrSpan) hdrSpan.textContent = `📁 TRASY (${currentFiles.length}) · zobrazeno: ${showCount}`;
-      const labels = { all:T[LANG].show_all, none:T[LANG].show_none, selection:T[LANG].show_sel };
-      const btnVse = document.getElementById('btn-vse-show');
-      if (btnVse) btnVse.textContent = { all:T[LANG].show_all, none:T[LANG].show_none, selection:T[LANG].show_sel }[showMode];
-      // Aktualizovat tlacitko VŠE v poi panelu
+      // Aktualizovat počítadlo
+      const shownCount = currentFiles.filter(f => savedSelection.includes(f)).length;
+      const countEl = document.getElementById('poi-trasy-count');
+      if (countEl) countEl.textContent = (T[LANG].tracks_section || 'TRASY') + ' (' + currentFiles.length + ' / ' + shownCount + ')';
+      // Aktualizovat label tlačítka
       const btnAll2 = document.getElementById('poi-trasa-btn-all');
-      if (btnAll2) btnAll2.textContent = T[LANG].roi_show || { all:T[LANG].show_all, none:T[LANG].show_none, selection:T[LANG].show_sel }[showMode];
+      const _lbl = { all: T[LANG].show_all || 'VŠE', none: T[LANG].show_none || 'SKRÝT', selection: T[LANG].show_sel || 'VÝBĚR' };
+      if (btnAll2) btnAll2.textContent = _lbl[showMode];
       applyZobrazitDebounced();
     }
 
 
 
-    function toggleSavedTracks() {
-      if (infoPanelOpen) {
-        document.getElementById('info-panel').classList.remove('visible');
-        document.getElementById('btn-zobrazeni').classList.remove('active');
-        infoPanelOpen = false;
-      }
-      trasaPanelOpen = !trasaPanelOpen;
-      const panel = document.getElementById('trasa-panel');
-      const btn   = document.getElementById('btn-trasa');
-      if (!trasaPanelOpen) {
-        if (panel) panel.classList.remove('visible');
-        if (btn)   btn.classList.remove('active');
-        return;
-      }
-      if (!panel) return;
-      panel.classList.add('visible');
-      if (btn) btn.classList.add('active');
-      renderTrasaPanel();
-      setTimeout(applyZobrazit, 50);
-    }
+
 
     function applyZobrazitDebounced() {
       if (_applyDebounce) clearTimeout(_applyDebounce);
       _applyDebounce = setTimeout(() => { _applyDebounce = null; applyZobrazit(); }, 400);
     }
 
-    // ---- Přepnout zobrazení jedné trasy ----
-    function trasaToggleShow(file, shown) {
-      if (shown) {
-        if (!savedSelection.includes(file)) savedSelection.push(file);
-      } else {
-        savedSelection = savedSelection.filter(x => x !== file);
-      }
-      lsSet('saved_selection', JSON.stringify(savedSelection));
-      applyZobrazitDebounced();
-    }
+
 
     function applyZobrazit() {
       if (typeof L === 'undefined') return;
@@ -5734,13 +5771,12 @@
     }
 
     function getSelectedCheckboxes() {
-      // Hledat v obou panelech — starem (#trasa-panel) i novem (#trasa-panel-poi)
       const fromDom = Array.from(
-        document.querySelectorAll('#trasa-panel .cb-sel:checked, #trasa-panel-poi .cb-sel:checked')
+        document.querySelectorAll('#trasa-panel-poi .cb-sel:checked')
       ).map(c => c.dataset.file).filter(Boolean);
       if (fromDom.length > 0) return fromDom;
       // Fallback na _selChecked
-      return Object.keys(_selChecked).filter(f => _selChecked[f]);
+      return Array.from(_selChecked);
     }
 
     function sdiletTrasy() {
@@ -5748,6 +5784,8 @@
       if (!files.length) return;
       if (typeof AndroidSerial !== 'undefined' && AndroidSerial.shareCSV)
         AndroidSerial.shareCSV(JSON.stringify(files));
+      _selChecked.clear();
+      renderTrasaPanelPoi();
     }
 
     function importCSV() {
@@ -5769,7 +5807,7 @@
         const name = file.name;
         if (IS_ANDROID && typeof AndroidSerial !== 'undefined') {
           AndroidSerial.saveCSV(csv, name);
-          setTimeout(() => { renderTrasaPanel(); }, 500);
+          setTimeout(() => { renderTrasaPanelPoi(); }, 500);
         }
       };
       reader.readAsText(file);
@@ -5777,23 +5815,54 @@
     }
 
     // Callback z Androidu po úspěšném importu
-    window.onCurieImported = function(filename) {
+    window.onCurieImported = function(filename, isImport) {
       setTimeout(() => {
-        if (filename && (filename.endsWith('.json') || filename.endsWith('.roi') || filename.endsWith('.roi.txt') || filename.endsWith('.json.txt'))) {
-          // Zavrit wizard pokud je otevreny
+        if (filename && filename.startsWith('CF_POI_export')) {
+          // Import exportovaných bodů — přidat k existujícím (merge) s ℹ️ prefixem
+          try {
+            // Nejdřív načíst stávající body pokud ještě nejsou v paměti
+            if (poiPoints.length === 0) poiLoadFromFile();
+            const csv = typeof AndroidSerial !== 'undefined' ? AndroidSerial.readCSV(filename) : '';
+            if (!csv) return;
+            const lines = csv.replace(/\r/g, '').split('\n');
+            let header = false;
+            let added = 0;
+            for (const line of lines) {
+              if (!line || line.startsWith('#')) continue;
+              if (!header) { header = true; continue; }
+              const p = line.split(',');
+              if (p.length < 6) continue;
+              const pt = { ts: p[0] || String(Date.now() + added), lat: parseFloat(p[1]), lon: parseFloat(p[2]),
+                           name: 'ℹ️ ' + (p[3] || ''), desc: p[4] || '', icon: p[5] || '📍', log: p[6] || '' };
+              if (isNaN(pt.lat) || isNaN(pt.lon)) continue;
+              poiPoints.push(pt);
+              poiDrawMarker(pt);
+              added++;
+            }
+            if (added > 0) {
+              poiSaveToFile();
+              poiRefreshLayer();
+              switchTab('poi');
+              poiAccToggle('body');
+              cfInfo('Importováno ' + added + ' bodů');
+            }
+          } catch(e) { console.warn('POI import error:', e); }
+        } else if (filename && (filename.endsWith('.json') || filename.endsWith('.roi') || filename.endsWith('.roi.txt') || filename.endsWith('.json.txt'))) {
+          // Heat oblast
           console.log('onCurieImported: filename=' + filename);
           const wizOv = document.getElementById('wiz-overlay');
-          console.log('onCurieImported: wizard visible=' + (wizOv ? wizOv.classList.contains('visible') : 'no-el'));
-          if (wizOv && wizOv.classList.contains('visible')) {
-            wizOv.classList.remove('visible');
-          }
-          // Prepnout na zalozku HEAT
+          if (wizOv && wizOv.classList.contains('visible')) wizOv.classList.remove('visible');
           switchTab('roi');
-          console.log('onCurieImported: switchTab done, calling roiCheckImportConflict');
-          // Zkontrolovat duplicitu az po nacteni seznamu
-          setTimeout(() => { console.log('roiCheckImportConflict start, _roiList.length=' + _roiList.length); roiCheckImportConflict(filename); }, 600);
+          setTimeout(() => { roiCheckImportConflict(filename); }, 600);
+        } else if (filename && filename.startsWith('CF_LAYER_')) {
+          // Importovaná vrstva (důlní díla / gama anomálie) — znovu objevit a vykreslit
+          const existing = cfLayers.find(l => l.file === filename);
+          if (existing) { existing.loaded = false; existing.points = []; }
+          cfLayersDiscover();
+          switchTab('poi');
+          cfInfo((T[LANG].roi_imported || 'Importováno: ') + filename);
         } else {
-          renderTrasaPanel();
+          renderTrasaPanelPoi();
           applyZobrazit();
         }
       }, 300);
@@ -5975,7 +6044,7 @@
           if (filename === trackFilename) logNote = newNote;
           delete _noteCache[filename]; // invalidovat cache pro tento soubor
           setTimeout(() => {
-            renderTrasaPanel();
+            renderTrasaPanelPoi();
             redrawSavedTracks(); // Překreslit trasy aby popup měl aktuální poznámku
           }, 600);
         });
@@ -5992,7 +6061,7 @@
       if (IS_ANDROID && typeof AndroidSerial !== 'undefined') {
         AndroidSerial.saveCSV(csv, name);
         lsSet('ram_autosave', '');  // uloženo, záloha zbytečná
-        setTimeout(() => { renderTrasaPanel(); }, 500);
+        setTimeout(() => { renderTrasaPanelPoi(); }, 500);
       } else {
         const blob = new Blob([csv], { type:'text/csv' });
         const url  = URL.createObjectURL(blob);
@@ -6010,7 +6079,7 @@
         savedSelection = savedSelection.filter(f => !files.includes(f));
         files.forEach(f => { delete _noteCache[f]; delete _trackCache[f]; });
         lsSet('saved_selection', JSON.stringify(savedSelection));
-        setTimeout(() => { renderTrasaPanel(); renderTrasaPanelPoi(); applyZobrazit(); updateLogStatus(); }, 500);
+        setTimeout(() => { renderTrasaPanelPoi(); applyZobrazit(); updateLogStatus(); }, 500);
       }
     }
 
@@ -6027,7 +6096,7 @@
         if (recDot) recDot.classList.remove('active');
       } else if (!isConnected || lastLat === null) {
         logSpan.className = 'log-pauza';
-        logSpan.innerHTML = '📝 LOG: ' + (T[LANG].log_pause || 'PAUZA');
+        logSpan.innerHTML = '📝 LOG: PAUZA';
         if (recDot) recDot.classList.remove('active');
       } else {
         logSpan.className = 'log-rec';
@@ -6071,8 +6140,6 @@
         } catch(e) { console.warn('toggleLog delete small:', e); }
       }
       updateLogStatus();
-      // Překreslit panel trasy po zastavení — zobrazí poznámku
-      if (trasaPanelOpen) setTimeout(() => renderTrasaPanel(), 600);
     }
 
     function _doStartLog() {
@@ -7023,7 +7090,7 @@
       if (!bar) return;
       bar.style.display = _roiSelected.size > 0 ? 'flex' : 'none';
       const countEl = document.getElementById('roi-bulk-count');
-      if (countEl) countEl.textContent = _roiSelected.size + (T[LANG].suf_selected || ' vybráno');
+      if (countEl) countEl.textContent = _roiSelected.size + ' vybráno';
     }
 
     function roiBulkDelete() {
@@ -7039,9 +7106,13 @@
 
     function roiBulkShare() {
       if (_roiSelected.size === 0) return;
-      for (const fn of [..._roiSelected]) {
-        if (IS_ANDROID && typeof AndroidSerial !== 'undefined') AndroidSerial.shareROI(fn);
+      const files = [..._roiSelected];
+      if (IS_ANDROID && typeof AndroidSerial !== 'undefined' && AndroidSerial.shareROI) {
+        AndroidSerial.shareROI(JSON.stringify(files));
       }
+      _roiSelected.clear();
+      roiUpdateBulkBar();
+      roiRenderList(_roiList);
     }
     function roiRenderDetail(data, filename) {
       const b = data.bounds;
@@ -7842,7 +7913,7 @@ window.addEventListener('load',()=>{generate();});
     let _wizConnectTimer = null;
     let _wizScanTimer    = null;
     let _wizScanResults  = {};
-    const WIZ_OUR_NAMES    = ['CurieFinder', 'Raysid', 'Dozik', 'RN_BLE', 'RN487', 'CurieBT', 'FNIRSI'];
+    const WIZ_OUR_NAMES    = ['CurieFinder', 'Raysid', 'Dozik', 'RN_BLE', 'RN487', 'CurieBT', 'FNIRSI', 'KC761'];
     const WIZ_RADPRO_NAMES = ['HMSoft', 'HM-10', 'BT05', 'MLT-BT05', 'JDY-08', 'JDY-09'];
 
     function wizOpen() {
@@ -7902,6 +7973,8 @@ window.addEventListener('load',()=>{generate();});
       items.push({ name: '⚡ Hledat RadPro BLE/USB', label: '● RadPro BLE/USB', ours: true });
       // Raysid BLE
       items.push({ name: '⚡ Hledat Raysid BLE', label: '● Raysid BLE', ours: true });
+      // KC761 BLE
+      items.push({ name: '⚡ Hledat KC761 BLE', label: '● KC761', ours: true });
       // Ostatní
       const hasOthers = others.length > 0;
       let html = items.map(item => {
@@ -7990,14 +8063,17 @@ window.addEventListener('load',()=>{generate();});
       const foundList = document.getElementById('wiz-ble-found');
       if (!foundList) return;
       const results = Object.values(_wizScanResults).sort((a, b) => b.rssi - a.rssi);
+      // Zařízení se vlastními BLE managery — jméno přímo (ne BLE: prefix)
+      // aby connectSavedDevice() správně směroval, ne do NusBleManager
+      const OUR_PREFIXES = ['KC761', 'Raysid', 'Dozik', 'RN_BLE', 'RN487', 'RadiaCode', 'RC-10'];
       foundList.innerHTML = results.map(r => {
-        const devKey = 'BLE:' + r.name + ':' + r.addr; // BLE prefix pro NUS připojení
+        const isOurs = r.name && OUR_PREFIXES.some(p => r.name.toUpperCase().startsWith(p.toUpperCase()));
+        const devKey = isOurs ? r.name : ('BLE:' + r.name + ':' + r.addr);
         return '<div class="wiz-bt-item ours" data-dev="' + devKey.replace(/&/g,'&amp;').replace(/"/g,'&quot;') + '" data-ble="1">'
           + '<span>● ' + r.name + '</span>'
           + '<span class="wiz-bt-mac">' + (r.rssi || '') + ' dBm</span>'
           + '</div>';
       }).join('');
-      // Event listener přidán přímo na každý element aby přežil re-render
       foundList.querySelectorAll('.wiz-bt-item').forEach(el => {
         el.addEventListener('click', function() {
           foundList.querySelectorAll('.wiz-bt-item').forEach(e => e.classList.remove('selected'));
@@ -8101,51 +8177,143 @@ window.addEventListener('load',()=>{generate();});
       if (!panel) return;
       const { files, sizes } = getFilesList();
       currentFiles = files;
-      if (countEl) countEl.textContent = (T[LANG].tracks_section || 'TRASY') + ' (' + files.length + ')';
 
       const _noteMap = {};
       files.forEach(f => {
         _noteMap[f] = _noteCache[f] !== undefined ? _noteCache[f] : (_noteCache[f] = getFileNote(f));
       });
+      Object.keys(_noteCache).forEach(k => { if (!files.includes(k)) delete _noteCache[k]; });
       const sortedFiles = sortFiles(files, _trasaSort, _noteMap);
       currentFiles = sortedFiles;
+
+      // Počítadlo: celkem / zobrazeno
+      const shownCount = sortedFiles.filter(f => savedSelection.includes(f)).length;
+      if (countEl) countEl.textContent = (T[LANG].tracks_section || 'TRASY') + ' (' + files.length + ' / ' + shownCount + ')';
+
+      // Aktualizovat label tlačítka podle aktuálního showMode
+      const btnAll2 = document.getElementById('poi-trasa-btn-all');
+      const _modeLabels = { all: T[LANG].show_all || 'VŠE', none: T[LANG].show_none || 'SKRÝT', selection: T[LANG].show_sel || 'VÝBĚR' };
+      if (btnAll2) btnAll2.textContent = _modeLabels[showMode] || 'VŠE';
 
       if (files.length === 0) {
         panel.innerHTML = '<div class="trasa-empty">' + T[LANG].no_tracks + '</div>';
         return;
       }
+
       const items = sortedFiles.map((f, i) => {
         const shown    = savedSelection.includes(f);
-        const selState = _selChecked[f] || false;
+        const selState = _selChecked.has(f);
         const name     = fmtDate(f);
         const note     = _noteMap[f];
         const noteHtml = note ? '<span class="trasa-note">' + note + '</span>' : '<span class="trasa-note"></span>';
+        // POZOR: cb-show NEMÁ id propojené s žádným labelem — checkbox pouze přes přímý klik
+        // span.trasa-lbl slouží pro klik na jméno (fitBounds + zaškrtnout) a long press (editace)
         return '<div class="trasa-item">' +
-          '<input type="checkbox" class="cb-show" data-file="' + f + '" id="tsp_' + i + '" ' + (shown ? 'checked' : '') + '>' +
-          '<label for="tsp_' + i + '" data-file="' + f + '">' + name + '</label>' +
+          '<input type="checkbox" class="cb-show" data-file="' + f + '" ' + (shown ? 'checked' : '') + '>' +
+          '<span class="trasa-lbl" data-file="' + f + '">' + name + '</span>' +
           noteHtml +
           '<span class="trasa-size">' + fmtSize(sizes[f]) + '</span>' +
-          '<input type="checkbox" class="cb-sel" data-file="' + f + '" id="tcp_' + i + '" ' + (selState ? 'checked' : '') + '>' +
+          '<input type="checkbox" class="cb-sel" data-file="' + f + '" ' + (selState ? 'checked' : '') + '>' +
           '</div>';
       }).join('');
       panel.innerHTML = '<div class="trasa-list" id="trasa-list-poi">' + items + '</div>';
 
-      panel.querySelectorAll('.cb-show').forEach(cb => {
-        cb.addEventListener('change', function() {
-          trasaToggleShow(this.dataset.file, this.checked);
-          renderTrasaPanelPoi();
+      // ---- Event listenery ----
+      panel.querySelectorAll('.trasa-item').forEach(item => {
+        const cbShow = item.querySelector('.cb-show');
+        const cbSel  = item.querySelector('.cb-sel');
+        const lbl    = item.querySelector('.trasa-lbl');
+        const note   = item.querySelector('.trasa-note');
+        if (!cbShow || !lbl) return;
+        const f = cbShow.dataset.file;
+
+        // Checkbox zobrazení — pouze přímý klik na checkbox
+        cbShow.addEventListener('change', function() {
+          onShowCheckboxChange({ target: this });
         });
-      });
-      panel.querySelectorAll('.cb-sel').forEach(cb => {
-        cb.addEventListener('change', function() {
-          _selChecked[this.dataset.file] = this.checked;
+
+        // Checkbox výběru pro akce (žlutý)
+        if (cbSel) cbSel.addEventListener('change', function() {
+          if (this.checked) _selChecked.add(f);
+          else _selChecked.delete(f);
         });
+
+        // Klik na jméno nebo poznámku = zaškrtnout (ne odškrtnout) + přejít na mapu + fitBounds
+        const aktivuj = () => {
+          // Zaškrtnout pokud ještě není
+          if (!savedSelection.includes(f)) {
+            savedSelection.push(f);
+            showMode = 'selection';
+            lsSet('saved_selection', JSON.stringify(savedSelection));
+            lsSet('saved_selection_manual', JSON.stringify(savedSelection));
+            cbShow.checked = true;
+            // Aktualizovat počítadlo a tlačítko
+            const shownNow = currentFiles.filter(x => savedSelection.includes(x)).length;
+            if (countEl) countEl.textContent = (T[LANG].tracks_section || 'TRASY') + ' (' + currentFiles.length + ' / ' + shownNow + ')';
+            if (btnAll2) btnAll2.textContent = _modeLabels['selection'];
+            applyZobrazitDebounced();
+          }
+          // Přejít na mapu + fitBounds na tuto trasu
+          if (!leafletMap) initMap();
+          switchTab('map');
+          setTimeout(() => {
+            leafletMap.invalidateSize();
+            if (!IS_ANDROID || typeof AndroidSerial === 'undefined') return;
+            try {
+              const csv = AndroidSerial.readCSV(f);
+              if (!csv) return;
+              const lines = csv.replace(/\r/g, '').split('\n');
+              let latI = -1, lonI = -1, hSeen = false;
+              const ll = [];
+              for (const line of lines) {
+                if (!line || line.startsWith('#')) continue;
+                if (!hSeen) { const h = line.toLowerCase().split(','); latI = h.indexOf('lat'); lonI = h.indexOf('lon'); hSeen = true; continue; }
+                const c = line.split(','); const lat = +c[latI], lon = +c[lonI];
+                if (lat && lon) ll.push([lat, lon]);
+              }
+              if (ll.length > 0) { const b = L.latLngBounds(ll); if (b.isValid()) leafletMap.fitBounds(b, { padding: [40, 40], maxZoom: 20 }); }
+            } catch(e) { console.warn('fitBounds:', e); }
+          }, 350);
+        };
+
+        // Long press na jméno nebo poznámku = editace
+        let _lpTimer = null, _lpMoved = false, _lpFired = false;
+        let _lpStartX = 0, _lpStartY = 0;
+        const lpStart = (e) => {
+          if (e.target && e.target.type === 'checkbox') return;
+          _lpMoved = false; _lpFired = false;
+          _lpStartX = e.touches ? e.touches[0].clientX : e.clientX;
+          _lpStartY = e.touches ? e.touches[0].clientY : e.clientY;
+          _lpTimer = setTimeout(() => { _lpTimer = null; _lpFired = true; if (!_lpMoved) editLogNote(f); }, 700);
+        };
+        const lpMove = (e) => {
+          const cx = e.touches ? e.touches[0].clientX : e.clientX;
+          const cy = e.touches ? e.touches[0].clientY : e.clientY;
+          if (Math.abs(cx - _lpStartX) > 8 || Math.abs(cy - _lpStartY) > 8) {
+            _lpMoved = true; if (_lpTimer) { clearTimeout(_lpTimer); _lpTimer = null; }
+          }
+        };
+        const lpEnd = () => { if (_lpTimer) { clearTimeout(_lpTimer); _lpTimer = null; } };
+
+        item.addEventListener('contextmenu', (e) => e.preventDefault());
+        lbl.addEventListener('click', () => { if (!_lpFired && !_lpMoved) aktivuj(); });
+        if (note) note.addEventListener('click', () => { if (!_lpFired && !_lpMoved) aktivuj(); });
+        item.addEventListener('touchstart', lpStart, { passive: false });
+        item.addEventListener('touchmove',  lpMove,  { passive: true });
+        item.addEventListener('touchend',   lpEnd);
+        item.addEventListener('mousedown',  lpStart);
+        item.addEventListener('mousemove',  lpMove);
+        item.addEventListener('mouseup',    lpEnd);
       });
-      // Sync sort buttons
-      const btnDate = document.getElementById('poi-trasa-sort-date');
-      const btnName = document.getElementById('poi-trasa-sort-name');
-      if (btnDate) { btnDate.style.background = _trasaSort==='date'?'#003d0f':'#0a0e0a'; btnDate.style.color = _trasaSort==='date'?'#00ff41':'#4a8a4a'; }
-      if (btnName) { btnName.style.background = _trasaSort==='name'?'#003d0f':'#0a0e0a'; btnName.style.color = _trasaSort==='name'?'#00ff41':'#4a8a4a'; }
+
+      // Sync sort button — ikona ukazuje aktuální řazení
+      const sortBtn = document.getElementById('poi-trasa-sort-btn');
+      if (sortBtn) {
+        sortBtn.textContent = _trasaSort === 'date' ? '📅' : 'AZ';
+        sortBtn.style.background = '#003d0f';
+        sortBtn.style.color = '#00ff41';
+        sortBtn.style.borderColor = '#00ff41';
+      }
     }
 
     function wizConnect() {}  // zpětná kompatibilita
