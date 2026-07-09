@@ -56,7 +56,7 @@ class MainActivity : AppCompatActivity() {
                 CurieService.BROADCAST_CONNECTED -> {
                     val typ  = intent.getStringExtra(CurieService.EXTRA_TYPE) ?: "BT"
                     val dname = (intent.getStringExtra(CurieService.EXTRA_DEVICE_NAME) ?: "")
-                        .replace("'", "\'").replace("\n", " ")
+                        .replace("'", "").replace("\n", " ")
                     runOnUiThread {
                         webView.evaluateJavascript("window.onCurieConnected('$typ','$dname')", null)
                     }
@@ -220,6 +220,14 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+
+    private fun latLonToTile(lat: Double, lon: Double, zoom: Int): Pair<Int, Int> {
+        val x = Math.floor((lon + 180.0) / 360.0 * Math.pow(2.0, zoom.toDouble())).toInt()
+        val latRad = Math.toRadians(lat)
+        val y = Math.floor((1.0 - Math.log(Math.tan(latRad) + 1.0 / Math.cos(latRad)) / Math.PI) / 2.0 * Math.pow(2.0, zoom.toDouble())).toInt()
+        return Pair(x, y)
+    }
+
     private fun handleIncomingIntent(intent: Intent?) {
         if (intent == null) return
         val action = intent.action
@@ -288,7 +296,7 @@ class MainActivity : AppCompatActivity() {
                 Log.d(TAG, "handleIncomingIntent: '$originalName'→'$filename' (${content.size}B) → ${targetDir.path}")
                 try { backupFile(filename, String(content, Charsets.UTF_8)) } catch (_: Exception) {}
 
-                val safeFilename = filename.replace("'", "\'")
+                val safeFilename = filename.replace("'", "")
                 val deadline = System.currentTimeMillis() + 10000L
                 while (!_pageFinished && System.currentTimeMillis() < deadline) { Thread.sleep(200) }
                 Thread.sleep(800)
@@ -636,10 +644,20 @@ class MainActivity : AppCompatActivity() {
             try {
                 val root = rootDir()
                 val filenames = org.json.JSONArray(filenamesJson)
+                val searchDirs = listOf(
+                    root,
+                    java.io.File(root, DIR_LOGS),
+                    java.io.File(root, DIR_LAYERS),
+                    java.io.File(root, DIR_HEAT),
+                    java.io.File(root, "tmp")
+                )
                 for (i in 0 until filenames.length()) {
                     val name = filenames.getString(i)
-                    val dir = getDirForFile(root, name)
-                    java.io.File(dir, name).delete()
+                    // Hledat soubor ve všech složkách a smazat kde existuje
+                    for (dir in searchDirs) {
+                        val f = java.io.File(dir, name)
+                        if (f.exists()) { f.delete(); break }
+                    }
                     deleteBackupFile(name)
                 }
             } catch (e: Exception) {
@@ -756,6 +774,51 @@ class MainActivity : AppCompatActivity() {
         }
 
         @JavascriptInterface
+        fun shareHTML(filenamesJson: String) {
+            runOnUiThread {
+                try {
+                    val filenames = org.json.JSONArray(filenamesJson)
+                    val root = rootDir()
+                    val uris = ArrayList<android.net.Uri>()
+                    for (i in 0 until filenames.length()) {
+                        val name = filenames.getString(i)
+                        val searchDirs = listOf(
+                            root,
+                            java.io.File(root, DIR_LOGS),
+                            java.io.File(root, DIR_HEAT),
+                            java.io.File(root, "tmp")
+                        )
+                        for (dir in searchDirs) {
+                            val file = java.io.File(dir, name)
+                            if (file.exists()) {
+                                uris.add(androidx.core.content.FileProvider.getUriForFile(
+                                    this@MainActivity, "$packageName.provider", file))
+                                break
+                            }
+                        }
+                    }
+                    if (uris.isEmpty()) return@runOnUiThread
+                    val intent = if (uris.size == 1) {
+                        android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                            type = "text/html"
+                            putExtra(android.content.Intent.EXTRA_STREAM, uris[0])
+                            addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        }
+                    } else {
+                        android.content.Intent(android.content.Intent.ACTION_SEND_MULTIPLE).apply {
+                            type = "text/html"
+                            putParcelableArrayListExtra(android.content.Intent.EXTRA_STREAM, uris)
+                            addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        }
+                    }
+                    startActivity(android.content.Intent.createChooser(intent, "Sdílet HTML mapu"))
+                } catch (e: Exception) {
+                    Log.e(TAG, "shareHTML error: ${e.message}")
+                }
+            }
+        }
+
+        @JavascriptInterface
         fun shareCSV(filenamesJson: String) {
             runOnUiThread {
                 try {
@@ -803,6 +866,193 @@ class MainActivity : AppCompatActivity() {
                     Log.e(TAG, "shareCSV error: ${e.message}")
                 }
             }
+        }
+
+
+        @JavascriptInterface
+        fun downloadTiles(providerUrl: String, lat0: Double, lat1: Double, lon0: Double, lon1: Double,
+                          minZoom: Int, maxZoom: Int, mapName: String) {
+            thread {
+                try {
+                    val root = rootDir()
+                    val safeName = mapName.replace(Regex("[^a-zA-Z0-9_\\-]"), "_")
+                    val mapsDir = java.io.File(root, "maps/$safeName").also { it.mkdirs() }
+
+                    // Spočítat celkový počet dlaždic
+                    var total = 0
+                    for (z in minZoom..maxZoom) {
+                        val (x0, y0) = latLonToTile(lat0, lon0, z)
+                        val (x1, y1) = latLonToTile(lat1, lon1, z)
+                        total += (Math.abs(x1 - x0) + 1) * (Math.abs(y1 - y0) + 1)
+                    }
+
+                    var downloaded = 0
+                    var failed = 0
+
+                    val client = java.net.HttpURLConnection::class.java
+
+                    for (z in minZoom..maxZoom) {
+                        val (xMin, yMin) = latLonToTile(lat1, lon0, z) // NW corner
+                        val (xMax, yMax) = latLonToTile(lat0, lon1, z) // SE corner
+                        val zDir = java.io.File(mapsDir, z.toString()).also { it.mkdirs() }
+                        for (x in xMin..xMax) {
+                            val xDir = java.io.File(zDir, x.toString()).also { it.mkdirs() }
+                            for (y in yMin..yMax) {
+                                val tileFile = java.io.File(xDir, "$y.png")
+                                if (!tileFile.exists()) {
+                                    try {
+                                        val url = providerUrl
+                                            .replace("{z}", z.toString())
+                                            .replace("{x}", x.toString())
+                                            .replace("{y}", y.toString())
+                                        val conn = java.net.URL(url).openConnection() as java.net.HttpURLConnection
+                                        conn.connectTimeout = 10000
+                                        conn.readTimeout = 10000
+                                        conn.setRequestProperty("User-Agent", "CurieFinder/1.0")
+                                        conn.connect()
+                                        if (conn.responseCode == 200) {
+                                            conn.inputStream.use { input ->
+                                                tileFile.outputStream().use { output ->
+                                                    input.copyTo(output)
+                                                }
+                                            }
+                                            downloaded++
+                                        } else {
+                                            failed++
+                                        }
+                                        conn.disconnect()
+                                    } catch (e: Exception) {
+                                        failed++
+                                        Log.w(TAG, "Tile $z/$x/$y failed: ${e.message}")
+                                    }
+                                } else {
+                                    downloaded++ // již staženo
+                                }
+
+                                val done = downloaded + failed
+                                if (done % 20 == 0 || done == total) {
+                                    val doneVal = done
+                                    val totalVal = total
+                                    val dlVal = downloaded
+                                    val failVal = failed
+                                    runOnUiThread {
+                                        webView.evaluateJavascript(
+                                            "window.onOfflineProgress && window.onOfflineProgress($doneVal, $totalVal, $dlVal, $failVal)",
+                                            null
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Zjistit reálný min/max zoom podle stažených souborů
+                    var realMinZoom = maxZoom
+                    var realMaxZoom = minZoom
+                    mapsDir.listFiles()?.filter { it.isDirectory }?.forEach { zDir ->
+                        val z = zDir.name.toIntOrNull() ?: return@forEach
+                        val hasTiles = zDir.walkTopDown().any { it.isFile && it.name.endsWith(".png") }
+                        if (hasTiles) {
+                            if (z < realMinZoom) realMinZoom = z
+                            if (z > realMaxZoom) realMaxZoom = z
+                        }
+                    }
+                    if (realMinZoom > realMaxZoom) { realMinZoom = minZoom; realMaxZoom = maxZoom }
+
+                    // Uložit metadata mapy s reálným zoom rozsahem
+                    val meta = org.json.JSONObject()
+                    meta.put("name", mapName)
+                    meta.put("safeName", safeName)
+                    meta.put("providerUrl", providerUrl)
+                    meta.put("lat0", lat0); meta.put("lat1", lat1)
+                    meta.put("lon0", lon0); meta.put("lon1", lon1)
+                    meta.put("minZoom", realMinZoom); meta.put("maxZoom", realMaxZoom)
+                    meta.put("requestedMinZoom", minZoom); meta.put("requestedMaxZoom", maxZoom)
+                    meta.put("downloaded", downloaded); meta.put("failed", failed)
+                    java.io.File(mapsDir, "meta.json").writeText(meta.toString())
+
+                    val dlFinal = downloaded
+                    val failFinal = failed
+                    val safeNameFinal = safeName
+                    runOnUiThread {
+                        webView.evaluateJavascript(
+                            "window.onOfflineDownloadDone && window.onOfflineDownloadDone('${safeNameFinal}', $dlFinal, $failFinal)",
+                            null
+                        )
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "downloadTiles error: ${e.message}")
+                    val msg = e.message?.replace("'", "") ?: "chyba"
+                    runOnUiThread {
+                        webView.evaluateJavascript(
+                            "window.onCurieError && window.onCurieError('Offline stažení: $msg')",
+                            null
+                        )
+                    }
+                }
+            }
+        }
+
+        @JavascriptInterface
+        fun listOfflineMaps(): String {
+            return try {
+                val root = rootDir()
+                val mapsRoot = java.io.File(root, "maps")
+                if (!mapsRoot.exists()) return "[]"
+                val arr = org.json.JSONArray()
+                mapsRoot.listFiles()?.filter { it.isDirectory }?.forEach { dir ->
+                    val metaFile = java.io.File(dir, "meta.json")
+                    if (metaFile.exists()) {
+                        try {
+                            val meta = org.json.JSONObject(metaFile.readText())
+                            // Přidat velikost složky
+                            val size = dir.walkTopDown().filter { it.isFile }.sumOf { it.length() }
+                            meta.put("size", size)
+                            arr.put(meta)
+                        } catch (e: Exception) { /* přeskočit poškozená metadata */ }
+                    }
+                }
+                arr.toString()
+            } catch (e: Exception) { "[]" }
+        }
+
+        @JavascriptInterface
+        fun deleteOfflineMap(safeName: String) {
+            try {
+                val root = rootDir()
+                java.io.File(root, "maps/$safeName").deleteRecursively()
+                Log.d(TAG, "Offline map deleted: $safeName")
+            } catch (e: Exception) {
+                Log.e(TAG, "deleteOfflineMap error: ${e.message}")
+            }
+        }
+
+        @JavascriptInterface
+        fun renameOfflineMap(safeName: String, newName: String) {
+            try {
+                val root = rootDir()
+                val metaFile = java.io.File(root, "maps/$safeName/meta.json")
+                if (metaFile.exists()) {
+                    val meta = org.json.JSONObject(metaFile.readText())
+                    meta.put("name", newName)
+                    metaFile.writeText(meta.toString())
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "renameOfflineMap error: ${e.message}")
+            }
+        }
+
+        @JavascriptInterface
+        fun getOfflineTileUrl(safeName: String, z: Int, x: Int, y: Int): String {
+            return try {
+                val root = rootDir()
+                val tileFile = java.io.File(root, "maps/$safeName/$z/$x/$y.png")
+                if (tileFile.exists()) {
+                    androidx.core.content.FileProvider.getUriForFile(
+                        this@MainActivity, "$packageName.provider", tileFile
+                    ).toString()
+                } else ""
+            } catch (e: Exception) { "" }
         }
 
         @JavascriptInterface
@@ -930,6 +1180,81 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+
+        @JavascriptInterface
+        fun readCSVInBounds(filename: String, lat0: Double, lat1: Double, lon0: Double, lon1: Double): String {
+            return try {
+                val root = rootDir()
+                val searchDirs = listOf(
+                    root,
+                    java.io.File(root, DIR_LOGS),
+                    java.io.File(root, DIR_LAYERS),
+                    java.io.File(root, DIR_HEAT),
+                    java.io.File(root, "tmp")
+                )
+                var raw = ""
+                for (dir in searchDirs) {
+                    val f = java.io.File(dir, filename)
+                    if (f.exists()) { raw = f.readText(); break }
+                }
+                if (raw.isEmpty()) return "[]"
+
+                val lines = raw.replace("\r", "").split("\n")
+                var header: List<String>? = null
+                val result = org.json.JSONArray()
+
+                for (line in lines) {
+                    if (line.isBlank() || line.startsWith("#")) continue
+                    val sep = if (line.contains("\t")) "\t" else ","
+                    if (header == null) {
+                        header = line.split(sep).map { it.trim().lowercase() }
+                        continue
+                    }
+                    val cols = line.split(sep)
+                    val get: (String) -> String = { key ->
+                        val idx = header!!.indexOf(key)
+                        if (idx >= 0 && idx < cols.size) cols[idx].trim() else ""
+                    }
+                    // Souřadnice — X=lon, Y=lat (gama) nebo lat/lon (ostatní)
+                    val latStr = get("y").ifEmpty { get("lat") }
+                    val lonStr = get("x").ifEmpty { get("lon") }
+                    val lat = latStr.toDoubleOrNull() ?: continue
+                    val lon = lonStr.toDoubleOrNull() ?: continue
+                    if (lat < lat0 || lat > lat1 || lon < lon0 || lon > lon1) continue
+
+                    val obj = org.json.JSONObject()
+                    obj.put("lat", lat)
+                    obj.put("lon", lon)
+                    // Gama pole
+                    if (header!!.contains("doporucuji")) {
+                        obj.put("uroven", get("doporucuji").toIntOrNull() ?: 0)
+                        obj.put("metoda", get("metoda"))
+                        obj.put("relativni_anomalie", get("relativni_anomalie"))
+                        obj.put("anomalie", get("anomalie"))
+                        obj.put("anomalie_usv", get("anomalie_usv"))
+                        obj.put("pozadi_usv", get("pozadi_usv"))
+                        obj.put("tvar_anomalie", get("tvar_anomalie"))
+                        obj.put("mocnost_pokryvu", get("mocnost_pokryvu"))
+                        obj.put("propustnost_pokryvu", get("propustnost_pokryvu"))
+                    } else {
+                        // Důlní díla a ostatní vrstvy
+                        obj.put("name", get("name").ifEmpty { get("nazev_dila") })
+                        obj.put("druh", get("type").ifEmpty { get("druh_dila") })
+                        obj.put("surovina", get("surovina").ifEmpty { get("desc") })
+                        obj.put("profil", get("profil_dila"))
+                        obj.put("rozmery", get("rozmery_usti"))
+                        obj.put("hloubka", get("hloubka_delka_dila"))
+                        obj.put("ukonceni", get("ukonceni_provozu"))
+                    }
+                    result.put(obj)
+                }
+                result.toString()
+            } catch (e: Exception) {
+                Log.e(TAG, "readCSVInBounds error: ${e.message}")
+                "[]"
+            }
+        }
+
         @JavascriptInterface
         fun appendCSV(line: String, filename: String) {
             thread {
@@ -1041,6 +1366,7 @@ class MainActivity : AppCompatActivity() {
                         "text/csv",
                         "text/comma-separated-values",
                         "application/octet-stream",
+                        "application/json",
                         "text/plain"
                     ))
                 }
