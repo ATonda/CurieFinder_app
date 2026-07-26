@@ -130,7 +130,7 @@ class NusBleManager(
                     // Neočekávané odpojení → zkusit reconnect sám bez JS round-tripu
                     if (!reconnectEnabled || status == 0) {
                         val reason = when (status) {
-                            0    -> "Odpojeno"
+                            0    -> "DISCONNECTED"
                             8    -> "NUS: timeout"
                             19   -> "NUS: odpojeno zařízením"
                             133  -> "NUS: GATT error 133"

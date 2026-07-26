@@ -5,6 +5,7 @@ import android.app.PendingIntent
 import android.bluetooth.*
 import android.content.BroadcastReceiver
 import android.content.Context
+import com.hoho.android.usbserial.driver.UsbSerialProber
 import android.content.Intent
 import android.content.IntentFilter
 import android.hardware.usb.*
@@ -46,7 +47,7 @@ class RadProManager(
         val CCCD_UUID         = UUID.fromString("00002902-0000-1000-8000-00805F9B34FB")
 
         // USB
-        const val ACTION_USB_PERMISSION  = "cz.antonin.curiefinder.USB_PERMISSION"
+        const val ACTION_USB_PERMISSION  = "cz.antonin.curiefinder.USB_PERMISSION_RADPRO"
         const val USB_BAUD_RATE          = 115200
         const val USB_READ_TIMEOUT_MS    = 100
         const val USB_WRITE_TIMEOUT_MS   = 200
@@ -58,7 +59,7 @@ class RadProManager(
         const val RSSI_INTERVAL_MS        = 5_000L
         const val TIME_SYNC_INTERVAL_MS      = 30 * 60 * 1000L  // 30 minut
         const val SENSITIVITY_INTERVAL_MS   = 3 * 60 * 1000L   // 3 minuty
-        const val CMD_TIMEOUT_MS            = 2000L
+        const val CMD_TIMEOUT_MS            = 3500L
         const val UINT32_MAX              = 4294967295L
     }
 
@@ -89,7 +90,7 @@ class RadProManager(
     private var cmdInFlight: PendingCommand? = null
     private val timeoutToken = Object()
     private var consecutiveTimeouts = 0
-    private val MAX_CONSECUTIVE_TIMEOUTS = 3
+    private val MAX_CONSECUTIVE_TIMEOUTS = 6
 
     // RX buffer
     private val rxBuffer = StringBuilder()
@@ -166,12 +167,25 @@ class RadProManager(
     private fun tryConnectUsb(): Boolean {
         val mgr = context.getSystemService(Context.USB_SERVICE) as UsbManager
         usbManager = mgr
-        val device = mgr.deviceList.values.firstOrNull { isRadProDevice(it) }
+        if (mgr.deviceList.isEmpty()) {
+            Log.d(TAG, "USB diag: system nevidí žádné USB zařízení")
+        } else {
+            for (d in mgr.deviceList.values) {
+                val ifaces = (0 until d.interfaceCount).joinToString(",") { i -> d.getInterface(i).interfaceClass.toString() }
+                Log.d(TAG, "USB diag: name=${d.deviceName} product=${d.productName} VID=0x${d.vendorId.toString(16)} PID=0x${d.productId.toString(16)} ifaceClasses=[$ifaces]")
+            }
+        }
+        val drivers = UsbSerialProber.getDefaultProber().findAllDrivers(mgr)
+        val device = drivers.firstOrNull()?.device ?: mgr.deviceList.values.firstOrNull { isRadProDevice(it) }
         if (device == null) { Log.d(TAG, "No RadPro USB device found"); return false }
         Log.d(TAG, "RadPro USB device found: ${device.productName} VID=${device.vendorId} PID=${device.productId}")
         if (!mgr.hasPermission(device)) {
             Log.d(TAG, "Requesting USB permission")
-            context.registerReceiver(usbPermissionReceiver, IntentFilter(ACTION_USB_PERMISSION))
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                context.registerReceiver(usbPermissionReceiver, IntentFilter(ACTION_USB_PERMISSION), Context.RECEIVER_NOT_EXPORTED)
+            } else {
+                context.registerReceiver(usbPermissionReceiver, IntentFilter(ACTION_USB_PERMISSION))
+            }
             usbReceiverRegistered = true
             val pi = PendingIntent.getBroadcast(
                 context, 0, Intent(ACTION_USB_PERMISSION),
@@ -287,7 +301,7 @@ class RadProManager(
                     mainHandler.removeCallbacksAndMessages(null)
                     cmdQueue.clear(); cmdInFlight = null
                     val reason = when (status) {
-                        0    -> "Odpojeno"
+                        0    -> "DISCONNECTED"
                         8    -> "RadPro BLE: timeout"
                         19   -> "RadPro BLE: odpojeno zařízením"
                         133  -> "RadPro BLE: GATT error 133"

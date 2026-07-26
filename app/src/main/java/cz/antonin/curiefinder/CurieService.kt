@@ -473,11 +473,16 @@ class CurieService : Service(), SerialInputOutputManager.Listener {
     private fun startBleScanForRadPro() {
         if (isScanning || isRadProMode) { Log.d(TAG, "startBleScanForRadPro: already scanning or connected, ignored"); return }
 
-        // Nejdřív zkusit USB — pokud USB zařízení nalezeno (i čekání na permission), nespouštět BLE
-        if (tryConnectRadProUsb()) {
-            Log.d(TAG, "RadPro USB found — BLE scan skipped")
-            return
+        // Nejdřív zkusit USB opakovaně (~5s) — enumerace USB zařízení po zapojení kabelu
+        // může chvíli trvat, jeden okamžitý pokus to často mine.
+        for (attempt in 1..10) {
+            if (tryConnectRadProUsb()) {
+                Log.d(TAG, "RadPro USB found — BLE scan skipped (pokus $attempt)")
+                return
+            }
+            if (attempt < 10) Thread.sleep(500)
         }
+        Log.d(TAG, "RadPro USB not found after retries — přechod na BLE")
 
         // USB není k dispozici — jdeme na BLE
         val adapter = BluetoothAdapter.getDefaultAdapter() ?: run {
@@ -511,7 +516,18 @@ class CurieService : Service(), SerialInputOutputManager.Listener {
      */
     private fun tryConnectRadProUsb(): Boolean {
         val usbMgr = getSystemService(Context.USB_SERVICE) as UsbManager
-        val device = usbMgr.deviceList.values.firstOrNull { isRadProUsbDevice(it) }
+        if (usbMgr.deviceList.isEmpty()) {
+            Log.d(TAG, "USB diag: system nevidí žádné USB zařízení")
+        } else {
+            for (d in usbMgr.deviceList.values) {
+                val ifaces = (0 until d.interfaceCount).joinToString(",") { i -> d.getInterface(i).interfaceClass.toString() }
+                Log.d(TAG, "USB diag: name=${d.deviceName} product=${d.productName} VID=0x${d.vendorId.toString(16)} PID=0x${d.productId.toString(16)} ifaceClasses=[$ifaces]")
+            }
+        }
+        // Použít UsbSerialProber (stejná knihovna jako u obecného USB) — rozpozná CDC-ACM
+        // a běžné čipy (CH340, CP210x, FTDI, PL2303) mnohem šíře než ruční seznam VID.
+        val drivers = UsbSerialProber.getDefaultProber().findAllDrivers(usbMgr)
+        val device = drivers.firstOrNull()?.device ?: usbMgr.deviceList.values.firstOrNull { isRadProUsbDevice(it) }
         if (device == null) {
             Log.d(TAG, "tryConnectRadProUsb: no USB device found")
             return false
@@ -656,9 +672,9 @@ class CurieService : Service(), SerialInputOutputManager.Listener {
                 isNusMode = false
                 nusBleManager = null
                 Log.d(TAG, "NUS disconnected: $reason")
-                // "Odpojeno" = záměrné odpojení uživatelem → reset autoConnectDone
+                // "DISCONNECTED" = záměrné odpojení uživatelem → reset autoConnectDone
                 // ostatní důvody = NusBleManager zkusil reconnect a vzdal to → informovat JS
-                if (reason == "Odpojeno") {
+                if (reason == "DISCONNECTED") {
                     autoConnectDone = false
                 } else {
                     autoConnectDone = false
@@ -788,7 +804,7 @@ class CurieService : Service(), SerialInputOutputManager.Listener {
             return false
         }
 
-        if (isRaysidName(savedName) || savedName == "⚡ Hledat Raysid BLE") {
+        if (isRaysidName(savedName) || savedName == "Hledat Raysid BLE" || savedName == "⚡ Hledat Raysid BLE") {
             Log.d(TAG, "connectSavedDevice: Raysid BLE scan")
             startBleScanRaysid()
             val deadline = System.currentTimeMillis() + BLE_SCAN_TIMEOUT_MS + 1000L
@@ -814,7 +830,7 @@ class CurieService : Service(), SerialInputOutputManager.Listener {
             return false
         }
 
-        if (isRadProHintName(savedName) || savedName == "⚡ Hledat RadPro BLE/USB" || savedName == "⚡ Hledat RadPro BLE") {
+        if (isRadProHintName(savedName) || savedName == "Hledat RadPro BLE/USB" || savedName == "Hledat RadPro BLE" || savedName == "⚡ Hledat RadPro BLE/USB" || savedName == "⚡ Hledat RadPro BLE") {
             Log.d(TAG, "connectSavedDevice: RadPro USB+BLE")
             startBleScanForRadPro()
             val deadline = System.currentTimeMillis() + BLE_SCAN_TIMEOUT_MS + 1000L
@@ -827,7 +843,7 @@ class CurieService : Service(), SerialInputOutputManager.Listener {
             return false
         }
 
-        if (isKC761Name(savedName) || savedName == "⚡ Hledat KC761 BLE") {
+        if (isKC761Name(savedName) || savedName == "Hledat KC761 BLE" || savedName == "⚡ Hledat KC761 BLE") {
             Log.d(TAG, "connectSavedDevice: KC761 BLE scan")
             startBleScanKC761()
             val deadline = System.currentTimeMillis() + BLE_SCAN_TIMEOUT_MS + 1000L
@@ -1179,7 +1195,7 @@ class CurieService : Service(), SerialInputOutputManager.Listener {
             raysidBle?.disconnect()
             raysidBle = null
             isRaysidMode = false
-            broadcast(BROADCAST_ERROR) { putExtra(EXTRA_MSG, "Odpojeno") }
+            broadcast(BROADCAST_ERROR) { putExtra(EXTRA_MSG, "DISCONNECTED") }
             updateNotification("Odpojeno")
             return
         }
@@ -1188,7 +1204,7 @@ class CurieService : Service(), SerialInputOutputManager.Listener {
             radiaCodeManager?.disconnect()
             radiaCodeManager = null
             isRadiaCodeMode = false
-            broadcast(BROADCAST_ERROR) { putExtra(EXTRA_MSG, "Odpojeno") }
+            broadcast(BROADCAST_ERROR) { putExtra(EXTRA_MSG, "DISCONNECTED") }
             updateNotification("Odpojeno")
             return
         }
@@ -1197,7 +1213,7 @@ class CurieService : Service(), SerialInputOutputManager.Listener {
             kc761Manager?.disconnect()
             kc761Manager = null
             isKC761Mode = false
-            broadcast(BROADCAST_ERROR) { putExtra(EXTRA_MSG, "Odpojeno") }
+            broadcast(BROADCAST_ERROR) { putExtra(EXTRA_MSG, "DISCONNECTED") }
             updateNotification("Odpojeno")
             return
         }
@@ -1207,7 +1223,7 @@ class CurieService : Service(), SerialInputOutputManager.Listener {
             radProManager = null
             isRadProMode = false
             radProUsbPending = false
-            broadcast(BROADCAST_ERROR) { putExtra(EXTRA_MSG, "Odpojeno") }
+            broadcast(BROADCAST_ERROR) { putExtra(EXTRA_MSG, "DISCONNECTED") }
             updateNotification("Odpojeno")
             return
         }
@@ -1218,7 +1234,7 @@ class CurieService : Service(), SerialInputOutputManager.Listener {
         usbPort = null
         try { btSocket?.close() } catch (_: Exception) {}
         btSocket = null
-        broadcast(BROADCAST_ERROR) { putExtra(EXTRA_MSG, "Odpojeno") }
+        broadcast(BROADCAST_ERROR) { putExtra(EXTRA_MSG, "DISCONNECTED") }
         updateNotification("Odpojeno")
     }
 

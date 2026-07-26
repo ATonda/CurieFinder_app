@@ -145,7 +145,7 @@ class KC761BleManager(
                     Log.d(TAG, "GATT disconnected status=$status reconnectEnabled=$reconnectEnabled tries=$reconnectTries")
                     if (!reconnectEnabled || status == 0) {
                         val reason = when (status) {
-                            0    -> "Odpojeno"
+                            0    -> "DISCONNECTED"
                             8    -> "KC761: timeout"
                             19   -> "KC761: odpojeno zařízením"
                             133  -> "KC761: GATT error 133"
