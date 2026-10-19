@@ -11,7 +11,9 @@ import android.content.pm.PackageManager
 import android.hardware.usb.UsbManager
 import android.os.Build
 import android.os.Bundle
+import android.os.SystemClock
 import android.util.Log
+import android.view.Choreographer
 import android.view.WindowInsets
 import android.view.WindowInsetsController
 import android.graphics.Bitmap
@@ -33,6 +35,12 @@ class MainActivity : AppCompatActivity() {
     private var _permissionsReady = false
     private var _pageFinished = false
 
+    // ---- PROVIZORNÍ LOG SEKÁNÍ / JANK (paměťový ring buffer, bez souboru, bez PC) ----
+    private val jankLog = java.util.Collections.synchronizedList(ArrayList<String>())
+    private var jankMonitorRunning = false
+    private var appStartElapsedMs = 0L
+    private var lastFrameNanos = 0L
+
     companion object {
         const val TAG = "CurieFinder"
         const val ACTION_USB_PERMISSION = "cz.antonin.curiefinder.USB_PERMISSION"
@@ -41,6 +49,49 @@ class MainActivity : AppCompatActivity() {
         const val DIR_LOGS = "logs"
         const val DIR_LAYERS = "layers"
         const val DIR_HEAT = "heat"
+
+        const val JANK_LOG_MAX_ENTRIES = 300
+        const val JANK_THRESHOLD_MS = 200L
+    }
+
+    private fun addJankLogEntry(entry: String) {
+        synchronized(jankLog) {
+            jankLog.add(entry)
+            while (jankLog.size > JANK_LOG_MAX_ENTRIES) {
+                jankLog.removeAt(0)
+            }
+        }
+        Log.d(TAG, "JANK: $entry")
+    }
+
+    private fun elapsedSinceStart(): String {
+        val ms = SystemClock.elapsedRealtime() - appStartElapsedMs
+        return String.format(java.util.Locale.US, "%.1fs", ms / 1000.0)
+    }
+
+    private fun startFrameMonitor() {
+        if (jankMonitorRunning) return
+        jankMonitorRunning = true
+        lastFrameNanos = 0L
+        val callback = object : Choreographer.FrameCallback {
+            override fun doFrame(frameTimeNanos: Long) {
+                if (lastFrameNanos != 0L) {
+                    val deltaMs = (frameTimeNanos - lastFrameNanos) / 1_000_000L
+                    if (deltaMs >= JANK_THRESHOLD_MS) {
+                        addJankLogEntry("[+${elapsedSinceStart()}] JANK kotlin/frame: ${deltaMs}ms")
+                    }
+                }
+                lastFrameNanos = frameTimeNanos
+                if (jankMonitorRunning) {
+                    Choreographer.getInstance().postFrameCallback(this)
+                }
+            }
+        }
+        Choreographer.getInstance().postFrameCallback(callback)
+    }
+
+    private fun stopFrameMonitor() {
+        jankMonitorRunning = false
     }
 
     private val serviceReceiver = object : BroadcastReceiver() {
@@ -91,6 +142,27 @@ class MainActivity : AppCompatActivity() {
                         webView.evaluateJavascript("window.onCurieGPS($lat,$lon,$acc,$alt,$bearingVal,$speed)", null)
                     }
                 }
+                CurieService.BROADCAST_ROVER_FIX -> {
+                    val lat = intent.getDoubleExtra(CurieService.EXTRA_LAT, 0.0)
+                    val lon = intent.getDoubleExtra(CurieService.EXTRA_LON, 0.0)
+                    val hacc = intent.getDoubleExtra("hacc", -1.0)
+                    val q = intent.getIntExtra("q", 0)
+                    val valid = intent.getBooleanExtra("valid", false)
+                    val speed = intent.getDoubleExtra("speed", -1.0)
+                    val course = intent.getDoubleExtra("course", -1.0)
+                    val moving = intent.getIntExtra("moving", -1)
+                    val tms = intent.getLongExtra("tms", 0L)
+                    runOnUiThread {
+                        webView.evaluateJavascript("window.onRoverGPS && window.onRoverGPS($lat,$lon,$hacc,$q,$valid,$speed,$course,$moving,$tms)", null)
+                    }
+                }
+                CurieService.BROADCAST_ROVER_STATE -> {
+                    val json = intent.getStringExtra(CurieService.EXTRA_JSON) ?: return
+                    val escaped = json.replace("\\", "\\\\").replace("\"", "\\\"")
+                    runOnUiThread {
+                        webView.evaluateJavascript("window.onRoverState && window.onRoverState(\"$escaped\")", null)
+                    }
+                }
                 CurieService.BROADCAST_GPS_ERROR -> {
                     val msg = intent.getStringExtra(CurieService.EXTRA_MSG) ?: ""
                     runOnUiThread {
@@ -128,6 +200,9 @@ class MainActivity : AppCompatActivity() {
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        appStartElapsedMs = SystemClock.elapsedRealtime()
+        addJankLogEntry("[+${elapsedSinceStart()}] START onCreate")
+        startFrameMonitor()
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
         webView = WebView(this)
@@ -153,6 +228,11 @@ class MainActivity : AppCompatActivity() {
         webView.settings.domStorageEnabled = true
         webView.settings.mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
         webView.settings.cacheMode = android.webkit.WebSettings.LOAD_DEFAULT
+        // Stránka se načítá z file:///android_asset/ — bez tohoto by JS fetch()
+        // na externí https adresy (např. ČGS ArcGIS API) byl blokovaný jako
+        // cross-origin z file:// původu.
+        webView.settings.allowUniversalAccessFromFileURLs = true
+        webView.settings.allowFileAccessFromFileURLs = true
         webView.webViewClient = object : WebViewClient() {
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
@@ -161,7 +241,7 @@ class MainActivity : AppCompatActivity() {
                     val sbh = try {
                         val rid = resources.getIdentifier("status_bar_height", "dimen", "android")
                         if (rid > 0) resources.getDimensionPixelSize(rid) else 0
-                    } catch (e: Exception) { 0 }
+                    } catch (_: Exception) { 0 }
                     val sbhDp = (sbh / resources.displayMetrics.density).toInt()
                     android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
                         view?.evaluateJavascript("document.documentElement.style.setProperty('--status-bar-height','${sbhDp}px'); console.log('sbh set: ${sbhDp}dp');", null)
@@ -193,6 +273,8 @@ class MainActivity : AppCompatActivity() {
             addAction(CurieService.BROADCAST_ERROR)
             addAction(CurieService.BROADCAST_GPS)
             addAction(CurieService.BROADCAST_GPS_ERROR)
+            addAction(CurieService.BROADCAST_ROVER_FIX)
+            addAction(CurieService.BROADCAST_ROVER_STATE)
             addAction(CurieService.BROADCAST_SAVE_LOG)
             addAction(CurieService.BROADCAST_WIZ_SCAN)
             addAction(ACTION_USB_PERMISSION)
@@ -275,13 +357,13 @@ class MainActivity : AppCompatActivity() {
 
                 // Cílový název — pokud WhatsApp přejmenoval, vygenerujeme správný podle obsahu
                 val filename = when {
-                    isHeat  && !isHeatFile(originalName)    -> "CF_ROI_import_${System.currentTimeMillis()}.json"
-                    isLayer && !isLayerFile(originalName)   -> "CF_LAYER_import_${System.currentTimeMillis()}.csv"
-                    isPoi   && !originalName.startsWith("CF_POI_export") -> "CF_POI_export_import_${System.currentTimeMillis()}.json"
+                    isHeat  && !isHeatFile(originalName)    -> buildRoiImportFilename(headerStr, rootDir)
+                    isLayer && !isLayerFile(originalName)   -> buildLayerImportFilename(headerStr, rootDir)
+                    isPoi   && !originalName.startsWith("CF_POI_export") -> "CF_POI_export_import_${humanImportTimestamp()}.json"
                     originalName.isNotEmpty() && !originalName.endsWith(".")  -> originalName
-                    isHeat                                  -> "CF_ROI_import_${System.currentTimeMillis()}.json"
-                    isPoi                                   -> "CF_POI_export_import_${System.currentTimeMillis()}.json"
-                    else                                    -> "CF_import_${System.currentTimeMillis()}.csv"
+                    isHeat                                  -> buildRoiImportFilename(headerStr, rootDir)
+                    isPoi                                   -> "CF_POI_export_import_${humanImportTimestamp()}.json"
+                    else                                    -> "CF_import_${humanImportTimestamp()}.csv"
                 }
 
                 // Cílová složka podle obsahu
@@ -294,6 +376,7 @@ class MainActivity : AppCompatActivity() {
 
                 java.io.File(targetDir, filename).writeBytes(content)
                 Log.d(TAG, "handleIncomingIntent: '$originalName'→'$filename' (${content.size}B) → ${targetDir.path}")
+                notifyMediaScanner(java.io.File(targetDir, filename))
                 try { backupFile(filename, String(content, Charsets.UTF_8)) } catch (_: Exception) {}
 
                 val safeFilename = filename.replace("'", "")
@@ -342,6 +425,7 @@ class MainActivity : AppCompatActivity() {
 
                         java.io.File(targetDir, filename).writeBytes(content)
                         Log.d(TAG, "CSV imported: $filename to ${targetDir.path}")
+                        notifyMediaScanner(java.io.File(targetDir, filename))
                         backupFile(filename, String(content, Charsets.UTF_8))
                         runOnUiThread {
                             webView.evaluateJavascript("window.onCurieImported('$filename')", null)
@@ -462,6 +546,55 @@ class MainActivity : AppCompatActivity() {
                 (filename.endsWith(".json") || filename.endsWith(".roi"))
     }
 
+    // Odvodí bezpečnou část názvu souboru z názvu oblasti (diakritika zachována, mezery -> _)
+    private fun sanitizeFilenamePart(name: String): String {
+        return name.trim()
+            .replace(Regex("[^a-zA-Z0-9_\\-áčďéěíňóřšťůúýžÁČĎÉĚÍŇÓŘŠŤŮÚÝŽ ]"), "")
+            .replace(Regex("\\s+"), "_")
+    }
+
+    // Čitelný časový fallback pro import, když obsah neobsahuje použitelný název (yyyy-MM-dd_HHmmss)
+    private fun humanImportTimestamp(): String {
+        val fmt = java.text.SimpleDateFormat("yyyy-MM-dd_HHmmss", java.util.Locale.getDefault())
+        return fmt.format(java.util.Date())
+    }
+
+    // Vygeneruje název pro importovaný ROI soubor s neznámým/přejmenovaným původním názvem —
+    // přednostně použije "# name=" z obsahu (název oblasti), čitelný čas jen jako fallback.
+    private fun buildRoiImportFilename(headerStr: String, rootDir: java.io.File): String {
+        val nameLine = headerStr.lines().firstOrNull { it.startsWith("# name=") }
+        val roiName = nameLine?.substring("# name=".length)?.trim() ?: ""
+        val safeName = if (roiName.isNotEmpty()) sanitizeFilenamePart(roiName) else ""
+        if (safeName.isEmpty()) return "CF_ROI_import_${humanImportTimestamp()}.json"
+
+        val heatDir = java.io.File(rootDir, DIR_HEAT)
+        var candidate = "CF_ROI_${safeName}.json"
+        var counter = 2
+        while (java.io.File(heatDir, candidate).exists()) {
+            candidate = "CF_ROI_${safeName}_${counter}.json"
+            counter++
+        }
+        return candidate
+    }
+
+    // Vygeneruje název pro importovanou vrstvu (Důlní díla, gama anomálie...) s neznámým názvem —
+    // přednostně použije "# name=" z obsahu (název vrstvy), čitelný čas jen jako fallback.
+    private fun buildLayerImportFilename(headerStr: String, rootDir: java.io.File): String {
+        val nameLine = headerStr.lines().firstOrNull { it.startsWith("# name=") }
+        val layerName = nameLine?.substring("# name=".length)?.trim() ?: ""
+        val safeName = if (layerName.isNotEmpty()) sanitizeFilenamePart(layerName) else ""
+        if (safeName.isEmpty()) return "CF_LAYER_import_${humanImportTimestamp()}.csv"
+
+        val layersDir = java.io.File(rootDir, DIR_LAYERS)
+        var candidate = "CF_LAYER_${safeName}.csv"
+        var counter = 2
+        while (java.io.File(layersDir, candidate).exists()) {
+            candidate = "CF_LAYER_${safeName}_${counter}.csv"
+            counter++
+        }
+        return candidate
+    }
+
     private fun isLogFile(filename: String): Boolean {
         if (!filename.startsWith("CF_")) return false
         if (filename.startsWith("CF_ROI_")) return false
@@ -512,8 +645,21 @@ class MainActivity : AppCompatActivity() {
             val backupDir = getBackupDir(filename) ?: return
             java.io.File(backupDir, filename).writeText(data)
             Log.d(TAG, "Backup saved: $filename to ${backupDir.path}")
+            notifyMediaScanner(java.io.File(backupDir, filename))
         } catch (e: Exception) {
             Log.e(TAG, "Backup error: ${e.message}")
+        }
+    }
+
+    // Zaregistruje nový/změněný soubor do Android MediaStore — bez tohoto ho průzkumník
+    // (např. Windows Explorer přes MTP) nemusí vidět, dokud appka/telefon neprojde jiným skenem.
+    private fun notifyMediaScanner(file: java.io.File) {
+        try {
+            android.media.MediaScannerConnection.scanFile(
+                applicationContext, arrayOf(file.absolutePath), null, null
+            )
+        } catch (e: Exception) {
+            Log.e(TAG, "notifyMediaScanner error: ${e.message}")
         }
     }
 
@@ -534,29 +680,33 @@ class MainActivity : AppCompatActivity() {
         @JavascriptInterface
         fun connect() {
             Log.d(TAG, "connect() called from JS")
-            runOnUiThread {
-                getSharedPreferences("curie_prefs", Context.MODE_PRIVATE)
-                    .edit().putBoolean("killed_by_swipe", false).apply()
+            Thread {
+                try {
+                    getSharedPreferences("curie_prefs", Context.MODE_PRIVATE)
+                        .edit().putBoolean("killed_by_swipe", false).apply()
 
-                val usbManager = getSystemService(Context.USB_SERVICE) as UsbManager
-                val drivers = UsbSerialProber.getDefaultProber().findAllDrivers(usbManager)
+                    val usbManager = getSystemService(Context.USB_SERVICE) as UsbManager
+                    val drivers = UsbSerialProber.getDefaultProber().findAllDrivers(usbManager)
 
-                if (drivers.isNotEmpty()) {
-                    val device = drivers[0].device
-                    if (!usbManager.hasPermission(device)) {
-                        val pi = PendingIntent.getBroadcast(
-                            this@MainActivity, device.deviceId,
-                            Intent(ACTION_USB_PERMISSION),
-                            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-                        )
-                        usbManager.requestPermission(device, pi)
+                    if (drivers.isNotEmpty()) {
+                        val device = drivers[0].device
+                        if (!usbManager.hasPermission(device)) {
+                            val pi = PendingIntent.getBroadcast(
+                                this@MainActivity, device.deviceId,
+                                Intent(ACTION_USB_PERMISSION),
+                                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                            )
+                            usbManager.requestPermission(device, pi)
+                        } else {
+                            sendToService(CurieService.ACTION_CONNECT_USB)
+                        }
                     } else {
-                        sendToService(CurieService.ACTION_CONNECT_USB)
+                        sendToService(CurieService.ACTION_CONNECT_BT)
                     }
-                } else {
-                    sendToService(CurieService.ACTION_CONNECT_BT)
+                } catch (e: Exception) {
+                    Log.e(TAG, "connect() background ERROR: ${e.message}")
                 }
-            }
+            }.start()
         }
 
         @JavascriptInterface
@@ -598,7 +748,7 @@ class MainActivity : AppCompatActivity() {
                     ?.filter { it.isFile && (it.name.endsWith(".csv") || it.name.endsWith(".geojson") || (it.name.endsWith(".json") && it.name.startsWith("CF_LAYER_"))) }
                     ?.map { it.name }?.let { files.addAll(it) }
                 org.json.JSONArray(files.distinct().sorted()).toString()
-            } catch (e: Exception) { "[]" }
+            } catch (_: Exception) { "[]" }
         }
 
         @JavascriptInterface
@@ -616,7 +766,7 @@ class MainActivity : AppCompatActivity() {
                     arr.put(obj)
                 }
                 arr.toString()
-            } catch (e: Exception) { "[]" }
+            } catch (_: Exception) { "[]" }
         }
 
         @JavascriptInterface
@@ -636,7 +786,7 @@ class MainActivity : AppCompatActivity() {
                     if (f.exists()) return f.readText()
                 }
                 ""
-            } catch (e: Exception) { "" }
+            } catch (_: Exception) { "" }
         }
 
         @JavascriptInterface
@@ -703,6 +853,7 @@ class MainActivity : AppCompatActivity() {
                     val heatDir = java.io.File(root, DIR_HEAT).also { it.mkdirs() }
                     java.io.File(heatDir, filename).writeText(data)
                     Log.d(TAG, "ROI saved: $filename")
+                    notifyMediaScanner(java.io.File(heatDir, filename))
                     backupFile(filename, data)
                     runOnUiThread {
                         webView.evaluateJavascript("window.onCurieSaved && window.onCurieSaved('$filename')", null)
@@ -728,7 +879,7 @@ class MainActivity : AppCompatActivity() {
                 try {
                     val filenames = try {
                         org.json.JSONArray(filenamesJson)
-                    } catch (e: Exception) {
+                    } catch (_: Exception) {
                         org.json.JSONArray().also { it.put(filenamesJson) }
                     }
                     val root = rootDir()
@@ -741,9 +892,21 @@ class MainActivity : AppCompatActivity() {
                         val file = if (java.io.File(heatDir, name).exists())
                             java.io.File(heatDir, name) else java.io.File(root, name)
                         if (file.exists()) {
-                            // Vytvořit dočasnou .cf kopii pro sdílení
-                            val cfName = name.replaceFirst(Regex("\\.[^.]+$"), ".json")
-                            val cfFile = java.io.File(tmpDir, cfName)
+                            // Odvodit čitelný název ze skutečné oblasti (# name= v obsahu), ne z (třeba starého) názvu na disku
+                            val headerStr = try { file.bufferedReader(Charsets.UTF_8).use { it.readText().take(300) } } catch (_: Exception) { "" }
+                            val nameLine = headerStr.lines().firstOrNull { it.startsWith("# name=") }
+                            val areaName = nameLine?.substring("# name=".length)?.trim() ?: ""
+                            val safeAreaName = if (areaName.isNotEmpty()) sanitizeFilenamePart(areaName) else ""
+                            var cfName = if (safeAreaName.isNotEmpty()) "CF_ROI_${safeAreaName}.json"
+                            else name.replaceFirst(Regex("\\.[^.]+$"), ".json")
+                            var cfFile = java.io.File(tmpDir, cfName)
+                            var counter = 2
+                            while (cfFile.exists()) {
+                                cfName = if (safeAreaName.isNotEmpty()) "CF_ROI_${safeAreaName}_${counter}.json"
+                                else name.replaceFirst(Regex("\\.[^.]+$"), "_${counter}.json")
+                                cfFile = java.io.File(tmpDir, cfName)
+                                counter++
+                            }
                             file.copyTo(cfFile, overwrite = true)
                             tmpFiles.add(cfFile)
                             uris.add(androidx.core.content.FileProvider.getUriForFile(
@@ -959,6 +1122,11 @@ class MainActivity : AppCompatActivity() {
                     }
                     if (realMinZoom > realMaxZoom) { realMinZoom = minZoom; realMaxZoom = maxZoom }
 
+                    // Velikost spočítat JEDNOU teď (při stažení), ne opakovaně při každém listOfflineMaps()
+                    val totalSize = try {
+                        mapsDir.walkTopDown().filter { it.isFile }.sumOf { it.length() }
+                    } catch (_: Exception) { 0L }
+
                     // Uložit metadata mapy s reálným zoom rozsahem
                     val meta = org.json.JSONObject()
                     meta.put("name", mapName)
@@ -969,6 +1137,7 @@ class MainActivity : AppCompatActivity() {
                     meta.put("minZoom", realMinZoom); meta.put("maxZoom", realMaxZoom)
                     meta.put("requestedMinZoom", minZoom); meta.put("requestedMaxZoom", maxZoom)
                     meta.put("downloaded", downloaded); meta.put("failed", failed)
+                    meta.put("size", totalSize)
                     java.io.File(mapsDir, "meta.json").writeText(meta.toString())
 
                     val dlFinal = downloaded
@@ -1005,15 +1174,18 @@ class MainActivity : AppCompatActivity() {
                     if (metaFile.exists()) {
                         try {
                             val meta = org.json.JSONObject(metaFile.readText())
-                            // Přidat velikost složky
-                            val size = dir.walkTopDown().filter { it.isFile }.sumOf { it.length() }
-                            meta.put("size", size)
+                            if (!meta.has("size")) {
+                                // Stará mapa bez cachované velikosti — spočítat JEDNOU a uložit natrvalo
+                                val size = dir.walkTopDown().filter { it.isFile }.sumOf { it.length() }
+                                meta.put("size", size)
+                                try { metaFile.writeText(meta.toString()) } catch (_: Exception) {}
+                            }
                             arr.put(meta)
-                        } catch (e: Exception) { /* přeskočit poškozená metadata */ }
+                        } catch (_: Exception) { /* přeskočit poškozená metadata */ }
                     }
                 }
                 arr.toString()
-            } catch (e: Exception) { "[]" }
+            } catch (_: Exception) { "[]" }
         }
 
         @JavascriptInterface
@@ -1052,7 +1224,7 @@ class MainActivity : AppCompatActivity() {
                         this@MainActivity, "$packageName.provider", tileFile
                     ).toString()
                 } else ""
-            } catch (e: Exception) { "" }
+            } catch (_: Exception) { "" }
         }
 
         @JavascriptInterface
@@ -1067,6 +1239,7 @@ class MainActivity : AppCompatActivity() {
                     val file = java.io.File(dir, filename)
                     file.writeBytes(bytes)
                     Log.d(TAG, "Image saved: $filename → ${file.absolutePath}")
+                    notifyMediaScanner(file)
                     runOnUiThread {
                         try {
                             val uri = androidx.core.content.FileProvider.getUriForFile(
@@ -1166,6 +1339,7 @@ class MainActivity : AppCompatActivity() {
                     val dir = getDirForFile(root, filename)
                     java.io.File(dir, filename).writeText(data)
                     Log.d(TAG, "CSV saved: $filename to ${dir.path}")
+                    notifyMediaScanner(java.io.File(dir, filename))
                     backupFile(filename, data)
                     runOnUiThread {
                         webView.evaluateJavascript("window.onCurieSaved('$filename')", null)
@@ -1201,12 +1375,17 @@ class MainActivity : AppCompatActivity() {
 
                 val lines = raw.replace("\r", "").split("\n")
                 var header: List<String>? = null
+                var sep = ","
                 val result = org.json.JSONArray()
 
                 for (line in lines) {
                     if (line.isBlank() || line.startsWith("#")) continue
-                    val sep = if (line.contains("\t")) "\t" else ","
                     if (header == null) {
+                        sep = when {
+                            line.contains(";")  -> ";"
+                            line.contains("\t") -> "\t"
+                            else -> ","
+                        }
                         header = line.split(sep).map { it.trim().lowercase() }
                         continue
                     }
@@ -1227,24 +1406,42 @@ class MainActivity : AppCompatActivity() {
                     obj.put("lon", lon)
                     // Gama pole
                     if (header!!.contains("doporucuji")) {
-                        obj.put("uroven", get("doporucuji").toIntOrNull() ?: 0)
+                        val urovenRaw = get("doporucuji")
+                        if (urovenRaw.equals("P", ignoreCase = true)) {
+                            obj.put("uroven", "P")
+                        } else {
+                            val urovenNum = urovenRaw.toIntOrNull()
+                            if (urovenNum != null && urovenNum in 1..5) obj.put("uroven", urovenNum)
+                        }
                         obj.put("metoda", get("metoda"))
                         obj.put("relativni_anomalie", get("relativni_anomalie"))
                         obj.put("anomalie", get("anomalie"))
+                        // Zachováno kvůli zpětné kompatibilitě — roiSaveLayersToMeta čte malá písmena
                         obj.put("anomalie_usv", get("anomalie_usv"))
                         obj.put("pozadi_usv", get("pozadi_usv"))
                         obj.put("tvar_anomalie", get("tvar_anomalie"))
                         obj.put("mocnost_pokryvu", get("mocnost_pokryvu"))
                         obj.put("propustnost_pokryvu", get("propustnost_pokryvu"))
+                        // Doplněná pole — přesné názvy dle cfLayerDraw popup (JS je case-sensitive)
+                        obj.put("anomalie_uSv", get("anomalie_usv"))
+                        obj.put("pozadi_ur_h", get("pozadi_ur_h"))
+                        obj.put("pozadi_uSV", get("pozadi_usv"))
+                        obj.put("typpomer_th_u", get("typpomer_th_u"))
+                        obj.put("anom_v_hloubce", get("anom_v_hloubce"))
+                        obj.put("plocha_anomalie", get("plocha_anomalie"))
+                        obj.put("azimut_anomalie", get("azimut_anomalie"))
                     } else {
                         // Důlní díla a ostatní vrstvy
+                        val surovina = get("surovina").ifEmpty { get("desc") }
                         obj.put("name", get("name").ifEmpty { get("nazev_dila") })
                         obj.put("druh", get("type").ifEmpty { get("druh_dila") })
-                        obj.put("surovina", get("surovina").ifEmpty { get("desc") })
+                        obj.put("surovina", surovina)
                         obj.put("profil", get("profil_dila"))
                         obj.put("rozmery", get("rozmery_usti"))
                         obj.put("hloubka", get("hloubka_delka_dila"))
                         obj.put("ukonceni", get("ukonceni_provozu"))
+                        // Doplněný příznak — potřebný pro filtr "jen radioaktivní" a výběr ikony
+                        obj.put("rad", surovina.lowercase().let { it.contains("radioaktivní") || it.contains("uran") })
                     }
                     result.put(obj)
                 }
@@ -1252,6 +1449,46 @@ class MainActivity : AppCompatActivity() {
             } catch (e: Exception) {
                 Log.e(TAG, "readCSVInBounds error: ${e.message}")
                 "[]"
+            }
+        }
+
+        // Zjistit typ vrstvy (gama/důlní) jen podle hlavičky — nečte celý soubor do paměti,
+        // zastaví se po prvním nekomentářovém řádku (CSV hlavička je vždy na začátku).
+        @JavascriptInterface
+        fun detectLayerType(filename: String): String {
+            return try {
+                val root = rootDir()
+                val searchDirs = listOf(
+                    root,
+                    java.io.File(root, DIR_LOGS),
+                    java.io.File(root, DIR_LAYERS),
+                    java.io.File(root, DIR_HEAT),
+                    java.io.File(root, "tmp")
+                )
+                var found: java.io.File? = null
+                for (dir in searchDirs) {
+                    val f = java.io.File(dir, filename)
+                    if (f.exists()) { found = f; break }
+                }
+                if (found == null) return "unknown"
+
+                found.bufferedReader().useLines { seq ->
+                    for (line in seq) {
+                        val trimmed = line.trim()
+                        if (trimmed.isEmpty() || trimmed.startsWith("#")) continue
+                        val sep = when {
+                            trimmed.contains(";")  -> ";"
+                            trimmed.contains("\t") -> "\t"
+                            else -> ","
+                        }
+                        val header = trimmed.split(sep).map { it.trim().lowercase() }
+                        return if (header.contains("doporucuji")) "gama" else "dulni"
+                    }
+                }
+                "unknown"
+            } catch (e: Exception) {
+                Log.e(TAG, "detectLayerType error: ${e.message}")
+                "unknown"
             }
         }
 
@@ -1321,6 +1558,8 @@ class MainActivity : AppCompatActivity() {
 
                 val devices = adapter.bondedDevices
                     ?.filter { it.name != null }
+                    // Rover X20 není detektor — v průvodci detektorů se nezobrazuje
+                    ?.filter { !it.name.startsWith(RoverSppManager.NAME_PREFIX, ignoreCase = true) }
                     ?.groupBy { it.name }
                     ?.flatMap { (name, list) ->
                         if (list.size == 1) {
@@ -1337,6 +1576,45 @@ class MainActivity : AppCompatActivity() {
                 Log.e(TAG, "getBondedDevices error: ${e.message}")
                 "[]"
             }
+        }
+
+        // ── Externí GPS rover X20 ────────────────────────────────────────────
+
+        /** Konfigurace roveru a NTRIP pro dialog (čte se přímo z prefs). */
+        @JavascriptInterface
+        fun getRoverConfig(): String {
+            val p = getSharedPreferences(RoverSppManager.PREFS, Context.MODE_PRIVATE)
+            val o = org.json.JSONObject()
+            o.put("roverEnabled", p.getBoolean(RoverSppManager.PREF_ENABLED, true))
+            o.put("ntripEnabled", p.getBoolean(RoverSppManager.PREF_NTRIP_ENABLED, false))
+            o.put("host", p.getString(RoverSppManager.PREF_NTRIP_HOST, "") ?: "")
+            o.put("port", p.getInt(RoverSppManager.PREF_NTRIP_PORT, 2101))
+            o.put("mount", p.getString(RoverSppManager.PREF_NTRIP_MOUNT, "") ?: "")
+            o.put("user", p.getString(RoverSppManager.PREF_NTRIP_USER, "") ?: "")
+            o.put("pass", p.getString(RoverSppManager.PREF_NTRIP_PASS, "") ?: "")
+            return o.toString()
+        }
+
+        /** Přepínač X20 / jen mobil. */
+        @JavascriptInterface
+        fun setRoverEnabled(enabled: Boolean) {
+            Log.d(TAG, "setRoverEnabled($enabled)")
+            val intent = Intent(this@MainActivity, CurieService::class.java).apply {
+                action = CurieService.ACTION_ROVER_ENABLE
+                putExtra(CurieService.EXTRA_ENABLED, enabled)
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) startForegroundService(intent) else startService(intent)
+        }
+
+        /** NTRIP konfigurace (JSON: enabled, host, port, mount, user, pass). */
+        @JavascriptInterface
+        fun setNtripConfig(json: String) {
+            Log.d(TAG, "setNtripConfig")
+            val intent = Intent(this@MainActivity, CurieService::class.java).apply {
+                action = CurieService.ACTION_NTRIP_CONFIG
+                putExtra(CurieService.EXTRA_JSON, json)
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) startForegroundService(intent) else startService(intent)
         }
 
         @JavascriptInterface
@@ -1374,6 +1652,20 @@ class MainActivity : AppCompatActivity() {
                 startActivityForResult(intent, IMPORT_CSV_REQUEST)
             }
         }
+
+        @JavascriptInterface
+        fun logJank(source: String, durationMs: Int, detail: String) {
+            val safeSource = source.replace("\n", " ")
+            val safeDetail = if (detail.isNotEmpty()) " (${detail.replace("\n", " ")})" else ""
+            addJankLogEntry("[+${elapsedSinceStart()}] JANK $safeSource: ${durationMs}ms$safeDetail")
+        }
+
+        @JavascriptInterface
+        fun getJankLog(): String {
+            synchronized(jankLog) {
+                return if (jankLog.isEmpty()) "" else jankLog.joinToString("\n")
+            }
+        }
     }
 
     override fun onPause() {
@@ -1388,6 +1680,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        stopFrameMonitor()
         try { LocalBroadcastManager.getInstance(this).unregisterReceiver(serviceReceiver) } catch (_: Exception) {}
     }
 }

@@ -13,10 +13,9 @@ import java.util.UUID
  * Připojí se k libovolnému BLE zařízení implementujícímu NUS
  * a přijímá textové řádky ve formátu CPS=... \n
  *
- * OPRAVA: parseData throttling — při batchi více řádků najednou
- * odešle pouze poslední CPS řádek. Starší hodnoty ze stejného batche
- * jsou zahozeny — při 250ms intervalu odesílání jsou stejné nebo
- * téměř stejné, ztráta dat je zanedbatelná ale UI přestane zamrzat.
+ * parseData předává VŠECHNY přijaté řádky v pořadí (i při batchi z BLE stacku).
+ * Každý vzorek je potřeba pro klouzavý průměr a zápis logu; omezení
+ * překreslování UI řeší JS (parseLine kreslí max 1× za 200 ms).
  */
 @SuppressLint("MissingPermission")
 class NusBleManager(
@@ -214,26 +213,14 @@ class NusBleManager(
 
         if (lines.isEmpty()) return
 
-        val now = System.currentTimeMillis()
-
-        if (lines.size == 1) {
-            // Jeden řádek — standardní případ při nízkém CPS
-            val line = lines[0]
+        // Všechny řádky se předají dál ve stejném pořadí — žádné zahazování.
+        // Detektory posílají až 5 vzorků za sekundu a každý vzorek je potřeba
+        // pro klouzavý průměr a zápis. Omezení překreslování UI řeší JS.
+        for (line in lines) {
             Log.v(TAG, "RX: $line")
-            if (now - lastLineTs >= LINE_THROTTLE_MS) {
-                lastLineTs = now
-                onLine(addRssi(line))
-            }
-        } else {
-            // Batch více řádků — přišly najednou z Android BLE stacku
-            // Odeslat pouze poslední CPS řádek — nejnovější hodnota
-            // Starší hodnoty jsou zahozeny (UI throttling)
-            val lastCpsLine = lines.lastOrNull { it.contains("CPS=") } ?: lines.last()
-            Log.v(TAG, "RX batch ${lines.size} řádků → odesílám poslední: $lastCpsLine")
-            Log.v(TAG, "RX zahozeno ${lines.size - 1} starších řádků")
-            lastLineTs = now
-            onLine(addRssi(lastCpsLine))
+            onLine(addRssi(line))
         }
+        lastLineTs = System.currentTimeMillis()
     }
 
     private fun addRssi(line: String): String {

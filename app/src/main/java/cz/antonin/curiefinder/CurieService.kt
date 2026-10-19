@@ -9,10 +9,8 @@ import android.bluetooth.le.BluetoothLeScanner
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanResult
 import android.bluetooth.le.ScanSettings
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.hardware.usb.UsbDevice
 import android.hardware.usb.UsbManager
 import android.location.Location
@@ -47,6 +45,8 @@ class CurieService : Service(), SerialInputOutputManager.Listener {
         const val ACTION_SET_BT_DEVICE = "cz.antonin.curiefinder.SET_BT_DEVICE"
         const val ACTION_WIZ_SCAN_START = "cz.antonin.curiefinder.WIZ_SCAN_START"
         const val ACTION_WIZ_SCAN_STOP  = "cz.antonin.curiefinder.WIZ_SCAN_STOP"
+        const val ACTION_ROVER_ENABLE   = "cz.antonin.curiefinder.ROVER_ENABLE"
+        const val ACTION_NTRIP_CONFIG   = "cz.antonin.curiefinder.NTRIP_CONFIG"
 
         const val BROADCAST_DATA      = "cz.antonin.curiefinder.DATA"
         const val BROADCAST_CONNECTED = "cz.antonin.curiefinder.CONNECTED"
@@ -55,6 +55,10 @@ class CurieService : Service(), SerialInputOutputManager.Listener {
         const val BROADCAST_GPS_ERROR = "cz.antonin.curiefinder.GPS_ERROR"
         const val BROADCAST_SAVE_LOG  = "cz.antonin.curiefinder.SAVE_LOG"
         const val BROADCAST_WIZ_SCAN  = "cz.antonin.curiefinder.WIZ_SCAN"
+        const val BROADCAST_ROVER_FIX   = "cz.antonin.curiefinder.ROVER_FIX"
+        const val BROADCAST_ROVER_STATE = "cz.antonin.curiefinder.ROVER_STATE"
+        const val EXTRA_ENABLED       = "enabled"
+        const val EXTRA_JSON          = "json"
 
         const val EXTRA_DATA        = "data"
         const val EXTRA_TYPE        = "type"
@@ -68,10 +72,6 @@ class CurieService : Service(), SerialInputOutputManager.Listener {
         const val EXTRA_BT_NAME     = "bt_name"
         const val EXTRA_DEVICE_NAME = "device_name"
         const val PREF_BT_NAME      = "bt_device_name"
-
-        val CURIEFINDER_NAMES = setOf("CurieFinder", "CurieBT")
-        fun isCurieFinderName(name: String?): Boolean =
-            name != null && CURIEFINDER_NAMES.any { name.startsWith(it, ignoreCase = true) }
 
         val RAYSID_NAMES = setOf("Raysid", "Dozik", "RN_BLE", "RN487")
         fun isRaysidName(name: String?): Boolean =
@@ -139,6 +139,10 @@ class CurieService : Service(), SerialInputOutputManager.Listener {
     // ── Debounce pro setBtDevice — poslední požadované jméno ─────────────────
     @Volatile private var pendingDeviceName = ""
     private val switchLock = java.util.concurrent.atomic.AtomicBoolean(false)
+    @Volatile private var disconnectRequested = false
+
+    // ── Externí GNSS rover X20 (BT SPP) — běží nezávisle na detektoru ────────
+    private var roverManager: RoverSppManager? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -148,6 +152,30 @@ class CurieService : Service(), SerialInputOutputManager.Listener {
         wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "CurieFinder:WakeLock")
         wakeLock?.acquire(12 * 60 * 60 * 1000L)
         Log.d(TAG, "Service created, wakelock acquired")
+        startRover()
+    }
+
+    private fun startRover() {
+        if (roverManager != null) return
+        roverManager = RoverSppManager(
+            context = this,
+            onFix = { f ->
+                broadcast(BROADCAST_ROVER_FIX) {
+                    putExtra(EXTRA_LAT, f.lat)
+                    putExtra(EXTRA_LON, f.lon)
+                    putExtra("hacc", f.hAcc)
+                    putExtra("q", f.quality)
+                    putExtra("valid", f.valid)
+                    putExtra("speed", f.speed)
+                    putExtra("course", f.course)
+                    putExtra("moving", f.moving)
+                    putExtra("tms", f.tMs)
+                }
+            },
+            onState = { st ->
+                broadcast(BROADCAST_ROVER_STATE) { putExtra(EXTRA_JSON, st.toString()) }
+            }
+        ).also { it.start() }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -186,7 +214,7 @@ class CurieService : Service(), SerialInputOutputManager.Listener {
                 }
             }
             ACTION_CONNECT_USB  -> thread { connectUSB() }
-            ACTION_DISCONNECT   -> disconnect()
+            ACTION_DISCONNECT   -> thread { disconnect() }
             ACTION_START_GPS    -> startGps()
             ACTION_STOP_GPS     -> stopGps()
             ACTION_SET_BT_DEVICE -> {
@@ -235,6 +263,14 @@ class CurieService : Service(), SerialInputOutputManager.Listener {
                 Log.d(TAG, "WIZ_SCAN_STOP")
                 stopWizBleScan()
             }
+            ACTION_ROVER_ENABLE -> {
+                startRover()
+                roverManager?.setEnabled(intent.getBooleanExtra(EXTRA_ENABLED, true))
+            }
+            ACTION_NTRIP_CONFIG -> {
+                startRover()
+                roverManager?.setNtripConfig(intent.getStringExtra(EXTRA_JSON) ?: "{}")
+            }
             ACTION_STOP_SERVICE -> {
                 saveLogIfActive()
                 stopEverything()
@@ -277,6 +313,8 @@ class CurieService : Service(), SerialInputOutputManager.Listener {
         try { btSocket?.close() } catch (_: Exception) {}
         btSocket = null
         stopGps()
+        roverManager?.stop()
+        roverManager = null
         try { if (wakeLock?.isHeld == true) wakeLock?.release() } catch (_: Exception) {}
         stopForeground(STOP_FOREGROUND_REMOVE)
         val nm = getSystemService(NotificationManager::class.java)
@@ -299,12 +337,12 @@ class CurieService : Service(), SerialInputOutputManager.Listener {
 
     override fun onDestroy() {
         super.onDestroy()
+        roverManager?.stop()
+        roverManager = null
         Log.d(TAG, "Service destroyed")
     }
 
     // ── BLE Scan ─────────────────────────────────────────────────────────────
-
-    // startBleScanForRaysid → nahrazeno startBleScanRaysid()
 
     @SuppressLint("MissingPermission")
     private fun stopBleScan() {
@@ -467,46 +505,23 @@ class CurieService : Service(), SerialInputOutputManager.Listener {
         radiaCodeManager!!.connect(device)
     }
 
-    // ── RadPro BLE scan ───────────────────────────────────────────────────────
+    // ── RadPro USB připojení ──────────────────────────────────────────────────
 
-    @SuppressLint("MissingPermission")
     private fun startBleScanForRadPro() {
-        if (isScanning || isRadProMode) { Log.d(TAG, "startBleScanForRadPro: already scanning or connected, ignored"); return }
+        if (isRadProMode) { Log.d(TAG, "startBleScanForRadPro: already connected, ignored"); return }
 
-        // Nejdřív zkusit USB opakovaně (~5s) — enumerace USB zařízení po zapojení kabelu
-        // může chvíli trvat, jeden okamžitý pokus to často mine.
+        // RadPro/Bosean jde jen přes USB kabel — BT verze u tohoto zařízení není.
+        // Zkusit opakovaně (~5s) — enumerace USB zařízení po zapojení kabelu může chvíli trvat,
+        // jeden okamžitý pokus to často mine.
         for (attempt in 1..10) {
             if (tryConnectRadProUsb()) {
-                Log.d(TAG, "RadPro USB found — BLE scan skipped (pokus $attempt)")
+                Log.d(TAG, "RadPro USB found (pokus $attempt)")
                 return
             }
             if (attempt < 10) Thread.sleep(500)
         }
-        Log.d(TAG, "RadPro USB not found after retries — přechod na BLE")
-
-        // USB není k dispozici — jdeme na BLE
-        val adapter = BluetoothAdapter.getDefaultAdapter() ?: run {
-            broadcast(BROADCAST_ERROR) { putExtra(EXTRA_MSG, "BT nepodporovan") }; return
-        }
-        if (!adapter.isEnabled) {
-            broadcast(BROADCAST_ERROR) { putExtra(EXTRA_MSG, "BT vypnuto") }; return
-        }
-        bleScanner = adapter.bluetoothLeScanner ?: run {
-            broadcast(BROADCAST_ERROR) { putExtra(EXTRA_MSG, "BLE scanner nedostupny") }; return
-        }
-        bleScanTarget = ScanTarget.RADPRO
-        isScanning = true
-        bleScanActive = true
-        updateNotification("Hledám RadPro BLE...")
-        Log.d(TAG, "BLE scan started for RadPro")
-        val settings = ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build()
-        bleScanner?.startScan(null, settings, radProScanCallback)
-        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-            if (bleScanActive) {
-                stopBleScan()
-                broadcast(BROADCAST_ERROR) { putExtra(EXTRA_MSG, "RadPro nenalezen (timeout)") }
-            }
-        }, BLE_SCAN_TIMEOUT_MS)
+        Log.d(TAG, "RadPro USB not found after retries")
+        broadcast(BROADCAST_ERROR) { putExtra(EXTRA_MSG, "RadPro USB nenalezeno") }
     }
 
     /**
@@ -648,7 +663,7 @@ class CurieService : Service(), SerialInputOutputManager.Listener {
         val adapter = BluetoothAdapter.getDefaultAdapter() ?: return
         // Najít zařízení podle MAC nebo jména v bonded
         val device = if (mac.isNotEmpty()) {
-            try { adapter.getRemoteDevice(mac) } catch (e: Exception) { null }
+            try { adapter.getRemoteDevice(mac) } catch (_: Exception) { null }
         } else {
             adapter.bondedDevices?.firstOrNull { it.name == name }
         }
@@ -765,6 +780,7 @@ class CurieService : Service(), SerialInputOutputManager.Listener {
     @SuppressLint("MissingPermission")
     private fun connectSavedDevice(savedName: String): Boolean {
         Log.d(TAG, "connectSavedDevice: $savedName")
+        disconnectRequested = false
 
         // Pokud je uloženo jako BLE:jméno:mac (starý formát z WIZ scanu),
         // extrahovat jméno a zkontrolovat zda nejde o naše zařízení se vlastním managerem
@@ -795,6 +811,7 @@ class CurieService : Service(), SerialInputOutputManager.Listener {
             connectNusBle(savedName)
             val deadline = System.currentTimeMillis() + 12000L
             while (System.currentTimeMillis() < deadline) {
+                if (disconnectRequested) { Log.d(TAG, "connectSavedDevice: NUS cancelled by disconnect"); stopBleScan(); return false }
                 if (isNusMode) return true
                 Thread.sleep(300)
             }
@@ -809,6 +826,7 @@ class CurieService : Service(), SerialInputOutputManager.Listener {
             startBleScanRaysid()
             val deadline = System.currentTimeMillis() + BLE_SCAN_TIMEOUT_MS + 1000L
             while (System.currentTimeMillis() < deadline) {
+                if (disconnectRequested) { Log.d(TAG, "connectSavedDevice: Raysid cancelled by disconnect"); stopBleScan(); return false }
                 if (isRaysidMode) return true
                 Thread.sleep(300)
             }
@@ -822,6 +840,7 @@ class CurieService : Service(), SerialInputOutputManager.Listener {
             startBleScanRadiaCode()
             val deadline = System.currentTimeMillis() + BLE_SCAN_TIMEOUT_MS + 1000L
             while (System.currentTimeMillis() < deadline) {
+                if (disconnectRequested) { Log.d(TAG, "connectSavedDevice: RadiaCode cancelled by disconnect"); stopBleScan(); return false }
                 if (isRadiaCodeMode) return true
                 Thread.sleep(300)
             }
@@ -831,15 +850,17 @@ class CurieService : Service(), SerialInputOutputManager.Listener {
         }
 
         if (isRadProHintName(savedName) || savedName == "Hledat RadPro BLE/USB" || savedName == "Hledat RadPro BLE" || savedName == "⚡ Hledat RadPro BLE/USB" || savedName == "⚡ Hledat RadPro BLE") {
-            Log.d(TAG, "connectSavedDevice: RadPro USB+BLE")
+            Log.d(TAG, "connectSavedDevice: RadPro USB")
             startBleScanForRadPro()
-            val deadline = System.currentTimeMillis() + BLE_SCAN_TIMEOUT_MS + 1000L
+            // startBleScanForRadPro() už blokuje ~5s během USB retry smyčky —
+            // tady jen čekáme na dokončení USB handshake (RadProManager init sekvence)
+            val deadline = System.currentTimeMillis() + 8000L
             while (System.currentTimeMillis() < deadline) {
+                if (disconnectRequested) { Log.d(TAG, "connectSavedDevice: RadPro cancelled by disconnect"); return false }
                 if (isRadProMode) return true
                 Thread.sleep(300)
             }
-            Log.d(TAG, "connectSavedDevice: RadPro timeout")
-            stopBleScan()
+            Log.d(TAG, "connectSavedDevice: RadPro USB timeout")
             return false
         }
 
@@ -848,6 +869,7 @@ class CurieService : Service(), SerialInputOutputManager.Listener {
             startBleScanKC761()
             val deadline = System.currentTimeMillis() + BLE_SCAN_TIMEOUT_MS + 1000L
             while (System.currentTimeMillis() < deadline) {
+                if (disconnectRequested) { Log.d(TAG, "connectSavedDevice: KC761 cancelled by disconnect"); stopBleScan(); return false }
                 if (isKC761Mode) return true
                 Thread.sleep(300)
             }
@@ -886,12 +908,12 @@ class CurieService : Service(), SerialInputOutputManager.Listener {
      */
     @SuppressLint("MissingPermission")
     private fun trySppConnect(device: android.bluetooth.BluetoothDevice): Boolean {
-        android.bluetooth.BluetoothAdapter.getDefaultAdapter()?.cancelDiscovery()
+        try { android.bluetooth.BluetoothAdapter.getDefaultAdapter()?.cancelDiscovery() } catch (_: Exception) {}
         val uuid = java.util.UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
         for (attempt in 1..3) {
-            // Přerušit pokud uživatel mezitím vybral jiné zařízení
-            if (isSwitchRequested(device.name ?: "")) {
-                Log.d(TAG, "trySppConnect: switch requested — aborting ${device.name}")
+            // Přerušit pokud uživatel mezitím vybral jiné zařízení, nebo si vyžádal odpojení
+            if (isSwitchRequested(device.name ?: "") || disconnectRequested) {
+                Log.d(TAG, "trySppConnect: switch/disconnect requested — aborting ${device.name}")
                 return false
             }
             var socket: BluetoothSocket? = null
@@ -916,6 +938,7 @@ class CurieService : Service(), SerialInputOutputManager.Listener {
     /**
      * Spustí read loop pro aktuální btSocket. Blokuje vlákno dokud je spojení aktivní.
      */
+    @SuppressLint("MissingPermission")
     private fun startSppReadLoop() {
         lastRssiUpdate = 0L
         lastPktMs = 0L
@@ -934,7 +957,10 @@ class CurieService : Service(), SerialInputOutputManager.Listener {
                     if (line.isNotEmpty()) Log.d(TAG, "BT RX: $line")
                     if (line.contains("CPS=")) {
                         val now = System.currentTimeMillis()
-                        if (now - lastPktMs >= MIN_PKT_INTERVAL_MS) {
+                        // Každý řádek s CPS= se předá dál — žádné zahazování podle intervalu.
+                        // Detektor v2.5 posílá 5× za sekundu; SPP může doručit dva řádky
+                        // těsně za sebou (bufferování), oba jsou platné vzorky.
+                        run {
                             pktCount++
                             validPktCount++
                             lastPktMs = now
@@ -971,30 +997,6 @@ class CurieService : Service(), SerialInputOutputManager.Listener {
             autoConnectDone = false
         }
         updateNotification("Odpojeno")
-    }
-
-    /**
-     * Spustí BLE scan pro Raysid i RadPro najednou — jeden scanner, jeden callback.
-     */
-    @SuppressLint("MissingPermission")
-    private fun startBleScanAll() {
-        if (isScanning) return
-        bleScanTarget = ScanTarget.ALL
-        val adapter = android.bluetooth.BluetoothAdapter.getDefaultAdapter() ?: return
-        if (!adapter.isEnabled) return
-        bleScanner = adapter.bluetoothLeScanner ?: return
-        isScanning = true
-        bleScanActive = true
-        updateNotification("Hledám BLE zařízení...")
-        Log.d(TAG, "BLE scan ALL started")
-        val settings = ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build()
-        bleScanner?.startScan(null, settings, bleScanCallback)
-        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-            if (bleScanActive) {
-                stopBleScan()
-                Log.d(TAG, "BLE scan ALL timeout")
-            }
-        }, BLE_SCAN_TIMEOUT_MS)
     }
 
     /**
@@ -1094,17 +1096,15 @@ class CurieService : Service(), SerialInputOutputManager.Listener {
         kc761Manager!!.connect(device)
     }
 
+    @SuppressLint("MissingPermission")
     private fun showWizard() {
-        val adapter = android.bluetooth.BluetoothAdapter.getDefaultAdapter()
-        val bonded = adapter?.bondedDevices?.map { it.name } ?: emptyList()
+        val bonded = try {
+            val adapter = android.bluetooth.BluetoothAdapter.getDefaultAdapter()
+            adapter?.bondedDevices?.map { it.name }
+                ?.filter { !(it ?: "").startsWith(RoverSppManager.NAME_PREFIX, ignoreCase = true) }
+                ?: emptyList()
+        } catch (_: Exception) { emptyList() }
         broadcast(BROADCAST_ERROR) { putExtra(EXTRA_MSG, "BT_SELECT:" + bonded.joinToString("|")) }
-    }
-
-    // ── Staré connectBT() ponecháno jako alias pro zpětnou kompatibilitu ─────
-    private fun connectBT() {
-        if (btConnecting) { Log.d(TAG, "connectBT() ignored — already connecting"); return }
-        btConnecting = true
-        try { autoConnect() } finally { btConnecting = false }
     }
 
     @SuppressLint("MissingPermission")
@@ -1114,7 +1114,7 @@ class CurieService : Service(), SerialInputOutputManager.Listener {
             val method = socket.javaClass.getDeclaredMethod("getRssi")
             method.isAccessible = true
             (method.invoke(socket) as? Int)
-        } catch (e1: Exception) {
+        } catch (_: Exception) {
             try {
                 val field = socket.javaClass.getDeclaredField("mSocket")
                 field.isAccessible = true
@@ -1122,7 +1122,7 @@ class CurieService : Service(), SerialInputOutputManager.Listener {
                 val method = nativeSocket?.javaClass?.getDeclaredMethod("getRssi")
                 method?.isAccessible = true
                 method?.invoke(nativeSocket) as? Int
-            } catch (e2: Exception) { null }
+            } catch (_: Exception) { null }
         }
     }
 
@@ -1190,6 +1190,7 @@ class CurieService : Service(), SerialInputOutputManager.Listener {
     }
 
     private fun disconnect() {
+        disconnectRequested = true
         if (isRaysidMode) {
             stopBleScan()
             raysidBle?.disconnect()

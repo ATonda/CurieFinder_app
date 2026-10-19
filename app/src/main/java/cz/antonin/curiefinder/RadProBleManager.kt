@@ -415,11 +415,14 @@ class RadProManager(
     }
 
     private fun syncTime(onDone: () -> Unit = {}) {
-        val unixTime   = System.currentTimeMillis() / 1000
+        val unixTime    = System.currentTimeMillis() / 1000
         val tzOffsetMin = TimeZone.getDefault().getOffset(System.currentTimeMillis()) / 60_000
-        Log.d(TAG, "syncTime: unix=$unixTime tz=$tzOffsetMin min")
+        // Protokol (docs/comm.md) čeká SET deviceTimeZone v HODINÁCH, ne minutách —
+        // odsud "ERROR" odpověď zařízení při odeslání syrových minut.
+        val tzOffsetHours = tzOffsetMin / 60.0
+        Log.d(TAG, "syncTime: unix=$unixTime tz=$tzOffsetHours h")
         sendCommand("SET deviceTime $unixTime") { _ ->
-            sendCommand("SET deviceTimeZone $tzOffsetMin") { _ ->
+            sendCommand("SET deviceTimeZone $tzOffsetHours") { _ ->
                 Log.d(TAG, "Time sync done")
                 onDone()
             }
@@ -446,6 +449,7 @@ class RadProManager(
         cmdInFlight = null
         mainHandler.removeCallbacksAndMessages(timeoutToken)
         consecutiveTimeouts = 0  // úspěšná odpověď — reset čítače
+        Log.d(TAG, "RX odpověď na '${cmd.cmd}': $line")
         val value = when {
             line.startsWith("OK")    -> line.removePrefix("OK").trim()
             line.startsWith("ERROR") -> ""
@@ -453,6 +457,23 @@ class RadProManager(
         }
         cmd.onResponse(value)
         processQueue()
+    }
+
+    /**
+     * Vynutí čistý restart příkazové fronty — použít když odpověď na příkaz
+     * nejde naparsovat podle očekávaného typu (možný desync request/response
+     * páru). Zahodí rozpracovanou frontu i nedokončený RX fragment; další
+     * naplánovaný poll (schedulePoll/scheduleBattery/...) začne od nuly.
+     */
+    private fun resyncProtocol(reason: String) {
+        Log.w(TAG, "RadPro protokol resync: $reason")
+        mainHandler.removeCallbacksAndMessages(timeoutToken)
+        cmdQueue.clear()
+        cmdInFlight = null
+        if (rxBuffer.isNotEmpty()) {
+            Log.w(TAG, "Zahazuji nedokončený RX fragment: '$rxBuffer'")
+            rxBuffer.clear()
+        }
     }
 
     private fun sendCommand(cmd: String, critical: Boolean = true, onResponse: (String) -> Unit) {
@@ -514,13 +535,26 @@ class RadProManager(
 
     private fun doPoll() {
         sendCommand("GET tubePulseCount") { pulseStr ->
-            val pulseCount = pulseStr.toLongOrNull() ?: return@sendCommand
+            val pulseCount = pulseStr.toLongOrNull()
+            if (pulseCount == null) {
+                // Prázdná odpověď = normální timeout (už zalogováno v processQueue).
+                // Neprázdná ale nečíselná odpověď = podezření na desync request/response páru.
+                if (pulseStr.isNotEmpty()) resyncProtocol("tubePulseCount neplatná odpověď: '$pulseStr'")
+                return@sendCommand
+            }
             sendCommand("GET deviceTime") { timeStr ->
-                val deviceTime = timeStr.toLongOrNull() ?: return@sendCommand
+                val deviceTime = timeStr.toLongOrNull()
+                if (deviceTime == null) {
+                    if (timeStr.isNotEmpty()) resyncProtocol("deviceTime neplatná odpověď: '$timeStr'")
+                    return@sendCommand
+                }
                 lastPulseCount = pulseCount
                 lastPulseTime  = deviceTime
                 sendCommand("GET tubeRate") { rateStr ->
-                    rateStr.toDoubleOrNull()?.let { rawRate ->
+                    val rawRate = rateStr.toDoubleOrNull()
+                    if (rawRate == null) {
+                        if (rateStr.isNotEmpty()) resyncProtocol("tubeRate neplatná odpověď: '$rateStr'")
+                    } else {
                         lastRawRate = rawRate
                         lastCps     = rawRate / 60.0                          // CPM → CPS s desetinami
                         lastRate    = rawRate / tubeSensitivity               // µSv/h dle citlivosti trubice

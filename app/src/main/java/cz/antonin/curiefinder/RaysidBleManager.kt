@@ -15,6 +15,7 @@ import android.util.Log
 import java.util.UUID
 import java.util.concurrent.ConcurrentLinkedQueue
 
+@SuppressLint("MissingPermission")
 class RaysidBleManager(
     private val context: Context,
     private val onLine: (String) -> Unit,
@@ -59,7 +60,7 @@ class RaysidBleManager(
     private var lastDataTime = 0L
     private var lastRssi = -99
 
-    private val rssiToken = Object()
+    private var rssiRunnable: Runnable? = null
 
     private val cpsHistory = mutableListOf<Double>()
     private val MAX_HISTORY = 2  // Pouze 2 hodnoty pro rychlejší reakci
@@ -100,7 +101,7 @@ class RaysidBleManager(
         processingThread?.quitSafely()
         processingThread = null
         processingHandler = null
-        mainHandler.removeCallbacksAndMessages(rssiToken)
+        rssiRunnable?.let { mainHandler.removeCallbacks(it) }
 
         try { gatt?.disconnect() } catch (_: Exception) {}
         try { gatt?.close() } catch (_: Exception) {}
@@ -246,12 +247,14 @@ class RaysidBleManager(
     }
 
     private fun scheduleRssi() {
-        mainHandler.removeCallbacksAndMessages(rssiToken)
-        mainHandler.postDelayed({
+        rssiRunnable?.let { mainHandler.removeCallbacks(it) }
+        val r = Runnable {
             if (isReady && gatt != null) {
                 try { gatt?.readRemoteRssi() } catch (_: Exception) {}
             }
-        }, rssiToken, 5000L)
+        }
+        rssiRunnable = r
+        mainHandler.postDelayed(r, 5000L)
     }
 
     private fun startPingTimer() {
