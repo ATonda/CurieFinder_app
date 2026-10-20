@@ -164,3 +164,6 @@ Free to use. Attribution required — **© ATonda**
 - 🐛 [Issues & Bug Reports](https://github.com/ATonda/CurieFinder_app/issues)
 - 📦 [Releases / APK Download](https://github.com/ATonda/CurieFinder_app/releases)
 - 
+## Licence
+
+GPL-3.0 – viz [LICENSE](LICENSE).
