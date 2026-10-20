@@ -11,8 +11,8 @@ android {
         applicationId = "cz.antonin.curiefinder"
         minSdk = 26
         targetSdk = 36
-        versionCode = 357
-        versionName = "1.01"
+        versionCode = 358
+        versionName = "1.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
