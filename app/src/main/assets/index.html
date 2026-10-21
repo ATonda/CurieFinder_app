@@ -924,6 +924,7 @@
         offline_name_exists:'Tento název již existuje',
         // -- OBECNA TLACITKA ----------------------------------------
         btn_all:'VŠE', btn_delete:'SMAZAT', btn_share:'SDÍLET', btn_import:'IMPORT', btn_download:'STÁHNOUT', btn_yes:'ANO',
+        lyr_uran:'URAN', lyr_name_mine:'Důlní díla',
         btn_no:'NE', btn_ok:'OK', btn_add:'PŘIDAT', btn_cancel:'ZRUŠIT', btn_select:'VYBRAT', btn_skip:'PŘESKOČIT', btn_graph:'GRAF',
         btn_style:'VZHLED', btn_track:'TRASA',
         // -- RUZNE (kompas, chyby, zvuk, styl mapy) -----------------
@@ -1001,6 +1002,7 @@
         offline_name_exists:'Tento názov už existuje',
         // -- OBECNA TLACITKA ----------------------------------------
         btn_all:'VŠE', btn_delete:'ZMAZAŤ', btn_share:'ZDIEĽAŤ', btn_import:'IMPORTOVAŤ', btn_download:'STIAHNUŤ', btn_yes:'ÁNO',
+        lyr_uran:'URÁN', lyr_name_mine:'Banské diela',
         btn_no:'NIE', btn_ok:'OK', btn_add:'PRIDAŤ', btn_cancel:'ZRUŠIŤ', btn_select:'VYBRAŤ', btn_skip:'PRESKOČIŤ', btn_graph:'GRAF',
         btn_style:'VZHLED', btn_track:'TRASA',
         // -- RUZNE (kompas, chyby, zvuk, styl mapy) -----------------
@@ -1081,6 +1083,7 @@
         offline_name_exists:'Questo nome esiste già',
         // -- OBECNA TLACITKA ----------------------------------------
         btn_all:'TUTTI', btn_delete:'ELIMINA', btn_share:'CONDIVIDI', btn_import:'IMPORTA', btn_download:'SCARICA', btn_yes:'SÌ',
+        lyr_uran:'URANIO', lyr_name_mine:'Opere minerarie',
         btn_no:'NO', btn_ok:'OK', btn_add:'AGGIUNGI', btn_cancel:'ANNULLA', btn_select:'SELEZIONA', btn_skip:'SALTA', btn_graph:'GRAFICO',
         btn_style:'ASPETTO', btn_track:'TRACCIA',
         // -- RUZNE (kompas, chyby, zvuk, styl mapy) -----------------
@@ -1165,6 +1168,7 @@
         offline_name_exists:'Dieser Name existiert bereits',
         // -- OBECNA TLACITKA ----------------------------------------
         btn_all:'ALLE', btn_delete:'LÖSCHEN', btn_share:'TEILEN', btn_import:'IMPORTIEREN', btn_download:'HERUNTERLADEN',
+        lyr_uran:'URAN', lyr_name_mine:'Bergwerke',
         btn_yes:'JA', btn_no:'NEIN', btn_ok:'OK', btn_add:'HINZUFÜGEN', btn_cancel:'ABBRECHEN', btn_select:'AUSWÄHLEN', btn_skip:'ÜBERSPRINGEN',
         btn_graph:'GRAFIK', btn_style:'ANSICHT', btn_track:'TRACK',
         // -- RUZNE (kompas, chyby, zvuk, styl mapy) -----------------
@@ -1243,6 +1247,7 @@
         offline_name_exists:'This name already exists',
         // -- OBECNA TLACITKA ----------------------------------------
         btn_all:'ALL', btn_delete:'DELETE', btn_share:'SHARE', btn_import:'IMPORT', btn_download:'DOWNLOAD', btn_yes:'YES',
+        lyr_uran:'URANIUM', lyr_name_mine:'Mine workings',
         btn_no:'NO', btn_ok:'OK', btn_add:'ADD', btn_cancel:'CANCEL', btn_select:'SELECT', btn_skip:'SKIP', btn_graph:'GRAPH', btn_style:'STYLE',
         btn_track:'TRACK',
         // -- RUZNE (kompas, chyby, zvuk, styl mapy) -----------------
@@ -1323,6 +1328,7 @@
         offline_name_exists:'Ta nazwa już istnieje',
         // -- OBECNA TLACITKA ----------------------------------------
         btn_all:'WSZYSTKIE', btn_delete:'USUŃ', btn_share:'UDOSTĘPNIJ', btn_import:'IMPORTUJ', btn_download:'POBIERZ',
+        lyr_uran:'URAN', lyr_name_mine:'Wyrobiska górnicze',
         btn_yes:'TAK', btn_no:'NIE', btn_ok:'OK', btn_add:'DODAJ', btn_cancel:'ANULUJ', btn_select:'WYBIERZ', btn_skip:'POMIŃ', btn_graph:'WYKRES',
         btn_style:'WYGLĄD', btn_track:'TRASA',
         // -- RUZNE (kompas, chyby, zvuk, styl mapy) -----------------
@@ -1402,6 +1408,7 @@
         offline_name_exists:'Ez a név már létezik',
         // -- OBECNA TLACITKA ----------------------------------------
         btn_all:'MIND', btn_delete:'TÖRÖL', btn_share:'MEGOSZTÁS', btn_import:'IMPORTÁLÁS', btn_download:'LETÖLTÉS', btn_yes:'IGEN',
+        lyr_uran:'URÁN', lyr_name_mine:'Bányaművek',
         btn_no:'NEM', btn_ok:'OK', btn_add:'HOZZÁADÁS', btn_cancel:'MÉGSE', btn_select:'KIVÁLASZTÁS', btn_skip:'KIHAGYÁS', btn_graph:'GRAFIKON',
         btn_style:'MEGJELENÉS', btn_track:'NYOMVONAL',
         // -- RUZNE (kompas, chyby, zvuk, styl mapy) -----------------
@@ -6559,7 +6566,7 @@ function cfLayerDraw(idx) {
         inBounds.forEach(p => {
           const key = p.lat.toFixed(6) + ',' + p.lon.toFixed(6);
           if (!groups[key]) groups[key] = { lat: p.lat, lon: p.lon, items: [] };
-          groups[key].items.push(Object.assign({}, p, { _layerName: lyr.name, _ds: lyr.file }));
+          groups[key].items.push(Object.assign({}, p, { _layerName: cfLayerDisplayName(lyr), _ds: lyr.file }));
         });
         if (statusEl) statusEl.textContent = `${inBounds.length}/${lyr.points.length}`;
       });
@@ -6694,28 +6701,39 @@ function cfLayersDrawAll() {
         cfLayerDraw(i);
       });
     }
+// Zobrazovaný (přeložený) název vrstvy — jen pro 4 vrstvy stažené z ČGS, ostatní podle souboru/metadat
+function cfLayerDisplayName(lyr) {
+      if (!lyr) return '';
+      const key = {
+        'CF_LAYER_gama_anomalie.csv':   'cgs_ds_gama',
+        'CF_LAYER_radon_anomalie.csv':  'cgs_ds_radon',
+        'CF_LAYER_overovaci_prace.csv': 'cgs_ds_work',
+        'CF_LAYER_dulni_dila.csv':      'lyr_name_mine'
+      }[lyr.file];
+      return (key && T[LANG] && T[LANG][key]) ? T[LANG][key] : lyr.name;
+    }
 function cfLayersRenderTab() {
       const container = document.getElementById('cf-layers-container');
       if (!container) return;
       if (!cfLayers.length) { container.innerHTML = ''; return; }
-      const gamaLabels = { all: 'VŠE', '1-4': '1-4', 'P': 'P', none: 'SKRÝT' };
+      const gamaLabels = { all: T[LANG].show_all || 'VŠE', '1-4': '1-4', 'P': 'P', none: T[LANG].show_none || 'SKRÝT' };
       const items = cfLayers.map((lyr, i) => {
         const isGama = lyr.layerType === 'gama';
         return `
         <div class="dd-toolbar" style="flex-direction:column;align-items:stretch;gap:4px;padding:6px 10px;">
           <div style="display:flex;align-items:center;gap:6px;">
             <input type="checkbox" ${lyr.visible?'checked':''} onchange="cfLayerToggleVisible(${i},this.checked)" style="accent-color:#00ff41;width:16px;height:16px;">
-            <span style="font-size:0.65rem;color:#00ff41;flex:1;">${lyr.icon} ${lyr.name}</span>
+            <span style="font-size:0.65rem;color:#00ff41;flex:1;">${lyr.icon} ${cfLayerDisplayName(lyr)}</span>
             <span class="dd-status" id="cfl-status-${i}">${lyr.loaded ? lyr.points.length + T[LANG].suf_pts : T[LANG].not_loaded}</span>
           </div>
           <div style="display:flex;gap:4px;">
             ${isGama
               ? `<button class="dd-btn active" onclick="cfLayerCycleGamaFilter(${i})">${gamaLabels[lyr.gamaFilter || 'all']}</button>`
               : `<button class="dd-btn ${lyr.filter==='all'?'active':''}" onclick="cfLayerSetFilter(${i},'all')">${T[LANG].show_all||'VŠE'}</button>
-                 <button class="dd-btn ${lyr.filter==='rad'?'active':''}" onclick="cfLayerSetFilter(${i},'rad')"> URAN</button>
+                 <button class="dd-btn ${lyr.filter==='rad'?'active':''}" onclick="cfLayerSetFilter(${i},'rad')">${T[LANG].lyr_uran||'URAN'}</button>
                  <button class="dd-btn ${lyr.showNames?'active':''}" onclick="cfLayerToggleNames(${i})">ABC</button>`}
             <button class="dd-btn" onclick="cfLayerLoad(${i})">${lyr.loaded?'↺':(T[LANG].load_btn||'NAČÍST')}</button>
-            <button class="dd-btn" onclick="cfLayerExport(${i})" style="border-color:#00aaff;color:#00aaff;background:#0a0e0a;">SDÍLET</button>
+            <button class="dd-btn" onclick="cfLayerExport(${i})" style="border-color:#00aaff;color:#00aaff;background:#0a0e0a;">${T[LANG].btn_share||'SDÍLET'}</button>
           </div>
         </div>`;
       }).join('');

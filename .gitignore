@@ -25,3 +25,6 @@ build/
 
 # Systémové
 .DS_Store
+/aplikace CurieFinder/
+.idea/.name
+.idea/.gitignore
