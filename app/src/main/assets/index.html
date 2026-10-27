@@ -334,6 +334,18 @@
         .roi-item.active { border-color:#00ff41; }
         .roi-item-header { display:flex; align-items:center; gap:6px; padding:8px 10px; cursor:pointer; }
         .roi-item-name { font-size:0.75rem; color:#00ff41; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .roi-fav-star { font-size:1rem; line-height:1; color:#2a5a2a; padding:0 4px; cursor:pointer; flex-shrink:0; }
+        .roi-fav-star.on { color:#ffd600; }
+        .roi-fav-ctrl { position:relative; }
+        .roi-fav-btn { width:36px; height:36px; display:flex; align-items:center; justify-content:center; font-size:1.3rem; color:#ffd600; background:rgba(10,14,10,0.85); border:1px solid #2a5a2a; border-radius:4px; cursor:pointer; user-select:none; -webkit-user-select:none; }
+        .roi-fav-btn.open { background:#003d0f; }
+        .roi-fav-list { display:none; position:absolute; right:0; top:40px; min-width:170px; max-width:70vw; max-height:50vh; overflow-y:auto; background:#0a0e0a; border:1px solid #2a5a2a; border-radius:4px; padding:4px 0; font-family:'Share Tech Mono',monospace; }
+        .roi-fav-list.open { display:block; }
+        .roi-fav-title { font-size:0.6rem; color:#4a6a4a; padding:2px 10px 4px; border-bottom:1px solid #1a2e1a; }
+        .roi-fav-item { font-size:0.75rem; color:#00ff41; padding:7px 10px; cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .roi-fav-item:active { background:#003d0f; }
+        .roi-fav-item.active { color:#ffb300; }
+        .roi-fav-empty { font-size:0.65rem; color:#4a6a4a; padding:6px 10px; white-space:normal; }
         .roi-item-meta { font-size:0.55rem; color:#4a6a4a; flex-shrink:0; }
         .roi-item-btns { display:flex; gap:4px; padding:0 8px 8px 8px; }
         .roi-item-body { border-top:1px solid #0a1a0a; padding:8px 10px; display:none; flex-direction:column; gap:6px; }
@@ -895,7 +907,7 @@
         poi_imported_count:(n) => `Importováno ${n} bodů`,
         // -- ROI / HEAT OBLASTI -------------------------------------
         ctx_rename:'Přejmenovat', ctx_change_area:'Změnit oblast / zoom', ctx_delete:'Smazat',
-        roi_select_new:'VYBRAT OBLAST', roi_select_edit:'ZMĚNIT OBLAST', roi_show:'ZOBRAZIT', roi_new_area:'Název nové oblasti',
+        roi_select_new:'VYBRAT OBLAST', roi_select_edit:'ZMĚNIT OBLAST', roi_show:'ZOBRAZIT', roi_fav_title:'OBLÍBENÉ OBLASTI', roi_fav_empty:'Žádné oblíbené oblasti — označ ☆ na kartě HEAT', roi_new_area:'Název nové oblasti',
         roi_new_btn:'NOVÁ OBLAST', roi_import_btn:'IMPORT', roi_no_areas:'Žádné oblasti. Klepni NOVÁ OBLAST.', roi_blocks:'BLOKY TRAS', roi_name_lbl:'Název oblasti', roi_bounds_lbl:'Bounds oblasti:', roi_bounds_none:'Bounds nejsou nastaveny',
         roi_select_map:'VYBRAT V MAPĚ', roi_add_tracks:'PŘIDAT TRASY', roi_generate:'GENEROVAT', roi_share:'SDÍLET',
         roi_delete:'SMAZAT', roi_delete_confirm:(n) => `Smazat oblast "${n}"?`, roi_saved:'Uloženo',
@@ -972,7 +984,7 @@
         poi_imported_count:(n) => `Importovaných ${n} bodov`,
         // -- ROI / HEAT OBLASTI -------------------------------------
         ctx_rename:'Premenovať', ctx_change_area:'Zmeniť oblasť / zoom', ctx_delete:'Zmazať',
-        roi_select_new:'VYBRAŤ OBLASŤ', roi_select_edit:'ZMENIŤ OBLASŤ', roi_show:'ZOBRAZIŤ', roi_new_area:'Názov novej oblasti',
+        roi_select_new:'VYBRAŤ OBLASŤ', roi_select_edit:'ZMENIŤ OBLASŤ', roi_show:'ZOBRAZIŤ', roi_fav_title:'OBĽÚBENÉ OBLASTI', roi_fav_empty:'Žiadne obľúbené oblasti — označ ☆ na karte HEAT', roi_new_area:'Názov novej oblasti',
         roi_new_btn:'NOVÁ OBLASŤ', roi_import_btn:'IMPORT', roi_no_areas:'Žiadne oblasti. Klepni NOVÁ OBLASŤ.', roi_blocks:'BLOKY TRÁS', roi_name_lbl:'Názov oblasti', roi_bounds_lbl:'Bounds oblasti:', roi_bounds_none:'Bounds nie sú nastavené',
         roi_select_map:'VYBRAŤ V MAPE', roi_add_tracks:'PRIDAŤ TRASY', roi_generate:'GENEROVAŤ', roi_share:'ZDIEĽAŤ',
         roi_delete:'ZMAZAŤ', roi_delete_confirm:(n) => `Zmazať oblasť "${n}"?`, roi_saved:'Uložené',
@@ -1053,7 +1065,7 @@
         poi_imported_count:(n) => `Importati ${n} punti`,
         // -- ROI / HEAT OBLASTI -------------------------------------
         ctx_rename:'Rinomina', ctx_change_area:'Cambia area / zoom', ctx_delete:'Elimina',
-        roi_select_new:'SELEZIONA AREA', roi_select_edit:"MODIFICA AREA", roi_show:'MOSTRA', roi_new_area:'Nome nuova area',
+        roi_select_new:'SELEZIONA AREA', roi_select_edit:"MODIFICA AREA", roi_show:'MOSTRA', roi_fav_title:'AREE PREFERITE', roi_fav_empty:'Nessuna area preferita — segna ☆ nella scheda HEAT', roi_new_area:'Nome nuova area',
         roi_new_btn:'NUOVA AREA', roi_import_btn:'IMPORTA', roi_no_areas:'Nessuna area. Tocca NUOVA AREA.', roi_blocks:'BLOCCHI TRACCE', roi_name_lbl:'Nome area', roi_bounds_lbl:'Limiti area:', roi_bounds_none:'Limiti non impostati',
         roi_select_map:'SELEZIONA SU MAPPA', roi_add_tracks:'AGGIUNGI TRACCE', roi_generate:'GENERA', roi_share:'CONDIVIDI',
         roi_delete:'ELIMINA', roi_delete_confirm:(n) => `Eliminare area "${n}"?`,
@@ -1135,7 +1147,7 @@
         poi_imported_count:(n) => `${n} Punkte importiert`,
         // -- ROI / HEAT OBLASTI -------------------------------------
         ctx_rename:'Umbenennen', ctx_change_area:'Bereich / Zoom ändern', ctx_delete:'Löschen',
-        roi_select_new:'BEREICH WÄHLEN', roi_select_edit:'BEREICH BEARBEITEN', roi_show:'ANZEIGEN', roi_new_area:'Name des neuen Bereichs',
+        roi_select_new:'BEREICH WÄHLEN', roi_select_edit:'BEREICH BEARBEITEN', roi_show:'ANZEIGEN', roi_fav_title:'FAVORITEN', roi_fav_empty:'Keine Favoriten — mit ☆ im Tab HEAT markieren', roi_new_area:'Name des neuen Bereichs',
         roi_new_btn:'\u2795 NEUER BEREICH', roi_import_btn:'IMPORT', roi_no_areas:'Keine Bereiche. Tippe \u2795 NEUER BEREICH.',
         roi_blocks:'TRACK-BLÖCKE', roi_name_lbl:'Bereichsname', roi_bounds_lbl:'Bereichsgrenzen:',
         roi_bounds_none:'Grenzen nicht gesetzt', roi_select_map:'AUF KARTE WÄHLEN', roi_add_tracks:'TRACKS HINZUFÜGEN',
@@ -1218,7 +1230,7 @@
         poi_imported_count:(n) => `Imported ${n} points`,
         // -- ROI / HEAT OBLASTI -------------------------------------
         ctx_rename:'Rename', ctx_change_area:'Change area / zoom', ctx_delete:'Delete',
-        roi_select_new:'SELECT AREA', roi_select_edit:'EDIT AREA', roi_show:'SHOW', roi_new_area:'New area name', roi_new_btn:'NEW AREA',
+        roi_select_new:'SELECT AREA', roi_select_edit:'EDIT AREA', roi_show:'SHOW', roi_fav_title:'FAVOURITE AREAS', roi_fav_empty:'No favourite areas — mark ☆ in the HEAT tab', roi_new_area:'New area name', roi_new_btn:'NEW AREA',
         roi_import_btn:'IMPORT', roi_no_areas:'No areas. Tap NEW AREA.', roi_blocks:'TRACK BLOCKS',
         roi_name_lbl:'Area name',
         roi_bounds_lbl:'Area bounds:', roi_bounds_none:'Bounds not set', roi_select_map:'SELECT ON MAP', roi_add_tracks:'ADD TRACKS',
@@ -1298,7 +1310,7 @@
         poi_imported_count:(n) => `Zaimportowano ${n} punktów`,
         // -- ROI / HEAT OBLASTI -------------------------------------
         ctx_rename:'Zmień nazwę', ctx_change_area:'Zmień obszar / zoom', ctx_delete:'Usuń',
-        roi_select_new:'WYBIERZ OBSZAR', roi_select_edit:'EDYTUJ OBSZAR', roi_show:'POKAŻ', roi_new_area:'Nazwa nowego obszaru',
+        roi_select_new:'WYBIERZ OBSZAR', roi_select_edit:'EDYTUJ OBSZAR', roi_show:'POKAŻ', roi_fav_title:'ULUBIONE OBSZARY', roi_fav_empty:'Brak ulubionych obszarów — oznacz ☆ w karcie HEAT', roi_new_area:'Nazwa nowego obszaru',
         roi_new_btn:'NOWY OBSZAR', roi_import_btn:'IMPORT', roi_no_areas:'Brak obszarów. Dotknij NOWY OBSZAR.', roi_blocks:'BLOKI TRAS', roi_name_lbl:'Nazwa obszaru', roi_bounds_lbl:'Granice obszaru:', roi_bounds_none:'Granice nie zostały ustawione',
         roi_select_map:'WYBIERZ NA MAPIE', roi_add_tracks:'DODAJ TRASY', roi_generate:'GENERUJ', roi_share:'UDOSTĘPNIJ',
         roi_delete:'USUŃ', roi_delete_confirm:(n) => `Usunąć obszar "${n}"?`, roi_saved:'Zapisano',
@@ -1378,7 +1390,7 @@
         poi_edit_btn:'Szerkesztés', poi_move_btn:'Áthelyezés', poi_imported_count:(n) => `${n} pont importálva`,
         // -- ROI / HEAT OBLASTI -------------------------------------
         ctx_rename:'Átnevezés', ctx_change_area:'Terület / zoom módosítása', ctx_delete:'Töröl',
-        roi_select_new:'TERÜLET KIVÁLASZTÁSA', roi_select_edit:'TERÜLET MÓDOSÍTÁSA', roi_show:'MEGJELENÍT', roi_new_area:'Új terület neve',
+        roi_select_new:'TERÜLET KIVÁLASZTÁSA', roi_select_edit:'TERÜLET MÓDOSÍTÁSA', roi_show:'MEGJELENÍT', roi_fav_title:'KEDVENC TERÜLETEK', roi_fav_empty:'Nincs kedvenc terület — jelöld ☆ jellel a HEAT lapon', roi_new_area:'Új terület neve',
         roi_new_btn:'ÚJ TERÜLET', roi_import_btn:'IMPORT', roi_no_areas:'Nincs terület. Érintse meg ÚJ TERÜLET.', roi_blocks:'ÚTVONAL BLOKKOK', roi_name_lbl:'Terület neve', roi_bounds_lbl:'Terület határok:', roi_bounds_none:'Határok nincsenek beállítva',
         roi_select_map:'KIJELÖLÉS TÉRKÉPEN', roi_add_tracks:'ÚTVONALAK HOZZÁADÁSA', roi_generate:'GENERÁLÁS',
         roi_share:'MEGOSZTÁS', roi_delete:'TÖRLÉS', roi_delete_confirm:(n) => `Törli a(z) "${n}" területet?`, roi_saved:'Mentve', roi_saved_hint:'Határok mentve — térjen vissza a HEAT lapra',
@@ -8162,6 +8174,96 @@ function roiSaveLayersToMeta(meta) {
         }
       } catch(e) { console.warn('roiSaveLayersToMeta:', e); }
     }
+// ── Oblíbené heat oblasti — jen lokálně (localStorage), klíč = název souboru ──
+function roiFavGet() {
+      try {
+        const a = JSON.parse(lsGet('roi_favorites', '[]'));
+        return Array.isArray(a) ? a.filter(x => typeof x === 'string') : [];
+      } catch(e) { return []; }
+    }
+function roiFavSet(arr) {
+      lsSet('roi_favorites', JSON.stringify(arr));
+    }
+function roiFavIs(filename) {
+      return roiFavGet().includes(filename);
+    }
+function roiFavToggle(filename) {
+      const a = roiFavGet();
+      const i = a.indexOf(filename);
+      if (i >= 0) a.splice(i, 1); else a.push(filename);
+      roiFavSet(a);
+      roiRenderList(_roiList);
+      roiFavMenuRender();
+    }
+function roiFavRemove(filename) {
+      const a = roiFavGet();
+      const i = a.indexOf(filename);
+      if (i < 0) return;
+      a.splice(i, 1);
+      roiFavSet(a);
+      roiFavMenuRender();
+    }
+function roiFavMenuRender() {
+      const el = document.getElementById('roi-fav-list');
+      if (!el || !el.classList.contains('open')) return;
+      if (_roiList.length === 0) roiLoadList();
+      const favs = roiFavGet();
+      const items = _roiList.filter(r => favs.includes(r.filename));
+      const title = '<div class="roi-fav-title">' + _htmlEscape(T[LANG].roi_fav_title || 'OBLÍBENÉ OBLASTI') + '</div>';
+      if (!items.length) {
+        el.innerHTML = title + '<div class="roi-fav-empty">' + _htmlEscape(T[LANG].roi_fav_empty || 'Žádné oblíbené oblasti') + '</div>';
+        return;
+      }
+      el.innerHTML = title + items.map(r =>
+        '<div class="roi-fav-item' + (_roiHeatVisible && _roiHeatFile === r.filename ? ' active' : '') + '" data-fn="' + _htmlEscape(r.filename) + '">★ ' + _htmlEscape(r.name) + '</div>'
+      ).join('');
+      el.querySelectorAll('.roi-fav-item').forEach(it => {
+        it.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const fn = it.getAttribute('data-fn');
+          roiFavMenuClose();
+          if (fn) roiQuickShow(fn);
+        });
+      });
+    }
+function roiFavMenuToggle() {
+      const el  = document.getElementById('roi-fav-list');
+      const btn = document.getElementById('roi-fav-btn');
+      if (!el) return;
+      if (el.classList.contains('open')) { roiFavMenuClose(); return; }
+      el.classList.add('open');
+      if (btn) btn.classList.add('open');
+      roiFavMenuRender();
+    }
+function roiFavMenuClose() {
+      const el  = document.getElementById('roi-fav-list');
+      const btn = document.getElementById('roi-fav-btn');
+      if (el) el.classList.remove('open');
+      if (btn) btn.classList.remove('open');
+    }
+function roiFavAddMapControl() {
+      if (!leafletMap || document.getElementById('roi-fav-btn')) return;
+      const FavCtrl = L.Control.extend({
+        options: { position: 'topright' },
+        onAdd: function () {
+          const wrap = L.DomUtil.create('div', 'leaflet-control roi-fav-ctrl');
+          const btn  = L.DomUtil.create('div', 'roi-fav-btn', wrap);
+          btn.id = 'roi-fav-btn';
+          btn.textContent = '★';
+          btn.title = T[LANG].roi_fav_title || 'OBLÍBENÉ OBLASTI';
+          const list = L.DomUtil.create('div', 'roi-fav-list', wrap);
+          list.id = 'roi-fav-list';
+          L.DomEvent.disableClickPropagation(wrap);
+          L.DomEvent.disableScrollPropagation(wrap);
+          btn.addEventListener('click', (e) => { e.stopPropagation(); roiFavMenuToggle(); });
+          return wrap;
+        }
+      });
+      new FavCtrl().addTo(leafletMap);
+      // Klepnutí do mapy seznam zavře
+      leafletMap.on('click', roiFavMenuClose);
+      leafletMap.on('movestart', roiFavMenuClose);
+    }
 function roiRenderList(list) {
       const el = document.getElementById('roi-list');
       if (!el) return;
@@ -8178,6 +8280,7 @@ function roiRenderList(list) {
               onclick="event.stopPropagation();roiToggleSelect('${r.filename}',this.checked)"
               style="margin:0 4px 0 0;cursor:pointer;accent-color:#00ff41;width:14px;height:14px;flex-shrink:0;">
             <span class="roi-item-name" style="flex:1;cursor:pointer;">${r.name}</span>
+            <span class="roi-fav-star${roiFavIs(r.filename) ? ' on' : ''}" onclick="event.stopPropagation();roiFavToggle('${r.filename}')">${roiFavIs(r.filename) ? '★' : '☆'}</span>
             <span class="roi-item-meta">${r.blockCount} bl. · ${typeof r.totalKm === 'number' ? _fmtKm(r.totalKm, 1) : '–'} · ${r.size > 1048576 ? (r.size/1048576).toFixed(1)+'MB' : r.size > 1024 ? (r.size/1024).toFixed(1)+'kB' : r.size+'B'}</span>
           </div>
           ${isOpen && _roiOpenData ? roiRenderDetail(_roiOpenData, r.filename) : ''}
@@ -8206,6 +8309,7 @@ function roiBulkDelete() {
       cfConfirm('Smazat ' + _roiSelected.size + ' oblastí?', () => {
         for (const fn of [..._roiSelected]) {
           if (IS_ANDROID && typeof AndroidSerial !== 'undefined') AndroidSerial.deleteROI(fn);
+          roiFavRemove(fn);
         }
         _roiSelected.clear();
         roiLoadList();
@@ -8476,6 +8580,7 @@ function roiDelete(filename) {
         if (IS_ANDROID && typeof AndroidSerial !== 'undefined') {
           AndroidSerial.deleteROI(filename);
         }
+        roiFavRemove(filename);
         if (_roiOpenFile === filename) { _roiOpenFile = null; _roiOpenData = null; }
         roiLoadList();
         roiStatus('Smazáno: ' + name);
@@ -8582,27 +8687,11 @@ function roiExportAndShareHTML(filename) {
           for (const p of blk.data) allPts.push([p.lat, p.lon, p.cps]);
         }
 
-        // Parametry — pouzit ulozene z oblasti, nebo auto min/max z bodů, nebo globalni
+        // Parametry — pouzit ulozene z oblasti, jinak globalni spektrum (stejne jako heat v aplikaci)
         const gridRes = data.gridRes || 1;
         const radius  = data.radius  || 3;
-        // Auto min/max z naměřených bodů pokud oblast nemá uložené hodnoty
-        let specMin, specMax;
-        if (data.specMin !== null && data.specMin !== undefined) {
-          specMin = data.specMin;
-        } else if (allPts.length > 0) {
-          specMin = allPts.reduce((m, p) => p[2] > 0 && p[2] < m ? p[2] : m, Infinity);
-          if (!isFinite(specMin)) specMin = _specMin;
-        } else {
-          specMin = _specMin;
-        }
-        if (data.specMax !== null && data.specMax !== undefined) {
-          specMax = data.specMax;
-        } else if (allPts.length > 0) {
-          specMax = allPts.reduce((m, p) => p[2] > m ? p[2] : m, -Infinity);
-          if (!isFinite(specMax)) specMax = _specMax;
-        } else {
-          specMax = _specMax;
-        }
+        const specMin = (data.specMin !== null && data.specMin !== undefined) ? data.specMin : _specMin;
+        const specMax = (data.specMax !== null && data.specMax !== undefined) ? data.specMax : _specMax;
         // Barevna skala — stejna jako v app
         const specColors = [..._specColors];
 
@@ -8981,8 +9070,9 @@ function generate(){
   drawLegend(min,max);
   if(heatLayer){map.removeLayer(heatLayer);}
   if(!_roiHeatPts)_roiHeatPts=DATA.points.map(p=>({lat:p[0],lon:p[1],cps:p[2]}));
+  // Bez bringToBack(): GridLayer lezi v tile pane s podkladem, bringToBack by ji dal pod podkladovou mapu.
+  // zIndex:200 ji drzi nad podkladem.
   heatLayer=roiBuildHeatGridLayer(_roiHeatPts,DATA.gridRes,DATA.radius,min,max).addTo(map);
-  heatLayer.bringToBack();
   (document.getElementById('hdr-status')||{}).textContent=L_HEAT_READY_FN(_roiHeatPts.length);
 }
 
@@ -10221,6 +10311,8 @@ function initMap() {
         { 'Mapa':osmL, '️ Satelit':satL, '️ Turistická':topoL, ' Voyager':voyagerL, ' Tmavá':darkL, '⬜ Světlá':lightL, '🇸🇰 Freemap':freemapL },
         {}, { position:'topright', collapsed:true }
       ).addTo(leafletMap);
+      // Oblíbené heat oblasti — tlačítko ★ pod výběrem podkladu
+      roiFavAddMapControl();
 
       leafletMap.on('baselayerchange', (e) => {
         saveLayerColors(_currentLayerName);
@@ -10400,6 +10492,12 @@ function initMap() {
 
       document.getElementById('tab-map').addEventListener('touchstart', (e) => {
         _mlMoved = false;
+        if (_mlTimer) { clearTimeout(_mlTimer); _mlTimer = null; }
+        // Dlouhý stisk = celá obrazovka jen na ploše mapy, ne na tlačítkách,
+        // ovládacích prvcích mapy, popupech a panelech nad mapou
+        const _t = e.target;
+        if (!_t || !_t.closest || !_t.closest('#map') ||
+            _t.closest('.leaflet-control, .leaflet-popup, button, input, select, canvas#compass-canvas')) return;
         _mlTimer = setTimeout(() => {
           if (!_mlMoved && !infoPanelOpen) toggleMapFullscreen();
         }, 700);
