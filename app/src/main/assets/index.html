@@ -97,6 +97,38 @@
         .avg-cell-label { font-size:0.45rem; color:#4a6a4a; letter-spacing:1px; margin-bottom:2px; }
         .avg-cell-val { font-family:'Orbitron',monospace,Arial,sans-serif; font-size:0.85rem; font-weight:700; color:#00aa2b; line-height:1; }
         .avg-cell-err { font-size:0.4rem; color:#2a5a2a; margin-top:1px; }
+        .avg-head { display:flex; align-items:center; gap:6px; margin-bottom:5px; }
+        .avg-head .avg-title { margin-bottom:0; }
+        .meas-ref-tag { font-size:0.45rem; color:#0a0e0a; background:#00aa2b; border-radius:2px; padding:0 4px; letter-spacing:1px; display:none; }
+        .meas-count { margin-left:auto; font-family:'Share Tech Mono',monospace; font-size:0.55rem; color:#00ff41; display:none; }
+        .meas-close { background:transparent; border:1px solid #4a6a4a; color:#4a6a4a; font-size:0.6rem; line-height:1; padding:2px 6px; border-radius:3px; cursor:pointer; display:none; }
+        .meas-rows { display:none; margin-top:6px; }
+        .meas-rows .avg-title { margin-top:4px; }
+        .avg-grid.frozen .avg-cell-val { color:#4a8a4a; }
+        .avg-cell.meas-hl { border-color:#00aa2b; }
+        .avg-cell.meas-hl .avg-cell-val { color:#00ff41; }
+        .graph-btn-row { display:flex; justify-content:center; gap:8px; flex-shrink:0; }
+        .graph-btn-row .reset-btn { margin-left:0; margin-right:0; }
+        .cal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:9000; align-items:center; justify-content:center; }
+        .cal-overlay.visible { display:flex; }
+        .cal-box { background:#111a11; border:1px solid #00ff41; border-radius:6px; padding:12px; width:92%; max-width:340px; max-height:88vh; overflow-y:auto; font-family:'Share Tech Mono',monospace; color:#4a8a4a; box-sizing:border-box; }
+        .cal-head { display:flex; align-items:center; gap:6px; color:#00ff41; font-size:0.7rem; letter-spacing:2px; margin-bottom:6px; }
+        .cal-head .meas-close { display:inline-block; margin-left:auto; }
+        .cal-dev { font-size:0.55rem; color:#4a8a4a; letter-spacing:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .cal-note { font-size:0.55rem; color:#ffb300; min-height:0; margin-bottom:4px; }
+        .cal-sec { font-size:0.5rem; color:#4a6a4a; letter-spacing:1px; margin:8px 0 3px; }
+        .cal-live { font-family:'Orbitron',monospace; font-size:1rem; color:#00ff41; }
+        .cal-row { display:flex; gap:6px; align-items:center; }
+        .cal-row .reset-btn { margin:0; }
+        .cal-row input { flex:1; min-width:0; background:#0a1a0a; border:1px solid #2a5a2a; color:#00ff41; font-family:'Share Tech Mono',monospace; font-size:0.7rem; padding:5px; border-radius:3px; box-sizing:border-box; }
+        .cal-row button:disabled { opacity:0.35; cursor:default; }
+        .cal-list { display:flex; flex-direction:column; gap:3px; }
+        .cal-pt { display:flex; align-items:center; gap:6px; background:#0a0e0a; border:1px solid #1a2e1a; border-radius:3px; padding:3px 6px; font-size:0.6rem; color:#00aa2b; }
+        .cal-pt span { flex:1; }
+        .cal-pt .cal-k { color:#2a5a2a; font-size:0.5rem; }
+        .cal-pt.bad { border-color:#ff3333; color:#ff3333; }
+        .cal-pt.bad .cal-k { color:#ff3333; }
+        .cal-pt button { background:transparent; border:1px solid #4a6a4a; color:#4a6a4a; font-size:0.55rem; padding:1px 5px; border-radius:3px; cursor:pointer; }
         .ratio-box { flex-shrink:0; background:#111a11; border:1px solid #1a2e1a; padding:8px 12px; display:flex; align-items:center; gap:10px; }
         .ratio-label { font-size:0.6rem; color:#4a6a4a; min-width:70px; }
         .ratio-bar { flex:1; height:7px; background:#0a0e0a; border:1px solid #1a2e1a; overflow:hidden; }
@@ -589,11 +621,20 @@
                 <div class="graph-container">
                     <div class="graph-header"><span id="graph-label">HISTORIE CPS</span><span id="graph-time">0 s</span></div>
                     <canvas id="graph"></canvas>
-                    <button class="reset-btn" id="reset-graph-btn" onclick="resetGraph()">VYNULOVAT GRAF</button>
+                    <div class="graph-btn-row">
+                        <button class="reset-btn" id="reset-graph-btn" onclick="resetGraph()">VYNULOVAT GRAF</button>
+                        <button class="reset-btn" id="meas-btn" onclick="measStart()">MĚŘIT</button>
+                        <button class="reset-btn" id="cal-btn" onclick="calOpen()">KALIBROVAT</button>
+                    </div>
                 </div>
                 <div class="avg-panel">
-                    <div class="avg-title" id="avg-label">PRŮMĚR CPS</div>
-                    <div class="avg-grid">
+                    <div class="avg-head">
+                        <div class="avg-title" id="avg-label">PRŮMĚR CPS</div>
+                        <span class="meas-ref-tag" id="meas-ref-tag">REFERENCE</span>
+                        <span class="meas-count" id="meas-count"></span>
+                        <button class="meas-close" id="meas-close" onclick="measClose()">✕</button>
+                    </div>
+                    <div class="avg-grid" id="avg-grid">
                         <div class="avg-cell">
                             <div class="avg-cell-label">10s</div>
                             <div class="avg-cell-val" id="avg-val-10">--</div>
@@ -613,6 +654,54 @@
                             <div class="avg-cell-label">60s</div>
                             <div class="avg-cell-val" id="avg-val-60">--</div>
                             <div class="avg-cell-err" id="avg-err-60">--</div>
+                        </div>
+                    </div>
+                    <div class="meas-rows" id="meas-rows">
+                        <div class="avg-title" id="meas-obj-label">PŘEDMĚT</div>
+                        <div class="avg-grid">
+                        <div class="avg-cell" id="meas-obj-cell-10">
+                            <div class="avg-cell-label">10s</div>
+                            <div class="avg-cell-val" id="meas-obj-val-10">--</div>
+                            <div class="avg-cell-err" id="meas-obj-err-10">--</div>
+                        </div>
+                        <div class="avg-cell" id="meas-obj-cell-20">
+                            <div class="avg-cell-label">20s</div>
+                            <div class="avg-cell-val" id="meas-obj-val-20">--</div>
+                            <div class="avg-cell-err" id="meas-obj-err-20">--</div>
+                        </div>
+                        <div class="avg-cell" id="meas-obj-cell-40">
+                            <div class="avg-cell-label">40s</div>
+                            <div class="avg-cell-val" id="meas-obj-val-40">--</div>
+                            <div class="avg-cell-err" id="meas-obj-err-40">--</div>
+                        </div>
+                        <div class="avg-cell" id="meas-obj-cell-60">
+                            <div class="avg-cell-label">60s</div>
+                            <div class="avg-cell-val" id="meas-obj-val-60">--</div>
+                            <div class="avg-cell-err" id="meas-obj-err-60">--</div>
+                        </div>
+                        </div>
+                        <div class="avg-title" id="meas-res-label">ROZDÍL</div>
+                        <div class="avg-grid">
+                        <div class="avg-cell" id="meas-res-cell-10">
+                            <div class="avg-cell-label">10s</div>
+                            <div class="avg-cell-val" id="meas-res-val-10">--</div>
+                            <div class="avg-cell-err" id="meas-res-err-10">--</div>
+                        </div>
+                        <div class="avg-cell" id="meas-res-cell-20">
+                            <div class="avg-cell-label">20s</div>
+                            <div class="avg-cell-val" id="meas-res-val-20">--</div>
+                            <div class="avg-cell-err" id="meas-res-err-20">--</div>
+                        </div>
+                        <div class="avg-cell" id="meas-res-cell-40">
+                            <div class="avg-cell-label">40s</div>
+                            <div class="avg-cell-val" id="meas-res-val-40">--</div>
+                            <div class="avg-cell-err" id="meas-res-err-40">--</div>
+                        </div>
+                        <div class="avg-cell" id="meas-res-cell-60">
+                            <div class="avg-cell-label">60s</div>
+                            <div class="avg-cell-val" id="meas-res-val-60">--</div>
+                            <div class="avg-cell-err" id="meas-res-err-60">--</div>
+                        </div>
                         </div>
                     </div>
                 </div>
@@ -803,6 +892,37 @@
     </div>
 </div>
 
+<div class="cal-overlay" id="cal-overlay">
+    <div class="cal-box">
+        <div class="cal-head">
+            <span id="cal-title">KALIBRACE</span>
+            <span class="cal-dev" id="cal-dev"></span>
+            <button class="meas-close" onclick="calClose()">✕</button>
+        </div>
+        <div class="cal-note" id="cal-note"></div>
+        <div class="cal-sec" id="cal-cps60-label">PRŮMĚR CPS 60 s</div>
+        <div class="cal-live" id="cal-live">--</div>
+        <div class="cal-sec" id="cal-usv-label">µSv/h REFERENČNÍHO PŘÍSTROJE</div>
+        <div class="cal-row">
+            <input id="cal-usv-in" type="text" inputmode="decimal" placeholder="µSv/h">
+            <button class="reset-btn" id="cal-add-btn" onclick="calAddLive()">PŘIDAT BOD</button>
+        </div>
+        <div class="cal-sec" id="cal-manual-label">RUČNÍ ZADÁNÍ</div>
+        <div class="cal-row">
+            <input id="cal-man-cps" type="text" inputmode="decimal" placeholder="CPS">
+            <input id="cal-man-usv" type="text" inputmode="decimal" placeholder="µSv/h">
+            <button class="reset-btn" onclick="calAddManual()">+</button>
+        </div>
+        <div class="cal-sec"><span id="cal-points-label">BODY</span> · <span id="cal-status"></span></div>
+        <div class="cal-list" id="cal-list"></div>
+        <div class="cal-row" style="margin-top:8px;justify-content:center;">
+            <button class="reset-btn" id="cal-exp-btn" onclick="calExport()">EXPORT</button>
+            <button class="reset-btn" id="cal-imp-btn" onclick="document.getElementById('cal-import-input').click()">IMPORT</button>
+        </div>
+    </div>
+</div>
+<input type="file" id="cal-import-input" accept=".json,application/json" style="display:none" onchange="calImport(event)">
+
 <div class="cf-dialog-overlay" id="cf-dialog-overlay">
     <div class="cf-dialog">
         <div class="cf-dialog-msg" id="cf-dialog-msg"></div>
@@ -885,7 +1005,7 @@
         sec_body:'BODY', sec_layers:'VRSTVY', sec_tracks:'TRASY', sec_offline:'OFFLINE MAPY', tab_map:'MAPA', tab_poi:'BODY',
         panel_spectrum:'BAREVNÉ SPEKTRUM CPS', panel_graph_map:'GRAF NAD MAPOU',
         // -- GRAF A MERICI VELICINY ---------------------------------
-        avg_label:'PRŮMĚR CPS', ratio_label:'CPS / BG', hist_label:'HISTORIE CPS', reset_graph:'VYNULOVAT GRAF',
+        avg_label:'PRŮMĚR CPS', ratio_label:'CPS / BG', hist_label:'HISTORIE CPS', reset_graph:'VYNULOVAT GRAF', meas_btn:'MĚŘIT', meas_ref_tag:'REFERENCE', meas_obj:'PŘEDMĚT', meas_res:'ROZDÍL', meas_ref_fill:'REF', meas_running:'MĚŘÍM', cal_btn:"KALIBROVAT", cal_title:"KALIBRACE", cal_cps60:"PRŮMĚR CPS 60 s", cal_usv_ref:"µSv/h REFERENČNÍHO PŘÍSTROJE", cal_add:"PŘIDAT BOD", cal_manual:"RUČNÍ ZADÁNÍ", cal_points:"BODY", cal_none:"Žádné body", cal_active:"AKTIVNÍ", cal_inactive:"NEAKTIVNÍ (min. 3 body)", cal_wait:"Čekám na plné okno 60 s", cal_dev_rate:"Zařízení posílá µSv/h – kalibrace se nepoužije", cal_invalid:"nesedí", cal_bad:"Neplatná hodnota", cal_saved:"Uloženo: ", cal_imported:"Importováno bodů: ", cal_import_err:"Chyba importu: ", cal_del_q:"Smazat bod?",
         background:'POZADÍ', cps_unit:'IMPULZŮ ZA SEKUNDU', close_hint:'2× TAP PRO ZAVŘENÍ', avg_short:'PRŮMĚR',
         graph_window:'délka grafu', graph_avg:'průměr', graph_height:'výška', graph_line_color:'barva čáry', graph_bg:'pozadí', graph_opacity:'průhlednost', graph_position:'poloha',
         hist_usv:'HISTORIE µSv/h', avg_usv:'PRŮMĚR µSv/h',
@@ -917,7 +1037,7 @@
         roi_heat_ready: p => `Heatmapa hotová — ${p} bodů`,
         roi_done:(c,r,p,v) => `${c}×${r} grid, ${p} bodů, ${v} buněk`, roi_added:(n,t) => `Přidáno ${n} blok(ů), celkem ${t} bodů`,
         roi_no_new:'Žádné nové trasy k přidání (duplicity nebo prázdné)', roi_imported:'Importováno: ',
-        roi_hint_move:'Pohybuj mapou — oblast zůstane uprostřed', roi_hint_edit:'Editační mód — tah rohovými body, protější zůstane na místě', roi_import_cancelled:'Import zrušen', roi_track_no_pts:'Aktuální trasa nemá body v oblasti',
+        roi_hint_move:'Pohybuj mapou — oblast zůstane uprostřed', roi_hint_edit:'Editační mód — tah rohovými body, protější zůstane na místě', roi_import_cancelled:'Import zrušen', roi_track_no_pts:'Aktuální trasa nemá body v oblasti', roi_track_no_new:"Žádné nové body k uložení", roi_track_appended:(n) => `Trasa doplněna (${n} nových bodů)`, roi_track_saved_new:(n) => `Trasa uložena do oblasti (${n} bodů)`, roi_autosaved:(n, t) => `Heat ${t}: uloženo ${n} nových bodů`,
         roi_add_track_q:'<b>Přidat aktuální trasu?</b>', roi_track_saved:'Trasa uložena do oblasti (', roi_track_saved2:'Trasa uložena do ',
         roi_cur_track:'Aktuální trasa ', roi_cur_track2:'Aktuální trasa',
         roi_export_fmt:'FORMÁT EXPORTU',
@@ -962,7 +1082,7 @@
         sec_body:'BODY', sec_layers:'VRSTVY', sec_tracks:'TRASY', sec_offline:'OFFLINE MAPY', tab_map:'MAPA', tab_poi:'BODY',
         panel_spectrum:'FAREBNÉ SPEKTRUM CPS', panel_graph_map:'GRAF NAD MAPOU',
         // -- GRAF A MERICI VELICINY ---------------------------------
-        avg_label:'PRIEMER CPS', ratio_label:'CPS / BG', hist_label:'HISTÓRIA CPS', reset_graph:'VYNULOVAŤ GRAF',
+        avg_label:'PRIEMER CPS', ratio_label:'CPS / BG', hist_label:'HISTÓRIA CPS', reset_graph:'VYNULOVAŤ GRAF', meas_btn:'MERAŤ', meas_ref_tag:'REFERENCIA', meas_obj:'PREDMET', meas_res:'ROZDIEL', meas_ref_fill:'REF', meas_running:'MERIAM', cal_btn:"KALIBROVAŤ", cal_title:"KALIBRÁCIA", cal_cps60:"PRIEMER CPS 60 s", cal_usv_ref:"µSv/h REFERENČNÉHO PRÍSTROJA", cal_add:"PRIDAŤ BOD", cal_manual:"RUČNÉ ZADANIE", cal_points:"BODY", cal_none:"Žiadne body", cal_active:"AKTÍVNA", cal_inactive:"NEAKTÍVNA (min. 3 body)", cal_wait:"Čakám na plné okno 60 s", cal_dev_rate:"Zariadenie posiela µSv/h – kalibrácia sa nepoužije", cal_invalid:"nesedí", cal_bad:"Neplatná hodnota", cal_saved:"Uložené: ", cal_imported:"Importovaných bodov: ", cal_import_err:"Chyba importu: ", cal_del_q:"Zmazať bod?",
         background:'POZADIE', cps_unit:'IMPULZOV ZA SEKUNDU', close_hint:'2× TAP PRE ZATVORENIE', avg_short:'PRIEMER',
         graph_window:'dĺžka grafu', graph_avg:'priemer', graph_height:'výška', graph_line_color:'farba čiary', graph_bg:'pozadie', graph_opacity:'priehľadnosť', graph_position:'poloha',
         hist_usv:'HISTÓRIA µSv/h', avg_usv:'PRIEMER µSv/h',
@@ -995,7 +1115,7 @@
         roi_done:(c,r,p,v) => `${c}×${r} grid, ${p} bodov, ${v} buniek`, roi_added:(n,t) => `Pridané ${n} blok(ov), celkom ${t} bodov`,
         roi_no_new:'Žiadne nové trasy na pridanie (duplicity alebo prázdne)', roi_imported:'Importované: ',
         roi_hint_move:'Pohybuj mapou — oblasť zostane uprostred', roi_hint_edit:'Editačný mód — ťahaj rohovými bodmi, protľahlý zostane na mieste', roi_import_cancelled:'Import zrušený',
-        roi_track_no_pts:'Aktuálna trasa nemá body v oblasti', roi_add_track_q:'<b>Pridať aktuálnu trasu?</b>',
+        roi_track_no_pts:'Aktuálna trasa nemá body v oblasti', roi_track_no_new:"Žiadne nové body na uloženie", roi_track_appended:(n) => `Trasa doplnená (${n} nových bodov)`, roi_track_saved_new:(n) => `Trasa uložená do oblasti (${n} bodov)`, roi_autosaved:(n, t) => `Heat ${t}: uložených ${n} nových bodov`, roi_add_track_q:'<b>Pridať aktuálnu trasu?</b>',
         roi_track_saved:'Trasa uložená do oblasti (', roi_track_saved2:'Trasa uložená do ', roi_cur_track:'Aktuálna trasa ',
         roi_cur_track2:'Aktuálna trasa',
         roi_export_fmt:'FORMÁT EXPORTU',
@@ -1041,7 +1161,7 @@
         sec_body:'PUNTI', sec_layers:'LIVELLI', sec_tracks:'PERCORSI', sec_offline:'MAPPE OFFLINE', tab_map:'MAPPA', tab_poi:'PUNTI',
         panel_spectrum:'SPETTRO COLORI CPS', panel_graph_map:'GRAFICO SULLA MAPPA',
         // -- GRAF A MERICI VELICINY ---------------------------------
-        avg_label:'MEDIA CPS', ratio_label:'CPS / BG', hist_label:'STORIA CPS', reset_graph:'AZZERA GRAFICO',
+        avg_label:'MEDIA CPS', ratio_label:'CPS / BG', hist_label:'STORIA CPS', reset_graph:'AZZERA GRAFICO', meas_btn:'MISURA', meas_ref_tag:'RIFERIMENTO', meas_obj:'OGGETTO', meas_res:'DIFFERENZA', meas_ref_fill:'RIF', meas_running:'MISURO', cal_btn:"CALIBRA", cal_title:"CALIBRAZIONE", cal_cps60:"MEDIA CPS 60 s", cal_usv_ref:"µSv/h STRUMENTO DI RIFERIMENTO", cal_add:"AGGIUNGI PUNTO", cal_manual:"INSERIMENTO MANUALE", cal_points:"PUNTI", cal_none:"Nessun punto", cal_active:"ATTIVA", cal_inactive:"NON ATTIVA (min. 3 punti)", cal_wait:"Attendo finestra 60 s completa", cal_dev_rate:"Il dispositivo invia µSv/h – calibrazione non usata", cal_invalid:"non coerente", cal_bad:"Valore non valido", cal_saved:"Salvato: ", cal_imported:"Punti importati: ", cal_import_err:"Errore importazione: ", cal_del_q:"Eliminare il punto?",
         background:'FONDO', cps_unit:'IMPULSI AL SECONDO', close_hint:'2× TAP PER CHIUDERE', avg_short:'MEDIA',
         graph_window:'durata grafico', graph_avg:'media', graph_height:'altezza', graph_line_color:'colore linea', graph_bg:'sfondo', graph_opacity:'opacità', graph_position:'posizione',
         hist_usv:'STORIA µSv/h', avg_usv:'MEDIA µSv/h',
@@ -1076,7 +1196,7 @@
         roi_done:(c,r,p,v) => `Griglia ${c}×${r}, ${p} punti, ${v} celle`, roi_added:(n,t) => `Aggiunti ${n} blocchi, totale ${t} punti`,
         roi_no_new:'Nessuna traccia nuova da aggiungere (duplicati o vuote)', roi_imported:'Importato: ',
         roi_hint_move:"Sposta la mappa — l'area rimane al centro", roi_hint_edit:"Modalità modifica — trascina angoli, l'opposto rimane fermo", roi_import_cancelled:'Importazione annullata',
-        roi_track_no_pts:'La traccia corrente non ha punti nell area', roi_add_track_q:'<b>Aggiungere traccia corrente?</b>',
+        roi_track_no_pts:'La traccia corrente non ha punti nell area', roi_track_no_new:"Nessun nuovo punto da salvare", roi_track_appended:(n) => `Traccia completata (${n} nuovi punti)`, roi_track_saved_new:(n) => `Traccia salvata nell area (${n} punti)`, roi_autosaved:(n, t) => `Heat ${t}: salvati ${n} nuovi punti`, roi_add_track_q:'<b>Aggiungere traccia corrente?</b>',
         roi_track_saved:'Traccia salvata nell\'area (', roi_track_saved2:'Traccia salvata in ', roi_cur_track:'Traccia corrente ',
         roi_cur_track2:'Traccia corrente',
         roi_export_fmt:'FORMATO ESPORTAZIONE',
@@ -1124,7 +1244,7 @@
         panel_spectrum:'FARBSPEKTRUM CPS', panel_graph_map:'GRAFIK AUF KARTE',
         // -- GRAF A MERICI VELICINY ---------------------------------
         avg_label:'DURCHSCHNITT CPS', ratio_label:'CPS / HINTERGRUND', hist_label:'CPS-VERLAUF',
-        reset_graph:'\u29f3 GRAFIK RESET', background:'HINTERGRUND', cps_unit:'IMPULSE PRO SEKUNDE',
+        reset_graph:'\u29f3 GRAFIK RESET', meas_btn:'MESSEN', meas_ref_tag:'REFERENZ', meas_obj:'OBJEKT', meas_res:'DIFFERENZ', meas_ref_fill:'REF', meas_running:'MESSE', cal_btn:"KALIBRIEREN", cal_title:"KALIBRIERUNG", cal_cps60:"DURCHSCHNITT CPS 60 s", cal_usv_ref:"µSv/h REFERENZGERÄT", cal_add:"PUNKT HINZUFÜGEN", cal_manual:"MANUELLE EINGABE", cal_points:"PUNKTE", cal_none:"Keine Punkte", cal_active:"AKTIV", cal_inactive:"INAKTIV (min. 3 Punkte)", cal_wait:"Warte auf volles 60-s-Fenster", cal_dev_rate:"Gerät sendet µSv/h – Kalibrierung wird nicht verwendet", cal_invalid:"passt nicht", cal_bad:"Ungültiger Wert", cal_saved:"Gespeichert: ", cal_imported:"Importierte Punkte: ", cal_import_err:"Importfehler: ", cal_del_q:"Punkt löschen?", background:'HINTERGRUND', cps_unit:'IMPULSE PRO SEKUNDE',
         close_hint:'2× TIPPEN ZUM SCHLIEßEN', avg_short:'DURCHSCHNITT', graph_window:'Grafiklänge', graph_avg:'Mittelwert', graph_height:'Höhe', graph_line_color:'Linienfarbe',
         graph_bg:'Hintergrund', graph_opacity:'Transparenz', graph_position:'Position', hist_usv:'µSv/h VERLAUF', avg_usv:'DURCHSCHNITT µSv/h',
         // -- TRASY / LOG / POZNAMKY ---------------------------------
@@ -1161,7 +1281,7 @@
         roi_added:(n,t) => `${n} Block(s) hinzugefügt, gesamt ${t} Punkte`, roi_no_new:'Keine neuen Tracks hinzuzufügen (Duplikate oder leer)',
         roi_imported:'Importiert: ', roi_hint_move:'Karte bewegen — Bereich bleibt zentriert',
         roi_hint_edit:'\u270f Bearbeitungsmodus — Ecken ziehen, gegenüberliegende bleibt fest', roi_import_cancelled:'Import abgebrochen',
-        roi_track_no_pts:'Aktuelle Strecke hat keine Punkte im Bereich', roi_add_track_q:'<b>Aktuellen Track hinzufügen?</b>',
+        roi_track_no_pts:'Aktuelle Strecke hat keine Punkte im Bereich', roi_track_no_new:"Keine neuen Punkte zum Speichern", roi_track_appended:(n) => `Strecke ergänzt (${n} neue Punkte)`, roi_track_saved_new:(n) => `Strecke im Bereich gespeichert (${n} Punkte)`, roi_autosaved:(n, t) => `Heat ${t}: ${n} neue Punkte gespeichert`, roi_add_track_q:'<b>Aktuellen Track hinzufügen?</b>',
         roi_track_saved:'Track im Bereich gespeichert (', roi_track_saved2:'Track gespeichert in ', roi_cur_track:'Aktueller Track ',
         roi_cur_track2:'Aktueller Track',
         roi_export_fmt:'EXPORTFORMAT',
@@ -1208,7 +1328,7 @@
         sec_body:'POINTS', sec_layers:'LAYERS', sec_tracks:'TRACKS', sec_offline:'OFFLINE MAPS', tab_map:'MAP', tab_poi:'POINTS',
         panel_spectrum:'COLOR SPECTRUM CPS', panel_graph_map:'GRAPH ON MAP',
         // -- GRAF A MERICI VELICINY ---------------------------------
-        avg_label:'AVERAGE CPS', ratio_label:'CPS / BG', hist_label:'CPS HISTORY', reset_graph:'RESET GRAPH',
+        avg_label:'AVERAGE CPS', ratio_label:'CPS / BG', hist_label:'CPS HISTORY', reset_graph:'RESET GRAPH', meas_btn:'MEASURE', meas_ref_tag:'REFERENCE', meas_obj:'OBJECT', meas_res:'DIFFERENCE', meas_ref_fill:'REF', meas_running:'MEASURING', cal_btn:"CALIBRATE", cal_title:"CALIBRATION", cal_cps60:"AVERAGE CPS 60 s", cal_usv_ref:"µSv/h OF REFERENCE INSTRUMENT", cal_add:"ADD POINT", cal_manual:"MANUAL ENTRY", cal_points:"POINTS", cal_none:"No points", cal_active:"ACTIVE", cal_inactive:"INACTIVE (min. 3 points)", cal_wait:"Waiting for full 60 s window", cal_dev_rate:"Device sends µSv/h – calibration not used", cal_invalid:"inconsistent", cal_bad:"Invalid value", cal_saved:"Saved: ", cal_imported:"Points imported: ", cal_import_err:"Import error: ", cal_del_q:"Delete point?",
         background:'BACKGROUND', cps_unit:'COUNTS PER SECOND', close_hint:'2× TAP TO CLOSE', avg_short:'AVERAGE',
         graph_window:'graph length', graph_avg:'average', graph_height:'height', graph_line_color:'line color', graph_bg:'background', graph_opacity:'opacity', graph_position:'position',
         hist_usv:'µSv/h HISTORY', avg_usv:'AVERAGE µSv/h',
@@ -1240,7 +1360,7 @@
         roi_heat_ready: p => `Heatmap ready — ${p} points`,
         roi_generating:'⏳ Generating heatmap...', roi_done:(c,r,p,v) => `${c}×${r} grid, ${p} points, ${v} cells`,
         roi_added:(n,t) => `Added ${n} block(s), total ${t} points`, roi_no_new:'No new tracks to add (duplicates or empty)',
-        roi_imported:'Imported: ', roi_hint_move:'Move map — area stays centered', roi_hint_edit:'Edit mode — drag corners, opposite stays fixed', roi_import_cancelled:'Import cancelled', roi_track_no_pts:'Current track has no points in area',
+        roi_imported:'Imported: ', roi_hint_move:'Move map — area stays centered', roi_hint_edit:'Edit mode — drag corners, opposite stays fixed', roi_import_cancelled:'Import cancelled', roi_track_no_pts:'Current track has no points in area', roi_track_no_new:"No new points to save", roi_track_appended:(n) => `Track extended (${n} new points)`, roi_track_saved_new:(n) => `Track saved to area (${n} points)`, roi_autosaved:(n, t) => `Heat ${t}: saved ${n} new points`,
         roi_add_track_q:'<b>Add current track?</b>', roi_track_saved:'Track saved to area (', roi_track_saved2:'Track saved to ',
         roi_cur_track:'Current track ', roi_cur_track2:'Current track',
         roi_export_fmt:'EXPORT FORMAT',
@@ -1286,7 +1406,7 @@
         sec_body:'PUNKTY', sec_layers:'WARSTWY', sec_tracks:'TRASY', sec_offline:'MAPY OFFLINE', tab_map:'MAPA', tab_poi:'PUNKTY',
         panel_spectrum:'SPEKTRUM KOLORÓW CPS', panel_graph_map:'WYKRES NA MAPIE',
         // -- GRAF A MERICI VELICINY ---------------------------------
-        avg_label:'ŚREDNIA CPS', ratio_label:'CPS / TŁO', hist_label:'HISTORIA CPS', reset_graph:'RESET WYKRESU',
+        avg_label:'ŚREDNIA CPS', ratio_label:'CPS / TŁO', hist_label:'HISTORIA CPS', reset_graph:'RESET WYKRESU', meas_btn:'POMIAR', meas_ref_tag:'ODNIESIENIE', meas_obj:'OBIEKT', meas_res:'RÓŻNICA', meas_ref_fill:'REF', meas_running:'MIERZĘ', cal_btn:"KALIBRUJ", cal_title:"KALIBRACJA", cal_cps60:"ŚREDNIA CPS 60 s", cal_usv_ref:"µSv/h PRZYRZĄDU REFERENCYJNEGO", cal_add:"DODAJ PUNKT", cal_manual:"WPROWADZANIE RĘCZNE", cal_points:"PUNKTY", cal_none:"Brak punktów", cal_active:"AKTYWNA", cal_inactive:"NIEAKTYWNA (min. 3 punkty)", cal_wait:"Czekam na pełne okno 60 s", cal_dev_rate:"Urządzenie wysyła µSv/h – kalibracja nieużywana", cal_invalid:"niezgodny", cal_bad:"Nieprawidłowa wartość", cal_saved:"Zapisano: ", cal_imported:"Zaimportowano punktów: ", cal_import_err:"Błąd importu: ", cal_del_q:"Usunąć punkt?",
         background:'TŁO', cps_unit:'ZLICZEŃ NA SEKUNDĘ', close_hint:'2× DOTKNIJ ABY ZAMKNĄĆ', avg_short:'ŚREDNIA',
         graph_window:'długość wykresu', graph_avg:'średnia', graph_height:'wysokość', graph_line_color:'kolor linii', graph_bg:'tło', graph_opacity:'przezroczystość', graph_position:'pozycja',
         hist_usv:'HISTORIA µSv/h', avg_usv:'ŚREDNIA µSv/h',
@@ -1321,7 +1441,7 @@
         roi_done:(c,r,p,v) => `Siatka ${c}×${r}, ${p} punktów, ${v} komórek`, roi_added:(n,t) => `Dodano ${n} blok(ów), łącznie ${t} punktów`,
         roi_no_new:'Brak nowych tras do dodania (duplikaty lub puste)', roi_imported:'Zaimportowano: ',
         roi_hint_move:'Przesuń mapę — obszar pozostaje w centrum', roi_hint_edit:'Tryb edycji — przeciągnij rogi, przeciwległy zostaje na miejscu', roi_import_cancelled:'Import anulowany',
-        roi_track_no_pts:'Bieżąca trasa nie ma punktów w obszarze', roi_add_track_q:'<b>Dodać bieżącą trasę?</b>',
+        roi_track_no_pts:'Bieżąca trasa nie ma punktów w obszarze', roi_track_no_new:"Brak nowych punktów do zapisania", roi_track_appended:(n) => `Trasa uzupełniona (${n} nowych punktów)`, roi_track_saved_new:(n) => `Trasa zapisana w obszarze (${n} punktów)`, roi_autosaved:(n, t) => `Heat ${t}: zapisano ${n} nowych punktów`, roi_add_track_q:'<b>Dodać bieżącą trasę?</b>',
         roi_track_saved:'Trasa zapisana w obszarze (', roi_track_saved2:'Trasa zapisana w ', roi_cur_track:'Bieżąca trasa ',
         roi_cur_track2:'Bieżąca trasa',
         roi_export_fmt:'FORMAT EKSPORTU',
@@ -1367,7 +1487,7 @@
         panel_spectrum:'SZÍNSPEKTRUM CPS', panel_graph_map:'GRAFIKON TÉRKÉPEN',
         // -- GRAF A MERICI VELICINY ---------------------------------
         avg_label:'ÁTLAG CPS', ratio_label:'CPS / HÁTTÉR', hist_label:'CPS ELŐZMÉNYEK',
-        reset_graph:'GRAFIKON VISSZAÁLLÍTÁSA', background:'HÁTTÉR', cps_unit:'IMPULZUS MÁSODPERCENKÉNT',
+        reset_graph:'GRAFIKON VISSZAÁLLÍTÁSA', meas_btn:'MÉRÉS', meas_ref_tag:'REFERENCIA', meas_obj:'TÁRGY', meas_res:'KÜLÖNBSÉG', meas_ref_fill:'REF', meas_running:'MÉRÉS', cal_btn:"KALIBRÁLÁS", cal_title:"KALIBRÁCIÓ", cal_cps60:"ÁTLAG CPS 60 s", cal_usv_ref:"REFERENCIAMŰSZER µSv/h", cal_add:"PONT HOZZÁADÁSA", cal_manual:"KÉZI BEVITEL", cal_points:"PONTOK", cal_none:"Nincs pont", cal_active:"AKTÍV", cal_inactive:"INAKTÍV (min. 3 pont)", cal_wait:"Várakozás a teljes 60 s ablakra", cal_dev_rate:"A készülék µSv/h-t küld – kalibráció nincs használva", cal_invalid:"nem illeszkedik", cal_bad:"Érvénytelen érték", cal_saved:"Mentve: ", cal_imported:"Importált pontok: ", cal_import_err:"Importálási hiba: ", cal_del_q:"Pont törlése?", background:'HÁTTÉR', cps_unit:'IMPULZUS MÁSODPERCENKÉNT',
         close_hint:'2× ÉRINTÉS A BEZÁRÁSHOZ', avg_short:'ÁTLAG', graph_window:'grafikon hossza', graph_avg:'átlag', graph_height:'magasság', graph_line_color:'vonalszín', graph_bg:'háttér',
         graph_opacity:'átlátszóság', graph_position:'pozíció', hist_usv:'µSv/h ELŐZMÉNYEK', avg_usv:'ÁTLAG µSv/h',
         // -- TRASY / LOG / POZNAMKY ---------------------------------
@@ -1401,7 +1521,7 @@
         roi_added:(n,t) => `${n} blokk hozzáadva, összesen ${t} pont`, roi_no_new:'Nincs hozzáadható új útvonal (duplikátum vagy üres)',
         roi_imported:'Importálva: ', roi_hint_move:'Mozgassa a térképet — a terület középen marad',
         roi_hint_edit:'Szerkesztési mód — húzza a sarkokat, az átellenes sarkok helyben maradnak', roi_import_cancelled:'Importálás megszakítva',
-        roi_track_no_pts:'A jelenlegi útvonalnak nincsenek pontjai a területen', roi_add_track_q:'<b>Aktuális útvonal hozzáadása?</b>',
+        roi_track_no_pts:'A jelenlegi útvonalnak nincsenek pontjai a területen', roi_track_no_new:"Nincs új mentendő pont", roi_track_appended:(n) => `Útvonal kiegészítve (${n} új pont)`, roi_track_saved_new:(n) => `Útvonal mentve a területre (${n} pont)`, roi_autosaved:(n, t) => `Heat ${t}: ${n} új pont mentve`, roi_add_track_q:'<b>Aktuális útvonal hozzáadása?</b>',
         roi_track_saved:'Útvonal mentése a területen (', roi_track_saved2:'Útvonal mentve: ', roi_cur_track:'Aktuális útv. ',
         roi_cur_track2:'Aktuális útv.',
         roi_export_fmt:'EXPORT FORMÁTUM',
@@ -1468,6 +1588,7 @@
     const BAT_MIN_MV    = 3000;
     const BAT_MAX_MV    = 4200;
     let history=[], cpsBuffer=[], avgBuffer=[], bgValue=240;
+    const _meas = { open: false, ref: null, buf: [], t0: 0 };   // měření předmětu
     let port=null, reader=null, readingActive=false, lastUpdate=0, isConnected=false, lastCps=0;
     let lastRate = 0;      // µSv/h z RadPro (GET tubeRate)
     let lastRateTs = 0;    // čas posledního platného RATE — persistence 2s
@@ -1730,6 +1851,7 @@
       const _goMapBtn = document.getElementById('btn-go-to-map');
       if (_goMapBtn) _goMapBtn.textContent = T[LANG].go_to_map || 'PŘEJÍT NA MAPU';
       document.getElementById('avg-label').textContent       = L.avg_label;
+      measApplyLang();
       const _sl = document.getElementById('searching-label');
       if (_sl) _sl.textContent = L.wiz_searching_short || 'HLEDÁM...';
       const _sndLbl = document.querySelector('.snd-label');
@@ -2500,6 +2622,7 @@ window.onCurieConnected = function(typ, dname) {
       stopReconnectLoop();
       _reconnectInProgress = false;
       history = []; historyT = []; cpsBuffer = []; avgBuffer = []; lastUpdate = 0;
+      measResetData();
       _lastPacketTs = 0; _intervalSamples = []; _packetInterval = 500;
       // Reset µSv/h stavu při každém připojení
       lastRate = 0; lastRateTs = 0; deviceHasRate = false; displayUsv = false;
@@ -2629,6 +2752,7 @@ async function doConnect() {
         document.getElementById('data-panels').className    = 'data-panels visible';
         setStatus(T[LANG].connected, 'ok');
         history = []; historyT = []; cpsBuffer = []; avgBuffer = []; lastUpdate = 0;
+        measResetData();
         _lastPacketTs = 0; _intervalSamples = []; _packetInterval = 500;
         updateAvgDisplay();
         startReading();
@@ -2733,10 +2857,10 @@ function parseLine(line) {
         lastRateTs = Date.now();
         deviceHasRate = true;
       } else {
-        // Zařízení neposílá RATE= → vždy CPS mód
+        // Zařízení neposílá RATE= → CPS mód, µSv/h jen z aktivní kalibrace (≥ 3 body)
         lastRate = 0;
         deviceHasRate = false;
-        displayUsv = false;
+        displayUsv = displayUsv && calActive();
       }
 
       if (soundMode === 1) scheduleClicks(cps);
@@ -2759,13 +2883,18 @@ function parseLine(line) {
       const avg  = (now - _cfAvg1sTs < 2000) ? _cfAvg1s : avgBuf;
       const cpsD = avg;
       _lastCpsDisp = cpsD;
+      // Kalibrovaný µSv/h — jen pro zobrazení (CSV, mapa a HEAT dál jen z RATE= zařízení)
+      const _calR = (!deviceHasRate && calActive()) ? calConvert(cpsD) : null;
 
-      avgBuffer.push(displayUsv && lastRate > 0 ? lastRate : cps);
+      // Buffery průměrů: µSv/h jen ze zařízení s RATE=, jinak CPS (kalibrace se převádí až z průměru okna)
+      const _avgV = displayUsv && lastRate > 0 ? lastRate : cps;
+      avgBuffer.push({ v: _avgV, t: now });
+      if (_meas.open && _meas.ref) _meas.buf.push({ v: _avgV, t: now });
       updateAvgDisplay();
 
       if (bg !== null && bg > 0) bgValue = bg;
       // Graf a průměr — CPS nebo µSv/h podle módu
-      const histVal = displayUsv && lastRate > 0 ? lastRate : avg;
+      const histVal = displayUsv && lastRate > 0 ? lastRate : (displayUsv && _calR !== null ? _calR : avg);
       history.push(histVal);
       historyT.push(now);
       _graphTrim(now);
@@ -2777,7 +2906,9 @@ function parseLine(line) {
       const cpsPanelEl   = document.getElementById('cps-panel');
       // µSv/h persistence — použít lastRate pokud je mladší než 2s
       const _rateValid = lastRate > 0 && (Date.now() - lastRateTs < 2000);
-      if (displayUsv && _rateValid) {
+      const _usvVal = _rateValid ? lastRate : _calR;
+      const _usvOn  = displayUsv && _usvVal !== null;
+      if (_usvOn) {
         if (graphLabelEl) graphLabelEl.textContent = T[LANG].hist_usv;
         if (avgLabelEl)   avgLabelEl.textContent = T[LANG].avg_usv;
         if (cpsPanelEl)   cpsPanelEl.dataset.label = 'µSv/h';
@@ -2790,8 +2921,8 @@ function parseLine(line) {
       // Hlavní displej — velká/malá hodnota
       const el = document.getElementById('cps-value');
       const unitEl = document.getElementById('cps-unit');
-      if (displayUsv && _rateValid) {
-        el.textContent = fmtVal(lastRate);
+      if (_usvOn) {
+        el.textContent = fmtVal(_usvVal);
         if (unitEl) unitEl.textContent = 'µSv/h';
         const smEl = document.getElementById('cps-small-val');
         if (smEl) { smEl.textContent = fmtVal(cpsD) + ' CPS'; smEl.style.display = 'block'; }
@@ -2799,7 +2930,7 @@ function parseLine(line) {
         el.textContent = fmtVal(cpsD);
         if (unitEl) unitEl.textContent = T[LANG].cps_unit;
         const smEl = document.getElementById('cps-small-val');
-        if (smEl) { const _sv = _rateValid ? fmtVal(lastRate) + ' µSv/h' : ''; smEl.textContent = _sv; smEl.style.display = _sv ? 'block' : 'none'; }
+        if (smEl) { const _sv = _usvVal !== null ? fmtVal(_usvVal) + ' µSv/h' : ''; smEl.textContent = _sv; smEl.style.display = _sv ? 'block' : 'none'; }
       }
       const r = bgValue > 0 ? cpsD / bgValue : 1;
       el.className = 'cps-num';
@@ -3143,10 +3274,11 @@ function updateBigHeader() {
       document.getElementById('big-time').textContent        = document.getElementById('graph-time').textContent;
     }
 function toggleDisplayMode() {
+      const _calOk  = !deviceHasRate && calActive();
       const hasCps  = lastCps > 0;
-      const hasUsv  = lastRate > 0;
-      // Přepínat jen pokud zařízení posílá RATE= a cílový mód má data
-      if (!deviceHasRate) return;         // zařízení neposílá RATE= → nelze přepnout
+      const hasUsv  = lastRate > 0 || _calOk;
+      // Přepínat jen pokud zařízení posílá RATE= (nebo je aktivní kalibrace) a cílový mód má data
+      if (!deviceHasRate && !_calOk) return; // bez RATE= a bez kalibrace → nelze přepnout
       if (!displayUsv && !hasUsv) return; // chceme přepnout na µSv/h ale není
       if (displayUsv && !hasCps) return;  // chceme přepnout na CPS ale není
       displayUsv = !displayUsv;
@@ -3154,6 +3286,7 @@ function toggleDisplayMode() {
       if (navigator.vibrate) navigator.vibrate(50);
       // Reset grafu
       history = []; historyT = []; cpsBuffer = []; avgBuffer = [];
+      measResetData();
       document.getElementById('graph-time').textContent = '0 s';
       updateAvgDisplay();
       // Popisky
@@ -3173,14 +3306,15 @@ function toggleDisplayMode() {
       const el     = document.getElementById('cps-value');
       const unitEl = document.getElementById('cps-unit');
       const smEl   = document.getElementById('cps-small-val');
+      const _uv = deviceHasRate ? lastRate : (_calOk ? calConvert(_lastCpsDisp || lastCps) : 0);
       if (displayUsv) {
-        el.textContent = fmtVal(lastRate);
+        el.textContent = fmtVal(_uv);
         if (unitEl) unitEl.textContent = 'µSv/h';
         if (smEl) { smEl.textContent = fmtVal(_lastCpsDisp || lastCps) + ' CPS'; smEl.style.display = 'block'; }
       } else {
         el.textContent = fmtVal(_lastCpsDisp || lastCps);
         if (unitEl) unitEl.textContent = T[LANG].cps_unit;
-        if (smEl) { const _sv = lastRate > 0 ? fmtVal(lastRate) + ' µSv/h' : ''; smEl.textContent = _sv; smEl.style.display = _sv ? 'block' : 'none'; }
+        if (smEl) { const _sv = _uv > 0 ? fmtVal(_uv) + ' µSv/h' : ''; smEl.textContent = _sv; smEl.style.display = _sv ? 'block' : 'none'; }
       }
       drawGraph();
       drawMapGraph();
@@ -3476,37 +3610,84 @@ function drawSpectrumPreview() {
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, W, 18);
     }
+function _avgFmt(v) {
+      // CPS: ≥100 celé číslo, jinak 1 desetinné místo; µSv/h: podle velikosti
+      const a = Math.abs(v);
+      if (displayUsv) {
+        if (a < 1)   return v.toFixed(3);
+        if (a < 10)  return v.toFixed(2);
+        if (a < 100) return v.toFixed(1);
+        return Math.round(v).toString();
+      }
+      return a >= 100 ? Math.round(v).toString() : v.toFixed(1);
+    }
+function _avgTrim(buf) {
+      // Buffer drží jen posledních ~61 s (podle času posledního vzorku)
+      if (!buf.length) return;
+      const last = buf[buf.length - 1].t;
+      while (buf.length && buf[0].t < last - 61000) buf.shift();
+    }
+function _avgWindow(buf, sec) {
+      // Průměr okna sec podle času — jen když buffer pokrývá celou délku okna
+      // (nezávisí na frekvenci vzorků ani na odhadu _packetInterval)
+      if (!buf.length) return null;
+      const ms   = sec * 1000;
+      const last = buf[buf.length - 1].t;
+      if (last - buf[0].t < ms - 50) return null;
+      let sum = 0, n = 0;
+      for (let i = buf.length - 1; i >= 0 && buf[i].t > last - ms; i--) { sum += buf[i].v; n++; }
+      if (!n) return null;
+      // Doba sběru impulzů pro Poissona — počet vzorků × interval, max délka okna
+      return { avg: sum / n, t: Math.min(sec, n * _packetInterval / 1000) };
+    }
+function _wDisp(w) {
+      // Hodnota okna v zobrazené jednotce + σ (null = σ nelze určit)
+      if (!w) return null;
+      const sigCps = w.avg > 0 ? Math.sqrt(w.avg / w.t) : 0;
+      if (!displayUsv) return { v: w.avg, sig: sigCps };
+      if (!deviceHasRate) {
+        // µSv/h z kalibrace — buffer je v CPS, převádí se průměr okna; σ = směrnice × σ_CPS
+        const c = calConvert(w.avg);
+        if (c === null) return null;
+        return { v: c, sig: calSlope(w.avg) * sigCps };
+      }
+      return { v: w.avg, sig: null };   // µSv/h ze zařízení — σ nelze určit
+    }
+function _relErrTxt(d) {
+      return (d && d.sig !== null && d.v > 0) ? '±' + (d.sig / d.v * 100).toFixed(1) + '%' : '--';
+    }
 function updateAvgDisplay() {
       const windows = [10, 20, 40, 60];
       let bestAvg = null;
-      // avgBuffer drží max 60s dat
-      const maxN = Math.round(60000 / _packetInterval);
-      if (avgBuffer.length > maxN) avgBuffer.splice(0, avgBuffer.length - maxN);
+      _avgTrim(avgBuffer);
+      const frozen = _meas.open && _meas.ref;
       for (const sec of windows) {
-        const n = Math.max(1, Math.round(sec * 1000 / _packetInterval));
-        const slice = avgBuffer.slice(-n);
         const elVal = document.getElementById('avg-val-' + sec);
         const elErr = document.getElementById('avg-err-' + sec);
         if (!elVal) continue;
-        if (slice.length < 2) {
+        const live = _wDisp(_avgWindow(avgBuffer, sec));
+        if (live && bestAvg === null) bestAvg = live.v;
+        // Při měření předmětu ukazuje řádek zafixovanou referenci
+        const d = frozen ? _wDisp(_meas.ref[sec]) : live;
+        if (!d) {
           elVal.textContent = '--';
           if (elErr) elErr.textContent = '--';
         } else {
-          const avg = slice.reduce((a,b) => a+b, 0) / slice.length;
-          const err = avg > 0 ? (Math.sqrt(avg) / Math.sqrt(slice.length) / avg * 100) : 0;
-          elVal.textContent = avg >= 100 ? Math.round(avg).toString() : avg.toFixed(1);
-          if (elErr) elErr.textContent = '±' + err.toFixed(1) + '%';
-          if (bestAvg === null) bestAvg = avg;
+          elVal.textContent = _avgFmt(d.v);
+          if (elErr) elErr.textContent = _relErrTxt(d);
         }
       }
       const bigEl = document.getElementById('big-avg-small');
       if (bigEl) bigEl.textContent = bestAvg !== null
-        ? T[LANG].avg_short + ' ' + (bestAvg >= 100 ? Math.round(bestAvg) : bestAvg.toFixed(1))
+        ? T[LANG].avg_short + ' ' + _avgFmt(bestAvg)
         : T[LANG].avg_short + ' --';
+      updateMeasDisplay();
+      calPanelLive();
     }
 function resetGraph() {
       // Vynulovat graf, průměry 10/20/40/60 s, červenou čáru i měřítko osy Y
       history = []; historyT = []; cpsBuffer = []; avgBuffer = [];
+      measResetData();
       for (const k in _graphRanges) delete _graphRanges[k];
       _graphMACache = null;
       updateAvgDisplay();
@@ -3514,6 +3695,311 @@ function resetGraph() {
       if (bigMode) drawBigGraph();
       document.getElementById('graph-time').textContent = '0 s';
       drawMapGraph();
+    }
+
+    // ============================================================
+    // MĚŘENÍ PŘEDMĚTU — reference (zafixovaný průměr) vs. předmět
+    // ============================================================
+function measResetData() {
+      // Vynulování (graf, připojení, přepnutí CPS/µSv) — sekce zůstane otevřená,
+      // reference se znovu plní živě až do dalšího MĚŘIT
+      _meas.ref = null;
+      _meas.buf = [];
+      _meas.t0 = 0;
+    }
+function measStart() {
+      if (!_meas.open || !_meas.ref) {
+        // První MĚŘIT (nebo po vynulování) — zafixovat aktuální průměry jako referenci
+        const ref = {};
+        for (const sec of [10, 20, 40, 60]) ref[sec] = _avgWindow(avgBuffer, sec);
+        _meas.ref = ref;
+      }
+      // Opakované MĚŘIT — reference zůstává, měří se nový předmět
+      _meas.open = true;
+      _meas.buf = [];
+      _meas.t0 = Date.now();
+      if (navigator.vibrate) navigator.vibrate(50);
+      updateAvgDisplay();
+    }
+function measClose() {
+      _meas.open = false;
+      measResetData();
+      updateAvgDisplay();
+    }
+function measApplyLang(L) {
+      L = L || T[LANG];
+      const set = (id, txt) => { const el = document.getElementById(id); if (el && txt) el.textContent = txt; };
+      set('meas-btn', L.meas_btn);
+      set('meas-ref-tag', L.meas_ref_tag);
+      set('meas-obj-label', L.meas_obj);
+      set('meas-res-label', L.meas_res);
+      set('cal-btn', L.cal_btn);
+      set('cal-title', L.cal_title);
+      set('cal-cps60-label', L.cal_cps60);
+      set('cal-usv-label', L.cal_usv_ref);
+      set('cal-add-btn', L.cal_add);
+      set('cal-manual-label', L.cal_manual);
+      set('cal-points-label', L.cal_points);
+      updateMeasDisplay();
+      calRender();
+    }
+function updateMeasDisplay() {
+      const L = T[LANG];
+      const open = _meas.open;
+      const frozen = open && !!_meas.ref;
+      const show = (id, on, disp) => { const el = document.getElementById(id); if (el) el.style.display = on ? disp : 'none'; };
+      show('meas-rows', open, 'block');
+      show('meas-close', open, 'inline-block');
+      show('meas-count', open, 'inline');
+      show('meas-ref-tag', frozen, 'inline');
+      const grid = document.getElementById('avg-grid');
+      if (grid) grid.classList.toggle('frozen', frozen);
+      if (!open) return;
+
+      // Odpočet — plnění reference / měření předmětu
+      const cnt = document.getElementById('meas-count');
+      if (cnt) {
+        if (frozen) {
+          const el = Math.min(60, Math.floor((Date.now() - _meas.t0) / 1000));
+          cnt.textContent = (L.meas_running || 'MĚŘÍM') + ' ' + el + '/60 s';
+        } else {
+          const el = avgBuffer.length
+            ? Math.min(60, Math.floor((avgBuffer[avgBuffer.length - 1].t - avgBuffer[0].t) / 1000)) : 0;
+          cnt.textContent = (L.meas_ref_fill || 'REF') + ' ' + el + '/60 s';
+        }
+      }
+
+      // Buffer předmětu drží ~60 s dat (dál se klouzavě přepisuje)
+      _avgTrim(_meas.buf);
+
+      for (const sec of [10, 20, 40, 60]) {
+        const oVal = document.getElementById('meas-obj-val-' + sec);
+        const oErr = document.getElementById('meas-obj-err-' + sec);
+        const rVal = document.getElementById('meas-res-val-' + sec);
+        const rErr = document.getElementById('meas-res-err-' + sec);
+        const rCell = document.getElementById('meas-res-cell-' + sec);
+        if (!oVal || !rVal) continue;
+        const obj = frozen ? _wDisp(_avgWindow(_meas.buf, sec)) : null;
+        const ref = frozen ? _wDisp(_meas.ref[sec]) : null;
+        if (obj) {
+          oVal.textContent = _avgFmt(obj.v);
+          oErr.textContent = _relErrTxt(obj);
+        } else {
+          oVal.textContent = '--';
+          oErr.textContent = '--';
+        }
+        if (obj && ref) {
+          const d = obj.v - ref.v;
+          rVal.textContent = (d >= 0 ? '+' : '') + _avgFmt(d);
+          const ratio = ref.v > 0 ? (obj.v / ref.v).toFixed(2) + '×' : '--';
+          if (obj.sig !== null && ref.sig !== null) {
+            // σ rozdílu: √(σ_ref² + σ_předmět²)
+            const sig = Math.sqrt(ref.sig * ref.sig + obj.sig * obj.sig);
+            rErr.textContent = '±' + _avgFmt(sig) + ' · ' + ratio;
+          } else {
+            rErr.textContent = ratio;
+          }
+        } else {
+          rVal.textContent = '--';
+          rErr.textContent = '--';
+        }
+        if (rCell) rCell.classList.toggle('meas-hl', sec === 60);
+      }
+    }
+
+    // ============================================================
+    // KALIBRACE CPS → µSv/h — tabulka pro každé zařízení zvlášť (localStorage)
+    // Jen pro zařízení bez RATE=, aktivní od 3 platných bodů, jen pro zobrazení
+    // ============================================================
+const _cal = { key: null, pts: [], ok: [], valid: [] };
+function calDevKey() {
+      const n = (_connType === 'USB' && deviceName) ? deviceName : _savedBtDevice;
+      return (n && String(n).trim()) || 'default';
+    }
+function _calCheck(pts) {
+      // Kontrola monotonie v pořadí zadání: bod je platný, jen když s každým dříve platným bodem
+      // roste CPS i µSv/h stejným směrem — nesedící (typicky právě přidaný) bod se označí a nepočítá
+      const ok = [], valid = [];
+      for (const p of pts) {
+        const fits = valid.every(q => (q.cps < p.cps && q.usv < p.usv) || (q.cps > p.cps && q.usv > p.usv));
+        ok.push(fits);
+        if (fits) valid.push(p);
+      }
+      return ok;
+    }
+function _calLoad(force) {
+      const key = calDevKey();
+      if (!force && _cal.key === key) return;
+      let pts = [];
+      try {
+        const arr = JSON.parse(lsGet('cal_' + key, '[]'));
+        if (Array.isArray(arr)) pts = arr.filter(p => p && isFinite(p.cps) && isFinite(p.usv) && p.cps > 0 && p.usv > 0)
+                                         .map(p => ({ cps: +p.cps, usv: +p.usv }));
+      } catch(e) {}
+      _calSet(key, pts, false);
+    }
+function _calSet(key, pts, save) {
+      // pts zůstávají v pořadí zadání (rozhoduje o kontrole monotonie), platné body seřazené podle CPS
+      _cal.key = key;
+      _cal.pts = pts;
+      const ok = _calCheck(pts);
+      _cal.ok = ok;
+      _cal.valid = pts.filter((p, i) => ok[i]).sort((a, b) => a.cps - b.cps);
+      if (save) lsSet('cal_' + key, JSON.stringify(pts));
+    }
+function calActive() {
+      _calLoad(false);
+      return _cal.valid.length >= 3;
+    }
+function _calSeg(c) {
+      // Úsek pro CPS c: pod nejnižším bodem úměra přes nulu, nad nejvyšším prodloužení posledního úseku
+      const v = _cal.valid;
+      if (c <= v[0].cps) return { c0: 0, u0: 0, k: v[0].usv / v[0].cps };
+      for (let i = 1; i < v.length; i++) {
+        if (c <= v[i].cps || i === v.length - 1) {
+          const a = v[i - 1], b = v[i];
+          return { c0: a.cps, u0: a.usv, k: (b.usv - a.usv) / (b.cps - a.cps) };
+        }
+      }
+    }
+function calConvert(c) {
+      if (!calActive() || !isFinite(c)) return null;
+      const g = _calSeg(c);
+      return Math.max(0, g.u0 + (c - g.c0) * g.k);
+    }
+function calSlope(c) {
+      if (!calActive() || !isFinite(c)) return 0;
+      return _calSeg(c).k;
+    }
+function _calNum(str) {
+      const v = parseFloat(String(str || '').replace(',', '.').trim());
+      return isFinite(v) && v > 0 ? v : null;
+    }
+function calOpen() {
+      _calLoad(true);
+      const ov = document.getElementById('cal-overlay');
+      if (ov) ov.classList.add('visible');
+      calRender();
+      calPanelLive();
+    }
+function calClose() {
+      const ov = document.getElementById('cal-overlay');
+      if (ov) ov.classList.remove('visible');
+    }
+function _calLiveW() {
+      // Průměr CPS za 60 s — jen když buffer obsahuje CPS (ne µSv/h ze zařízení)
+      if (deviceHasRate && displayUsv) return null;
+      return _avgWindow(avgBuffer, 60);
+    }
+function calPanelLive() {
+      const ov = document.getElementById('cal-overlay');
+      if (!ov || !ov.classList.contains('visible')) return;
+      const L = T[LANG];
+      const w = _calLiveW();
+      const live = document.getElementById('cal-live');
+      if (live) live.textContent = w
+        ? (w.avg >= 100 ? Math.round(w.avg) : w.avg.toFixed(1)) + ' CPS  ±' + (1 / Math.sqrt(w.avg * w.t) * 100).toFixed(1) + '%'
+        : '--';
+      const note = document.getElementById('cal-note');
+      if (note) note.textContent = deviceHasRate ? (L.cal_dev_rate || '') : (!isConnected ? '' : (w ? '' : (L.cal_wait || '')));
+      const btn = document.getElementById('cal-add-btn');
+      if (btn) btn.disabled = !w || deviceHasRate;
+    }
+function calRender() {
+      const L = T[LANG];
+      const dev = document.getElementById('cal-dev');
+      if (dev) dev.textContent = _cal.key || calDevKey();
+      const st = document.getElementById('cal-status');
+      if (st) st.textContent = _cal.valid.length + '/' + _cal.pts.length + ' – ' +
+        (_cal.valid.length >= 3 ? (L.cal_active || 'AKTIVNÍ') : (L.cal_inactive || 'NEAKTIVNÍ'));
+      const list = document.getElementById('cal-list');
+      if (!list) return;
+      if (!_cal.pts.length) { list.innerHTML = '<div class="cal-pt"><span>' + (L.cal_none || '--') + '</span></div>'; return; }
+      const order = _cal.pts.map((p, i) => i).sort((a, b) => _cal.pts[a].cps - _cal.pts[b].cps);
+      list.innerHTML = order.map(i => {
+        const p = _cal.pts[i];
+        const bad = !_cal.ok[i];
+        const cps = p.cps >= 100 ? Math.round(p.cps) : p.cps.toFixed(1);
+        return '<div class="cal-pt' + (bad ? ' bad' : '') + '">' +
+          '<span>' + cps + ' CPS</span>' +
+          '<span>' + p.usv.toFixed(3) + ' µSv/h</span>' +
+          '<span class="cal-k">' + (bad ? (L.cal_invalid || '!') : (p.usv / p.cps).toExponential(2)) + '</span>' +
+          '<button onclick="calDel(' + i + ')">✕</button></div>';
+      }).join('');
+    }
+function _calAdd(cps, usv) {
+      const pts = _cal.pts.slice();
+      pts.push({ cps: Math.round(cps * 100) / 100, usv: usv });
+      _calSet(_cal.key || calDevKey(), pts, true);
+      calRender();
+      updateAvgDisplay();
+    }
+function calAddLive() {
+      const w = _calLiveW();
+      const inp = document.getElementById('cal-usv-in');
+      const usv = _calNum(inp && inp.value);
+      if (!w || deviceHasRate) return;
+      if (usv === null) { cfInfo(T[LANG].cal_bad || 'Neplatná hodnota'); return; }
+      _calAdd(w.avg, usv);
+      if (inp) inp.value = '';
+      if (navigator.vibrate) navigator.vibrate(50);
+    }
+function calAddManual() {
+      const ci = document.getElementById('cal-man-cps');
+      const ui = document.getElementById('cal-man-usv');
+      const cps = _calNum(ci && ci.value);
+      const usv = _calNum(ui && ui.value);
+      if (cps === null || usv === null) { cfInfo(T[LANG].cal_bad || 'Neplatná hodnota'); return; }
+      _calAdd(cps, usv);
+      if (ci) ci.value = '';
+      if (ui) ui.value = '';
+    }
+function calDel(i) {
+      cfConfirm(T[LANG].cal_del_q || 'Smazat bod?', () => {
+        const pts = _cal.pts.slice();
+        pts.splice(i, 1);
+        _calSet(_cal.key || calDevKey(), pts, true);
+        calRender();
+        updateAvgDisplay();
+      });
+    }
+function calExport() {
+      const key = _cal.key || calDevKey();
+      const data = JSON.stringify({ type: 'curiefinder-calibration', device: key, points: _cal.pts }, null, 1);
+      const fname = 'CF_kal_' + key.replace(/[^a-zA-Z0-9_\-]/g, '_') + '_' + _fileTsSuffix() + '.json';
+      if (IS_ANDROID && typeof AndroidSerial !== 'undefined' && AndroidSerial.saveCSV) {
+        AndroidSerial.saveCSV(data, fname);
+      } else {
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([data], { type: 'application/json' }));
+        a.download = fname;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+      }
+      cfInfo((T[LANG].cal_saved || 'Uloženo: ') + fname);
+    }
+function calImport(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const d = JSON.parse(e.target.result);
+          const arr = Array.isArray(d) ? d : d.points;
+          if (!Array.isArray(arr)) throw new Error('points');
+          const pts = arr.filter(p => p && isFinite(p.cps) && isFinite(p.usv) && +p.cps > 0 && +p.usv > 0)
+                         .map(p => ({ cps: +p.cps, usv: +p.usv }));
+          // Import nahradí tabulku aktuálního zařízení
+          _calSet(calDevKey(), pts, true);
+          calRender();
+          updateAvgDisplay();
+          cfInfo((T[LANG].cal_imported || 'Importováno bodů: ') + pts.length);
+        } catch(err) {
+          cfInfo((T[LANG].cal_import_err || 'Chyba importu: ') + err.message);
+        }
+        event.target.value = '';
+      };
+      reader.readAsText(file, 'UTF-8');
     }
 function updateRatio(cps, bg) {
       if (!bg) return;
@@ -4570,8 +5056,12 @@ function addTrackPoint(lat, lon, cps, tMs) {
       _trackBreak = false;  // od tohoto bodu trasa pokračuje normálně
       trackPoints.push(point);
       if (logActive) _dailyKmUpdate(lat, lon, ts, _hadBreak);
-      // Při překročení MAX_MEMORY_POINTS odebíráme ze začátku
-      if (trackPoints.length > MAX_MEMORY_POINTS) trackPoints.shift();
+      // Při překročení MAX_MEMORY_POINTS odebíráme ze začátku — při zobrazeném heatu
+      // nejdřív uložit do oblasti, pokud odcházející bod ještě nebyl zkontrolovaný/uložený
+      if (trackPoints.length > MAX_MEMORY_POINTS) {
+        if (_roiHeatVisible && _roiHeatFile && _roiChk.get(trackPoints[0]) !== _roiHeatFile) roiAutoSave(_roiHeatFile);
+        trackPoints.shift();
+      }
 
       if (leafletMap && displayMode !== 'none') {
         // Živá trasa — výchozí SVG renderer; nejstarší segmenty nad MAX_MEMORY_POINTS se odebírají
@@ -6981,7 +7471,8 @@ function roiCheckImportConflict(filename) {
     }
 function roiMapToggle() {
       if (_roiHeatVisible) {
-        // Skryt
+        // Skryt — nejdřív uložit body trasy, které ještě nejsou v oblasti
+        roiAutoSave(_roiHeatFile);
         if (_roiHeatCanvas) { leafletMap.removeLayer(_roiHeatCanvas); _roiHeatCanvas = null; }
         if (_roiBoundsRect) { leafletMap.removeLayer(_roiBoundsRect); _roiBoundsRect = null; }
         _roiHeatVisible = false;
@@ -7004,19 +7495,12 @@ function roiMapToggle() {
         }
         _roiHeatFile = targetFile;
 
-        // Pokud je aktualni trasa v pameti, nabidnout ulozeni - tri volby
-        if (typeof trackPoints !== 'undefined' && trackPoints.length > 0) {
-          const firstTs = trackPoints[0]?.ts || trackPoints[0]?.timestamp || '';
-          const existingStarts = new Set();
-          for (const blk of (_roiOpenData.blocks || [])) {
-            if (blk.sourceStart) existingStarts.add(blk.sourceStart);
-            if (blk.mergedStarts) blk.mergedStarts.forEach(s => existingStarts.add(s));
-          }
-          const alreadyIn = (firstTs && existingStarts.has(firstTs));
-          if (!alreadyIn) {
-            roiShowTrackDialog(targetFile);
-            return;
-          }
+        // Pokud má aktuální trasa v oblasti body, které tam ještě nejsou, nabídnout uložení - tři volby
+        // (dřív se porovnával jen čas prvního bodu trasy — ten se během jízdy nemění, takže
+        //  po prvním uložení se další body už nikdy nenabídly)
+        if (typeof trackPoints !== 'undefined' && trackPoints.length > 0 && roiNewTrackPts(_roiOpenData).length > 0) {
+          roiShowTrackDialog(targetFile);
+          return;
         }
         roiGenerateAndShow(true);
       }
@@ -7043,16 +7527,8 @@ function roiMapToggle() {
       } catch(e) { roiStatus(T[LANG].roi_error_generic(e.message)); return; }
       _roiHeatFile = targetFile;
 
-      if (typeof trackPoints !== 'undefined' && trackPoints.length > 0) {
-        const firstTs = trackPoints[0]?.ts || trackPoints[0]?.timestamp || '';
-        const existingStarts = new Set();
-        for (const blk of (_roiOpenData.blocks || [])) {
-          if (blk.sourceStart) existingStarts.add(blk.sourceStart);
-          if (blk.mergedStarts) blk.mergedStarts.forEach(s => existingStarts.add(s));
-        }
-        const alreadyIn = (firstTs && existingStarts.has(firstTs));
-        if (!alreadyIn) roiAddCurrentTrackToFile(targetFile);
-      }
+      // Vždy uložit body trasy, které v oblasti ještě nejsou (duplicity řeší roiPrepareNewBatch)
+      if (typeof trackPoints !== 'undefined' && trackPoints.length > 0) roiAddCurrentTrackToFile(targetFile, true);
       roiGenerateAndShow(true);
     }
 
@@ -7094,54 +7570,111 @@ function roiMapToggle() {
       if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
       else init();
     })();
-function roiAddCurrentTrackToFile(filename) {
-      if (!_roiOpenData || !trackPoints || trackPoints.length === 0) return;
-      const b = _roiOpenData.bounds;
-      const firstTs = trackPoints[0]?.ts || trackPoints[0]?.timestamp || '';
+// Body aktuální trasy uvnitř oblasti (data.bounds), které v žádném bloku oblasti ještě nejsou.
+// Seřazené podle TS, bez duplicit proti všem blokům (klíč lat+lon+ts+cps).
+function roiNewTrackPts(data) {
+      if (!data || typeof trackPoints === 'undefined' || !trackPoints.length) return [];
+      const b = data.bounds;
+      let latMin, latMax, lonMin, lonMax;
+      if (b) {
+        latMin = Math.min(b.lat0, b.lat1); latMax = Math.max(b.lat0, b.lat1);
+        lonMin = Math.min(b.lon0, b.lon1); lonMax = Math.max(b.lon0, b.lon1);
+      }
       const pts = [];
       for (const p of trackPoints) {
         if (!p.lat || !p.lon || p.cps <= 0) continue;
-        if (b) {
-          const latMin = Math.min(b.lat0, b.lat1), latMax = Math.max(b.lat0, b.lat1);
-          const lonMin = Math.min(b.lon0, b.lon1), lonMax = Math.max(b.lon0, b.lon1);
-          if (p.lat < latMin || p.lat > latMax || p.lon < lonMin || p.lon > lonMax) continue;
-        }
+        if (b && (p.lat < latMin || p.lat > latMax || p.lon < lonMin || p.lon > lonMax)) continue;
         pts.push({ lat: p.lat, lon: p.lon, cps: p.cps, ts: p.ts || p.timestamp || '' });
       }
-      if (!pts.length) { roiStatus(T[LANG].roi_track_no_pts || 'Aktuální trasa nemá body v oblasti'); return; }
-      if (!_roiOpenData.blocks) _roiOpenData.blocks = [];
-
-      // Jedna trasa = jeden blok — pokud existuje blok tras s mezerou <= 2,5h, doplnit ho
-      // (pro hledání cíle použít poslední bod nové dávky — firstTs je začátek CELÉ relace a nemění se
-      // mezi opakovanými přidáními, takže by proti rostoucímu lastMs bloku dával vždy záporný gap)
-      const lastNewTs = pts.length ? (pts[pts.length - 1].ts || firstTs) : firstTs;
-      const existIdx = roiFindMergeBlock(_roiOpenData.blocks, lastNewTs);
-      // Nová dávka: seřadit sama v sobě podle TS a odstranit duplicity proti VŠEM bodům v oblasti
-      // (ne jen proti cílovému bloku) — pak se připojí na konec, nikdy nepřeskládá už uložená data.
-      const preparedPts = roiPrepareNewBatch(_roiOpenData.blocks, pts);
-      if (!preparedPts.length) { roiStatus(T[LANG].roi_track_no_pts || 'Aktuální trasa nemá body v oblasti'); return; }
-      if (existIdx >= 0) {
-        _roiOpenData.blocks[existIdx].data.push(...preparedPts);
-        _roiOpenData.blocks[existIdx].points = _roiOpenData.blocks[existIdx].data.length;
-        roiSave(filename, _roiOpenData, _roiOpenData.blocks);
-        roiStatus('Trasa doplněna (' + preparedPts.length + ' nových bodů)');
-      } else {
-        // Nový blok
-        const blk = {
-          name: 'Aktuální trasa ' + localTimestamp().substring(0, 16),
-          visible: true,
-          sourceStart: firstTs,
-          sourceFile: '',
-          points: preparedPts.length,
-          data: preparedPts
-        };
-        _roiOpenData.blocks.push(blk);
-        roiSave(filename, _roiOpenData, _roiOpenData.blocks);
-        roiStatus('Trasa uložena do oblasti (' + preparedPts.length + ' bodů)');
-      }
-      const item = _roiList.find(r => r.filename === filename);
-      if (item) item.blockCount = _roiOpenData.blocks.length;
+      if (!pts.length) return [];
+      return roiPrepareNewBatch(data.blocks || [], pts);
     }
+
+// Body trasy, které už byly proti oblasti zkontrolované/uložené: bod → filename oblasti.
+// WeakMap — nic se nepřidává do objektů trackPoints a po shift() se záznam uvolní sám.
+const _roiChk = new WeakMap();
+function _roiMarkChecked(filename) {
+      if (typeof trackPoints === 'undefined') return;
+      for (const p of trackPoints) _roiChk.set(p, filename);
+    }
+
+// Připojí nové body aktuální trasy do data a uloží soubor oblasti.
+// Jedna trasa = jeden blok — pokud existuje blok s mezerou <= 2,5 h, doplní se do něj.
+// Vrací { n: počet nových bodů, merged: doplněn existující blok, inArea: trasa má body v oblasti }.
+function roiAppendTrackToData(data, filename) {
+      const res = { n: 0, merged: false, inArea: false };
+      if (!data || typeof trackPoints === 'undefined' || !trackPoints.length) return res;
+      const b = data.bounds;
+      res.inArea = !b || trackPoints.some(p => p.lat && p.lon &&
+        p.lat >= Math.min(b.lat0, b.lat1) && p.lat <= Math.max(b.lat0, b.lat1) &&
+        p.lon >= Math.min(b.lon0, b.lon1) && p.lon <= Math.max(b.lon0, b.lon1));
+      const preparedPts = roiNewTrackPts(data);
+      if (preparedPts.length) {
+        if (!data.blocks) data.blocks = [];
+        const firstTs = trackPoints[0]?.ts || trackPoints[0]?.timestamp || '';
+        // Cíl hledat podle posledního bodu nové dávky (firstTs je začátek relace a vůči rostoucímu
+        // lastMs bloku by dával záporný gap)
+        const lastNewTs = preparedPts[preparedPts.length - 1].ts || firstTs;
+        const existIdx = roiFindMergeBlock(data.blocks, lastNewTs);
+        if (existIdx >= 0) {
+          data.blocks[existIdx].data.push(...preparedPts);
+          data.blocks[existIdx].points = data.blocks[existIdx].data.length;
+          res.merged = true;
+        } else {
+          data.blocks.push({
+            name: 'Aktuální trasa ' + localTimestamp().substring(0, 16),
+            visible: true,
+            sourceStart: firstTs,
+            sourceFile: '',
+            points: preparedPts.length,
+            data: preparedPts
+          });
+        }
+        roiSave(filename, data, data.blocks);
+        res.n = preparedPts.length;
+        const item = _roiList.find(r => r.filename === filename);
+        if (item) item.blockCount = data.blocks.length;
+      }
+      _roiMarkChecked(filename);
+      return res;
+    }
+
+function roiAddCurrentTrackToFile(filename, quiet) {
+      if (!_roiOpenData || !trackPoints || trackPoints.length === 0) return 0;
+      const L = T[LANG];
+      const r = roiAppendTrackToData(_roiOpenData, filename);
+      if (!r.n) {
+        // Bez nových bodů nic nehlásit při dlouhém stisku (quiet); jinak rozlišit "mimo oblast" a "už uloženo"
+        if (!quiet) roiStatus(r.inArea ? L.roi_track_no_new : L.roi_track_no_pts);
+        return 0;
+      }
+      roiStatus(r.merged ? L.roi_track_appended(r.n) : L.roi_track_saved_new(r.n));
+      return r.n;
+    }
+
+// Automatické ukládání do zobrazené heat oblasti (bez ohledu na LOG):
+// 1×/min, při skrytí heatu, při přepnutí na jinou oblast a před odebráním bodu z paměti (shift).
+function roiAutoSave(filename) {
+      filename = filename || _roiHeatFile;
+      if (!filename || typeof trackPoints === 'undefined' || !trackPoints.length) return 0;
+      if (!IS_ANDROID || typeof AndroidSerial === 'undefined') return 0;
+      try {
+        let data;
+        if (_roiOpenFile === filename && _roiOpenData) {
+          data = _roiOpenData;
+        } else {
+          data = roiParseHeader(AndroidSerial.readROI(filename));
+          if (!data) return 0;
+        }
+        const r = roiAppendTrackToData(data, filename);
+        if (r.n) roiStatus(T[LANG].roi_autosaved(r.n, localTimestamp().substring(11, 16)));
+        return r.n;
+      } catch (e) {
+        console.warn('roiAutoSave:', filename, e);
+        return 0;
+      }
+    }
+setInterval(() => { if (_roiHeatVisible && _roiHeatFile) roiAutoSave(_roiHeatFile); }, 60000);
 function roiShowTrackDialog(targetFile) {
       const dotcene = _roiList.filter(r => {
         if (!r.bounds || !trackPoints || trackPoints.length === 0) return false;
@@ -7342,6 +7875,8 @@ function roiAddCurrentTrackToAll(filenames) {
 function roiGenerateAndShow(fromMapBtn) {
       if (!_roiOpenData) return;
       if (!leafletMap) initMap();
+      // Přepnutí heatu na jinou oblast — nejdřív uložit nové body do dosud zobrazené
+      if (_roiHeatVisible && _roiHeatFile && _roiHeatFile !== _roiOpenFile) roiAutoSave(_roiHeatFile);
       // Doplnit vrstvy do heat JSON pokud ještě nejsou uloženy (starší oblasti)
       if (!_roiOpenData.layersSaved && _roiOpenFile) {
         roiSaveLayersToMeta(_roiOpenData);
@@ -7357,8 +7892,12 @@ function roiGenerateAndShow(fromMapBtn) {
         for (const p of blk.data) pts.push(p);
       }
 
+      // Body trasy už uložené v zobrazených blocích nepřidávat podruhé (zdvojená váha v heatu)
+      const _ptKey = p => p.lat.toFixed(7) + ',' + p.lon.toFixed(7) + ',' + (p.ts || p.timestamp || '') + ',' + p.cps;
+      const _seen = new Set(pts.map(_ptKey));
       for (const p of trackPoints) {
         if (!p.lat || !p.lon || p.cps <= 0) continue;
+        if (_seen.has(_ptKey(p))) continue;
         if (b) {
           const latMin = Math.min(b.lat0, b.lat1), latMax = Math.max(b.lat0, b.lat1);
           const lonMin = Math.min(b.lon0, b.lon1), lonMax = Math.max(b.lon0, b.lon1);
@@ -10198,6 +10737,7 @@ function setLang(lang) {
       if (_e('cps-unit'))       _e('cps-unit').textContent       = L.cps_unit;
       if (_e('big-hint'))       _e('big-hint').textContent       = L.close_hint;
       if (_e('avg-label'))      _e('avg-label').textContent      = L.avg_label;
+      measApplyLang(L);
       if (_e('waiting-title'))  _e('waiting-title').textContent  = L.waiting_title;
       if (_e('waiting-hint'))   _e('waiting-hint').textContent   = L.waiting_hint;
       if (_e('btn-go-to-map'))  _e('btn-go-to-map').textContent  = L.go_to_map || 'PŘEJÍT NA MAPU';

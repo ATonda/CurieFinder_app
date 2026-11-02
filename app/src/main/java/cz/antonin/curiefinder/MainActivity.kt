@@ -37,6 +37,9 @@ class MainActivity : AppCompatActivity() {
 
     // ---- PROVIZORNÍ LOG SEKÁNÍ / JANK (paměťový ring buffer, bez souboru, bez PC) ----
     private val jankLog = java.util.Collections.synchronizedList(ArrayList<String>())
+    // Zápisy heat oblastí (saveROI/deleteROI) jedním vláknem v pořadí volání — dřív každý zápis
+    // vlastní thread{}, takže pozdější zápis mohl doběhnout dřív a starší obsah ho přepsal
+    private val roiIo = java.util.concurrent.Executors.newSingleThreadExecutor()
     private var jankMonitorRunning = false
     private var appStartElapsedMs = 0L
     private var lastFrameNanos = 0L
@@ -837,6 +840,8 @@ class MainActivity : AppCompatActivity() {
 
         @JavascriptInterface
         fun readROI(filename: String): String {
+            // Počkat na rozpracované zápisy oblastí — čtení musí vidět poslední uložený obsah
+            try { roiIo.submit {}.get(10, java.util.concurrent.TimeUnit.SECONDS) } catch (_: Exception) {}
             return try {
                 val root = rootDir()
                 val heatFile = java.io.File(java.io.File(root, DIR_HEAT), filename)
@@ -847,11 +852,18 @@ class MainActivity : AppCompatActivity() {
 
         @JavascriptInterface
         fun saveROI(data: String, filename: String) {
-            thread {
+            roiIo.execute {
                 try {
                     val root = rootDir()
                     val heatDir = java.io.File(root, DIR_HEAT).also { it.mkdirs() }
-                    java.io.File(heatDir, filename).writeText(data)
+                    // Atomicky: zápis do .tmp a přejmenování — přerušený zápis nepoškodí soubor oblasti
+                    val target = java.io.File(heatDir, filename)
+                    val tmp = java.io.File(heatDir, "$filename.tmp")
+                    tmp.writeText(data)
+                    if (!tmp.renameTo(target)) {
+                        target.delete()
+                        if (!tmp.renameTo(target)) throw java.io.IOException("rename $filename.tmp selhal")
+                    }
                     Log.d(TAG, "ROI saved: $filename")
                     notifyMediaScanner(java.io.File(heatDir, filename))
                     backupFile(filename, data)
@@ -864,12 +876,17 @@ class MainActivity : AppCompatActivity() {
 
         @JavascriptInterface
         fun deleteROI(filename: String) {
+            // Přes stejnou frontu jako saveROI — rozpracovaný zápis nesmí soubor po smazání znovu vytvořit
             try {
-                val root = rootDir()
-                java.io.File(java.io.File(root, DIR_HEAT), filename).delete()
-                java.io.File(root, filename).delete()
-                deleteBackupFile(filename)
-                Log.d(TAG, "ROI deleted: $filename")
+                roiIo.submit {
+                    try {
+                        val root = rootDir()
+                        java.io.File(java.io.File(root, DIR_HEAT), filename).delete()
+                        java.io.File(root, filename).delete()
+                        deleteBackupFile(filename)
+                        Log.d(TAG, "ROI deleted: $filename")
+                    } catch (e: Exception) { Log.e(TAG, "deleteROI error: ${e.message}") }
+                }.get(10, java.util.concurrent.TimeUnit.SECONDS)
             } catch (e: Exception) { Log.e(TAG, "deleteROI error: ${e.message}") }
         }
 
